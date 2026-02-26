@@ -1,0 +1,37 @@
+{
+  "nav_main":       "Principal",
+  "nav_dashboard":  "Tableau de bord",
+  "nav_resellers":  "Revendeurs",
+  "nav_clients":    "Clients",
+  "nav_devices":    "Appareils",
+  "nav_superadmin": "Super Administrateur",
+
+  "topbar_panel":   "Panneau Admin",
+
+  "notif_title":    "Notifications",
+
+  "dash_eyebrow":   "Panneau Admin",
+  "dash_title":     "Vue d'ensemble",
+  "dash_live":      "En direct",
+
+  "stat_resellers":   "Total Revendeurs",
+  "stat_clients":     "Total Clients",
+  "stat_devices":     "Total Appareils",
+  "manage_resellers": "Gérer les revendeurs →",
+  "manage_clients":   "Gérer les clients →",
+  "manage_devices":   "Gérer les appareils →",
+  "pct_active":       "% actifs",
+  "pct_inactive":     "% inactifs",
+
+  "device_status": "État des appareils",
+  "active":        "Actifs",
+  "inactive":      "Inactifs",
+
+  "recent_activity":  "Activité récente",
+  "act_reseller_reg": "Nouveau revendeur inscrit",
+  "act_client_added": "Nouveau client ajouté",
+  "act_device_off":   "Appareil hors ligne",
+  "act_reseller_upd": "Revendeur mis à jour",
+  "min_ago": "min",
+  "hr_ago":  "h"
+}

@@ -1,0 +1,37 @@
+{
+  "nav_main":       "Main",
+  "nav_dashboard":  "Dashboard",
+  "nav_resellers":  "Resellers",
+  "nav_clients":    "Clients",
+  "nav_devices":    "Devices",
+  "nav_superadmin": "Super Admin",
+
+  "topbar_panel":   "Admin Panel",
+
+  "notif_title":    "Notifications",
+
+  "dash_eyebrow":   "Admin Panel",
+  "dash_title":     "Overview",
+  "dash_live":      "Live",
+
+  "stat_resellers":   "Total Resellers",
+  "stat_clients":     "Total Clients",
+  "stat_devices":     "Total Devices",
+  "manage_resellers": "Manage resellers →",
+  "manage_clients":   "Manage clients →",
+  "manage_devices":   "Manage devices →",
+  "pct_active":       "% active",
+  "pct_inactive":     "% inactive",
+
+  "device_status": "Device Status",
+  "active":        "Active",
+  "inactive":      "Inactive",
+
+  "recent_activity":  "Recent Activity",
+  "act_reseller_reg": "New reseller registered",
+  "act_client_added": "New client added",
+  "act_device_off":   "Device went offline",
+  "act_reseller_upd": "Reseller updated",
+  "min_ago": "min ago",
+  "hr_ago":  "h ago"
+}

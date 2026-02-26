@@ -1,145 +1,146 @@
-<div class="page-wrap">
+<div class="page">
 
-  <!-- Header -->
-  <header class="page-header">
+  <!-- ── Header ─────────────────────────────────── -->
+  <div class="page-header">
     <div>
-      <p class="page-eyebrow">Admin Panel</p>
-      <h1 class="page-title">Overview</h1>
+      <p class="page-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
+      <h1 class="page-title">{{ i18n.t('dash_title') }}</h1>
     </div>
-    <div class="live-badge">
+    <div class="live-pill">
       <span class="live-dot"></span>
-      <span>Live</span>
+      {{ i18n.t('dash_live') }}
     </div>
-  </header>
+  </div>
 
-  <!-- Stat Cards -->
-  <section class="cards-grid">
+  <!-- ── Stat cards ─────────────────────────────── -->
+  <div class="cards-row">
 
-    <div class="stat-card accent-amber" (click)="navigateTo('/admin/resellers')">
-      <div class="card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Resellers -->
+    <div class="stat-card" (click)="navigateTo('/admin/resellers')">
+      <div class="stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
       </div>
-      <div class="card-body">
-        <p class="card-label">Total Resellers</p>
-        <p class="card-value">{{ formatNumber(totalResellers) }}</p>
-        <p class="card-cta">Manage resellers →</p>
+      <div class="stat-card__body">
+        <p class="stat-label">{{ i18n.t('stat_resellers') }}</p>
+        <p class="stat-value">{{ fmt(totalResellers) }}</p>
+        <p class="stat-hint">{{ i18n.t('manage_resellers') }}</p>
       </div>
-      <div class="card-glow"></div>
     </div>
 
-    <div class="stat-card accent-indigo" (click)="navigateTo('/admin/clients')">
-      <div class="card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Clients -->
+    <div class="stat-card" (click)="navigateTo('/admin/clients')">
+      <div class="stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
       </div>
-      <div class="card-body">
-        <p class="card-label">Total Clients</p>
-        <p class="card-value">{{ formatNumber(totalClients) }}</p>
-        <p class="card-cta">Manage clients →</p>
+      <div class="stat-card__body">
+        <p class="stat-label">{{ i18n.t('stat_clients') }}</p>
+        <p class="stat-value">{{ fmt(totalClients) }}</p>
+        <p class="stat-hint">{{ i18n.t('manage_clients') }}</p>
       </div>
-      <div class="card-glow"></div>
     </div>
 
-    <div class="stat-card accent-emerald" (click)="navigateTo('/admin/devices')">
-      <div class="card-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Devices -->
+    <div class="stat-card" (click)="navigateTo('/admin/devices')">
+      <div class="stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="2"/>
-          <circle cx="12" cy="17" r="1" fill="currentColor"/>
+          <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
         </svg>
       </div>
-      <div class="card-body">
-        <p class="card-label">Total Devices</p>
-        <p class="card-value">{{ formatNumber(totalDevices) }}</p>
-        <div class="bar-wrap">
-          <div class="bar-track">
-            <div class="bar-fill" [style.width.%]="activePercentage"></div>
-          </div>
-          <div class="bar-labels">
-            <span class="bar-active">{{ activePercentage }}% active</span>
-            <span class="bar-inactive">{{ inactivePercentage }}% inactive</span>
-          </div>
+      <div class="stat-card__body">
+        <p class="stat-label">{{ i18n.t('stat_devices') }}</p>
+        <p class="stat-value">{{ fmt(totalDevices) }}</p>
+        <div class="device-bar">
+          <div class="device-bar__fill" [style.width.%]="activePercent"></div>
         </div>
-      </div>
-      <div class="card-glow"></div>
-    </div>
-
-  </section>
-
-  <!-- Bottom row -->
-  <div class="bottom-grid">
-
-    <!-- Device breakdown -->
-    <div class="panel">
-      <p class="panel-title">Device Status</p>
-      <div class="donut-wrap">
-        <svg viewBox="0 0 120 120" class="donut-svg">
-          <!-- Background ring -->
-          <circle cx="60" cy="60" r="48" fill="none" stroke="#1e2d3d" stroke-width="14"/>
-          <!-- Active arc -->
-          <circle cx="60" cy="60" r="48" fill="none"
-            stroke="#34d399" stroke-width="14"
-            [attr.stroke-dasharray]="(activePercentage * 3.016) + ' 301.6'"
-            stroke-dashoffset="75.4"
-            stroke-linecap="round"/>
-          <!-- Inactive arc -->
-          <circle cx="60" cy="60" r="48" fill="none"
-            stroke="#1e3a8a" stroke-width="14"
-            [attr.stroke-dasharray]="(inactivePercentage * 3.016) + ' 301.6'"
-             [attr.stroke-dashoffset]="75.4 - (activePercentage * 3.016)"
-            stroke-linecap="round"/>
-        </svg>
-        <div class="donut-center">
-          <p class="donut-pct">{{ activePercentage }}%</p>
-          <p class="donut-sub">active</p>
-        </div>
-      </div>
-      <div class="donut-legend">
-        <div class="donut-legend-item">
-          <span class="donut-dot" style="background:#34d399"></span>
-          <span>Active — {{ formatNumber(activeDevices) }}</span>
-        </div>
-        <div class="donut-legend-item">
-          <span class="donut-dot" style="background:#1e3a8a"></span>
-          <span>Inactive — {{ formatNumber(totalDevices - activeDevices) }}</span>
+        <div class="device-bar__labels">
+          <span class="bar-active">{{ activePercent }}{{ i18n.t('pct_active') }}</span>
+          <span class="bar-inactive">{{ 100 - activePercent }}{{ i18n.t('pct_inactive') }}</span>
         </div>
       </div>
     </div>
 
-    <!-- Recent activity -->
-    <div class="panel panel--wide">
-      <p class="panel-title">Recent Activity</p>
+  </div>
+
+  <!-- ── Bottom section ─────────────────────────── -->
+  <div class="bottom-row">
+
+    <!-- Donut chart card -->
+    <div class="donut-card">
+      <div class="section-header">
+        <p class="section-title">{{ i18n.t('device_status') }}</p>
+      </div>
+
+      <div class="donut-body">
+        <div class="donut-wrap">
+          <svg viewBox="0 0 100 100" class="donut-svg">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#E5E7EB" stroke-width="10"/>
+            <circle
+              cx="50" cy="50" r="42"
+              fill="none"
+              stroke="#0D9488"
+              stroke-width="10"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="circumference"
+              [attr.stroke-dashoffset]="activeOffset"
+              transform="rotate(-90 50 50)"
+              class="donut-arc"
+            />
+          </svg>
+          <div class="donut-center">
+            <span class="donut-pct">{{ activePercent }}%</span>
+            <span class="donut-sub">{{ i18n.t('active') }}</span>
+          </div>
+        </div>
+
+        <div class="donut-legend">
+          <div class="legend-row">
+            <span class="legend-dot legend-dot--active"></span>
+            <span class="legend-key">{{ i18n.t('active') }}</span>
+            <span class="legend-val">{{ fmt(activeDevices) }}</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-dot legend-dot--inactive"></span>
+            <span class="legend-key">{{ i18n.t('inactive') }}</span>
+            <span class="legend-val">{{ fmt(inactiveDevices) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent activity card -->
+    <div class="activity-card">
+      <div class="section-header">
+        <p class="section-title">{{ i18n.t('recent_activity') }}</p>
+      </div>
+
       <div class="activity-list">
         <div class="activity-item" *ngFor="let a of recentActivity">
-          <div class="activity-icon"
-            [class.activity-icon--amber]="a.type === 'reseller'"
-            [class.activity-icon--indigo]="a.type === 'client'"
-            [class.activity-icon--emerald]="a.type === 'device'">
-            <!-- Reseller icon -->
-            <svg *ngIf="a.type === 'reseller'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <div class="activity-icon" [class]="'activity-icon--' + a.icon">
+            <svg *ngIf="a.icon === 'reseller'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            <!-- Client icon -->
-            <svg *ngIf="a.type === 'client'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg *ngIf="a.icon === 'client'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
-            <!-- Device icon -->
-            <svg *ngIf="a.type === 'device'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+            <svg *ngIf="a.icon === 'device'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
             </svg>
           </div>
           <div class="activity-body">
-            <p class="activity-msg">{{ a.message }}</p>
-            <p class="activity-name">{{ a.name }}</p>
+            <p class="activity-label">{{ i18n.t(a.labelKey) }}</p>
+            <p class="activity-sub">{{ a.sub }}</p>
           </div>
-          <span class="activity-time">{{ a.time }}</span>
+          <span class="activity-time">{{ a.time }}{{ i18n.t(a.unit) }}</span>
         </div>
       </div>
     </div>

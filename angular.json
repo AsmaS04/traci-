@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [
@@ -85,16 +90,17 @@
               {
                 "glob": "**/*",
                 "input": "public"
-                "src/favicon.ico",
-                "src/assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "assets"
               }
             ],
             "styles": [
               "src/styles.css",
               "node_modules/leaflet/dist/leaflet.css"
             ]
-            "
-]
           }
         }
       }
