@@ -20,7 +20,11 @@ export class AdminLayout {
   constructor(public i18n: TranslationService) {}
 
   toggleSidebar(): void { this.collapsed = !this.collapsed; }
-  toggleDark(): void    { this.darkMode  = !this.darkMode; }
+
+  toggleDark(): void {
+    this.darkMode = !this.darkMode;
+    document.documentElement.classList.toggle('dark', this.darkMode);
+  }
   toggleNotif(): void   { this.notifOpen = !this.notifOpen; if (this.notifOpen) this.notifCount = 0; }
   closeNotif(): void    { this.notifOpen = false; }
   async toggleLang(): Promise<void> { await this.i18n.toggle(); }

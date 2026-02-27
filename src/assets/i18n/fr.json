@@ -7,7 +7,6 @@
   "nav_superadmin": "Super Administrateur",
 
   "topbar_panel":   "Panneau Admin",
-
   "notif_title":    "Notifications",
 
   "dash_eyebrow":   "Panneau Admin",
@@ -23,15 +22,99 @@
   "pct_active":       "% actifs",
   "pct_inactive":     "% inactifs",
 
-  "device_status": "État des appareils",
-  "active":        "Actifs",
-  "inactive":      "Inactifs",
+  "device_status":    "État des appareils",
+  "active":           "Actifs",
+  "inactive":         "Inactifs",
 
   "recent_activity":  "Activité récente",
   "act_reseller_reg": "Nouveau revendeur inscrit",
   "act_client_added": "Nouveau client ajouté",
   "act_device_off":   "Appareil hors ligne",
   "act_reseller_upd": "Revendeur mis à jour",
-  "min_ago": "min",
-  "hr_ago":  "h"
+  "min_ago":          "min",
+  "hr_ago":           "h",
+
+  "page_management":  "Gestion",
+  "page_clients":     "Clients",
+  "page_resellers":   "Revendeurs",
+
+  "add_client":       "+ Ajouter un client",
+  "add_reseller":     "+ Ajouter un revendeur",
+
+  "search_clients":   "Rechercher par nom, revendeur, région…",
+  "search_resellers": "Rechercher par nom, entreprise, adresse…",
+
+  "filter_all":       "Tous",
+  "filter_active":    "Actifs",
+  "filter_inactive":  "Inactifs",
+  "filter_traci":     "Serveur Traci",
+  "filter_own":       "Serveur propre",
+
+  "col_name":     "Nom",
+  "col_reseller": "Revendeur",
+  "col_region":   "Région",
+  "col_devices":  "Appareils",
+  "col_status":   "Statut",
+  "col_actions":  "Actions",
+  "col_company":  "Entreprise",
+  "col_address":  "Adresse",
+  "col_clients":  "Clients",
+  "col_server":   "Serveur",
+  "col_joined":   "Rejoint",
+
+  "status_active":   "Actif",
+  "status_inactive": "Inactif",
+
+  "btn_back":           "Retour",
+  "btn_edit":           "Modifier",
+  "btn_delete":         "Supprimer",
+  "btn_cancel":         "Annuler",
+  "btn_save":           "Enregistrer",
+  "btn_confirm_delete": "Oui, supprimer",
+
+  "client_profile":   "Profil client",
+  "reseller_profile": "Profil revendeur",
+
+  "under_reseller":    "Sous",
+  "member_since":      "Membre depuis",
+
+  "total_devices":     "Total appareils",
+  "active_devices":    "Appareils actifs",
+  "inactive_devices":  "Appareils inactifs",
+  "assigned_reseller": "Revendeur assigné",
+  "device_connectivity": "Connectivité des appareils",
+  "online":            "En ligne",
+  "offline":           "Hors ligne",
+
+  "total_clients":     "Total clients",
+  "linked_client_ids": "IDs clients liés",
+
+  "server_traci_label": "Traci",
+  "server_own_label":   "Propre",
+  "server_traci_full":  "🖥 Serveur Traci",
+  "server_own_full":    "🔒 Serveur propre",
+
+  "modal_add_client":     "Ajouter un client",
+  "modal_edit_client":    "Modifier le client",
+  "modal_add_reseller":   "Ajouter un revendeur",
+  "modal_edit_reseller":  "Modifier le revendeur",
+
+  "form_name":        "Nom / Entreprise",
+  "form_full_name":   "Nom complet",
+  "form_email":       "Email",
+  "form_phone":       "Téléphone",
+  "form_region":      "Région",
+  "form_reseller":    "Revendeur assigné",
+  "form_status":      "Statut du compte",
+  "form_company":     "Nom de l'entreprise",
+  "form_address":     "Adresse",
+  "form_server_type": "Type de serveur",
+
+  "delete_client_title":   "Supprimer le client ?",
+  "delete_reseller_title": "Supprimer le revendeur ?",
+  "delete_confirm_pre":    "Vous êtes sur le point de supprimer définitivement",
+  "delete_confirm_post":   ". Cette action est irréversible.",
+
+  "no_clients":   "Aucun client trouvé",
+  "no_resellers": "Aucun revendeur trouvé"
 }
