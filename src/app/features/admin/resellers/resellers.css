@@ -844,4 +844,4 @@
 :host-context(.dark) .form-group input,
 :host-context(.dark) .form-group select { background: #0F172A; }
 :host-context(.dark) .modal-footer    { background: #1E293B; }
-:host-context(.dark) .server-option   { background: #0F172A; }
+:host-context(.dark) .server-option   { background: #0F172A; } 
