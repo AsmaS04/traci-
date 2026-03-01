@@ -5,50 +5,46 @@
 
     <header class="page-header">
       <div>
-        <p class="page-eyebrow">Management</p>
-        <h1 class="page-title">Clients</h1>
+        <p class="page-eyebrow">{{ i18n.t('page_management') }}</p>
+        <h1 class="page-title">{{ i18n.t('page_clients') }}</h1>
       </div>
       <button class="btn-primary" (click)="openAdd()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Client
+        {{ i18n.t('add_client') }}
       </button>
     </header>
 
-    <!-- Toolbar -->
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" type="text" placeholder="Search by name, reseller, region…" [(ngModel)]="searchQuery"/>
+        <input class="search-input" type="text" [placeholder]="i18n.t('search_clients')" [(ngModel)]="searchQuery"/>
         <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery=''">✕</button>
       </div>
       <div class="filter-tabs">
-        <button [class.active]="filterActive==='all'"      (click)="filterActive='all'">All</button>
-        <button [class.active]="filterActive==='active'"   (click)="filterActive='active'">Active</button>
-        <button [class.active]="filterActive==='inactive'" (click)="filterActive='inactive'">Inactive</button>
+        <button [class.active]="filterActive==='all'"      (click)="filterActive='all'">{{ i18n.t('filter_all') }}</button>
+        <button [class.active]="filterActive==='active'"   (click)="filterActive='active'">{{ i18n.t('filter_active') }}</button>
+        <button [class.active]="filterActive==='inactive'" (click)="filterActive='inactive'">{{ i18n.t('filter_inactive') }}</button>
       </div>
-      <span class="result-count">{{ filtered.length }} client{{ filtered.length !== 1 ? 's' : '' }}</span>
+      <span class="result-count">{{ filtered.length }} {{ i18n.t('page_clients').toLowerCase() }}</span>
     </div>
 
-    <!-- Table -->
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th class="col-id"       (click)="sortBy('id')">#  {{ sortIcon('id') }}</th>
-            <th class="col-name"     (click)="sortBy('name')">Name  {{ sortIcon('name') }}</th>
-            <th class="col-reseller" (click)="sortBy('resellerName')">Reseller  {{ sortIcon('resellerName') }}</th>
-            <th class="col-region"   (click)="sortBy('region')">Region  {{ sortIcon('region') }}</th>
-            <th class="col-devices"  (click)="sortBy('totalDevices')">Devices  {{ sortIcon('totalDevices') }}</th>
-            <th class="col-status"   (click)="sortBy('isActive')">Status  {{ sortIcon('isActive') }}</th>
-            <th class="col-actions">Actions</th>
+            <th class="col-id" (click)="sortBy('id')"># {{ sortIcon('id') }}</th>
+            <th (click)="sortBy('name')">{{ i18n.t('col_name') }} {{ sortIcon('name') }}</th>
+            <th (click)="sortBy('resellerName')">{{ i18n.t('col_reseller') }} {{ sortIcon('resellerName') }}</th>
+            <th (click)="sortBy('region')">{{ i18n.t('col_region') }} {{ sortIcon('region') }}</th>
+            <th (click)="sortBy('totalDevices')">{{ i18n.t('col_devices') }} {{ sortIcon('totalDevices') }}</th>
+            <th (click)="sortBy('isActive')">{{ i18n.t('col_status') }} {{ sortIcon('isActive') }}</th>
+            <th class="col-actions">{{ i18n.t('col_actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let c of filtered" (click)="openDetail(c)" class="table-row">
-            <td class="col-id">
-              <span class="id-badge">#{{ c.id }}</span>
-            </td>
-            <td class="col-name">
+            <td class="col-id"><span class="id-badge">#{{ c.id }}</span></td>
+            <td>
               <div class="name-cell">
                 <div class="avatar">{{ c.name.charAt(0) }}</div>
                 <div>
@@ -57,13 +53,9 @@
                 </div>
               </div>
             </td>
-            <td class="col-reseller">
-              <span class="reseller-link">{{ c.resellerName }}</span>
-            </td>
-            <td class="col-region">
-              <span class="region-pill">{{ c.region }}</span>
-            </td>
-            <td class="col-devices">
+            <td><span class="reseller-link">{{ c.resellerName }}</span></td>
+            <td><span class="region-pill">{{ c.region }}</span></td>
+            <td>
               <div class="devices-cell">
                 <span class="devices-count">{{ c.activeDevices }}/{{ c.totalDevices }}</span>
                 <div class="devices-bar">
@@ -74,17 +66,17 @@
                 </div>
               </div>
             </td>
-            <td class="col-status">
+            <td>
               <span class="status-badge" [class.status-badge--active]="c.isActive" [class.status-badge--inactive]="!c.isActive">
                 <span class="status-dot"></span>
-                {{ c.isActive ? 'Active' : 'Inactive' }}
+                {{ c.isActive ? i18n.t('status_active') : i18n.t('status_inactive') }}
               </span>
             </td>
             <td class="col-actions" (click)="$event.stopPropagation()">
-              <button class="action-btn action-btn--edit"   (click)="openEdit(c, $event)" title="Edit">
+              <button class="action-btn action-btn--edit"   (click)="openEdit(c, $event)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
-              <button class="action-btn action-btn--delete" (click)="askDelete(c, $event)" title="Delete">
+              <button class="action-btn action-btn--delete" (click)="askDelete(c, $event)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
               </button>
             </td>
@@ -92,7 +84,7 @@
           <tr *ngIf="filtered.length === 0">
             <td colspan="7" class="empty-state">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <p>No clients found</p>
+              <p>{{ i18n.t('no_clients') }}</p>
             </td>
           </tr>
         </tbody>
@@ -108,20 +100,19 @@
       <div class="detail-header-left">
         <button class="back-btn" (click)="backToTable()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Back
+          {{ i18n.t('btn_back') }}
         </button>
         <div>
-          <p class="page-eyebrow">Client Profile</p>
+          <p class="page-eyebrow">{{ i18n.t('client_profile') }}</p>
           <h1 class="page-title">{{ selected.name }}</h1>
         </div>
       </div>
       <div class="detail-header-actions">
-        <button class="btn-secondary" (click)="openEdit(selected, $event)">Edit</button>
-        <button class="btn-danger"    (click)="askDelete(selected, $event)">Delete</button>
+        <button class="btn-secondary" (click)="openEdit(selected, $event)">{{ i18n.t('btn_edit') }}</button>
+        <button class="btn-danger"    (click)="askDelete(selected, $event)">{{ i18n.t('btn_delete') }}</button>
       </div>
     </header>
 
-    <!-- Profile card -->
     <div class="profile-card">
       <div class="profile-avatar">{{ selected.name.charAt(0) }}</div>
       <div class="profile-info">
@@ -129,10 +120,10 @@
           <h2 class="profile-name">{{ selected.name }}</h2>
           <span class="status-badge" [class.status-badge--active]="selected.isActive" [class.status-badge--inactive]="!selected.isActive">
             <span class="status-dot"></span>
-            {{ selected.isActive ? 'Active' : 'Inactive' }}
+            {{ selected.isActive ? i18n.t('status_active') : i18n.t('status_inactive') }}
           </span>
         </div>
-        <p class="profile-company">Under {{ selected.resellerName }}</p>
+        <p class="profile-company">{{ i18n.t('under_reseller') }} {{ selected.resellerName }}</p>
         <div class="profile-meta">
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -148,46 +139,42 @@
           </span>
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Member since {{ formatDate(selected.joinDate) }}
+            {{ i18n.t('member_since') }} {{ formatDate(selected.joinDate) }}
           </span>
         </div>
       </div>
     </div>
 
-    <!-- Stats row -->
     <div class="detail-stats">
       <div class="detail-stat">
         <p class="detail-stat-value">{{ selected.totalDevices }}</p>
-        <p class="detail-stat-label">Total Devices</p>
+        <p class="detail-stat-label">{{ i18n.t('total_devices') }}</p>
       </div>
       <div class="detail-stat">
-        <p class="detail-stat-value" style="color:#34d399">{{ selected.activeDevices }}</p>
-        <p class="detail-stat-label">Active Devices</p>
+        <p class="detail-stat-value" style="color:var(--teal)">{{ selected.activeDevices }}</p>
+        <p class="detail-stat-label">{{ i18n.t('active_devices') }}</p>
       </div>
       <div class="detail-stat">
-        <p class="detail-stat-value" style="color:#f87171">{{ selected.totalDevices - selected.activeDevices }}</p>
-        <p class="detail-stat-label">Inactive Devices</p>
+        <p class="detail-stat-value" style="color:var(--red)">{{ selected.totalDevices - selected.activeDevices }}</p>
+        <p class="detail-stat-label">{{ i18n.t('inactive_devices') }}</p>
       </div>
       <div class="detail-stat">
-        <p class="detail-stat-value">{{ selected.resellerName }}</p>
-        <p class="detail-stat-label">Assigned Reseller</p>
+        <p class="detail-stat-value" style="font-size:0.9rem;letter-spacing:0;font-weight:700">{{ selected.resellerName }}</p>
+        <p class="detail-stat-label">{{ i18n.t('assigned_reseller') }}</p>
       </div>
     </div>
 
-    <!-- Device connectivity bar -->
     <div class="connectivity-card" *ngIf="selected.totalDevices > 0">
-      <p class="connectivity-title">Device Connectivity</p>
+      <p class="connectivity-title">{{ i18n.t('device_connectivity') }}</p>
       <div class="connectivity-bar">
         <div class="connectivity-fill connectivity-fill--active"
-          [style.width.%]="selected.activeDevices / selected.totalDevices * 100">
-        </div>
+          [style.width.%]="selected.activeDevices / selected.totalDevices * 100"></div>
         <div class="connectivity-fill connectivity-fill--inactive"
-          [style.width.%]="(selected.totalDevices - selected.activeDevices) / selected.totalDevices * 100">
-        </div>
+          [style.width.%]="(selected.totalDevices - selected.activeDevices) / selected.totalDevices * 100"></div>
       </div>
       <div class="connectivity-legend">
-        <span><span class="cleg-dot" style="background:#34d399"></span>Online ({{ selected.activeDevices }})</span>
-        <span><span class="cleg-dot" style="background:#f87171"></span>Offline ({{ selected.totalDevices - selected.activeDevices }})</span>
+        <span><span class="cleg-dot" style="background:var(--teal)"></span>{{ i18n.t('online') }} ({{ selected.activeDevices }})</span>
+        <span><span class="cleg-dot" style="background:var(--red)"></span>{{ i18n.t('offline') }} ({{ selected.totalDevices - selected.activeDevices }})</span>
       </div>
     </div>
 
@@ -196,30 +183,28 @@
   <!-- ═══════════════════ ADD/EDIT MODAL ═══════════════ -->
   <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
-
       <div class="modal-header">
-        <h2 class="modal-title">{{ modalMode === 'add' ? 'Add Client' : 'Edit Client' }}</h2>
+        <h2 class="modal-title">{{ modalMode === 'add' ? i18n.t('modal_add_client') : i18n.t('modal_edit_client') }}</h2>
         <button class="modal-close" (click)="closeModal()">✕</button>
       </div>
-
       <div class="modal-body">
         <div class="form-row">
           <div class="form-group">
-            <label>Full Name / Company</label>
+            <label>{{ i18n.t('form_name') }}</label>
             <input type="text" [(ngModel)]="formData.name" placeholder="e.g. Alpha Logistics"/>
           </div>
           <div class="form-group">
-            <label>Email</label>
+            <label>{{ i18n.t('form_email') }}</label>
             <input type="email" [(ngModel)]="formData.email" placeholder="email@company.tn"/>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Phone</label>
+            <label>{{ i18n.t('form_phone') }}</label>
             <input type="text" [(ngModel)]="formData.phone" placeholder="+216 XX XXX XXX"/>
           </div>
           <div class="form-group">
-            <label>Region</label>
+            <label>{{ i18n.t('form_region') }}</label>
             <select [(ngModel)]="formData.region">
               <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
             </select>
@@ -227,30 +212,28 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Assigned Reseller</label>
+            <label>{{ i18n.t('form_reseller') }}</label>
             <select [(ngModel)]="formData.resellerId" (ngModelChange)="onResellerChange()">
               <option *ngFor="let r of resellers" [value]="r.id">{{ r.companyName }}</option>
             </select>
           </div>
           <div class="form-group form-group--toggle">
-            <label>Account Status</label>
+            <label>{{ i18n.t('form_status') }}</label>
             <div class="toggle-wrap" (click)="formData.isActive = !formData.isActive">
               <div class="toggle" [class.toggle--on]="formData.isActive">
                 <div class="toggle-thumb"></div>
               </div>
-              <span>{{ formData.isActive ? 'Active' : 'Inactive' }}</span>
+              <span>{{ formData.isActive ? i18n.t('status_active') : i18n.t('status_inactive') }}</span>
             </div>
           </div>
         </div>
       </div>
-
       <div class="modal-footer">
-        <button class="btn-ghost" (click)="closeModal()">Cancel</button>
+        <button class="btn-ghost"   (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
         <button class="btn-primary" (click)="saveForm()">
-          {{ modalMode === 'add' ? 'Add Client' : 'Save Changes' }}
+          {{ modalMode === 'add' ? i18n.t('add_client') : i18n.t('btn_save') }}
         </button>
       </div>
-
     </div>
   </div>
 
@@ -260,13 +243,11 @@
       <div class="delete-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </div>
-      <h2 class="modal-title" style="text-align:center">Delete Client?</h2>
-      <p class="delete-msg">
-        You are about to delete <strong>{{ toDelete?.name }}</strong>. This action cannot be undone.
-      </p>
+      <h2 class="modal-title" style="text-align:center">{{ i18n.t('delete_client_title') }}</h2>
+      <p class="delete-msg">{{ i18n.t('delete_confirm_pre') }} <strong>{{ toDelete?.name }}</strong>{{ i18n.t('delete_confirm_post') }}</p>
       <div class="modal-footer" style="justify-content:center">
-        <button class="btn-ghost"  (click)="cancelDelete()">Cancel</button>
-        <button class="btn-danger" (click)="confirmDelete()">Yes, Delete</button>
+        <button class="btn-ghost"  (click)="cancelDelete()">{{ i18n.t('btn_cancel') }}</button>
+        <button class="btn-danger" (click)="confirmDelete()">{{ i18n.t('btn_confirm_delete') }}</button>
       </div>
     </div>
   </div>

@@ -5,49 +5,47 @@
 
     <header class="page-header">
       <div>
-        <p class="page-eyebrow">Management</p>
-        <h1 class="page-title">Resellers</h1>
+        <p class="page-eyebrow">{{ i18n.t('page_management') }}</p>
+        <h1 class="page-title">{{ i18n.t('page_resellers') }}</h1>
       </div>
       <button class="btn-primary" (click)="openAdd()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Reseller
+        {{ i18n.t('add_reseller') }}
       </button>
     </header>
 
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" type="text" placeholder="Search by name, company, address…" [(ngModel)]="searchQuery"/>
+        <input class="search-input" type="text" [placeholder]="i18n.t('search_resellers')" [(ngModel)]="searchQuery"/>
         <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery=''">✕</button>
       </div>
       <div class="filter-tabs">
-        <button [class.active]="filterServer==='all'"       (click)="filterServer='all'">All</button>
-        <button [class.active]="filterServer==='shared'"    (click)="filterServer='shared'">Traci Server</button>
-        <button [class.active]="filterServer==='dedicated'" (click)="filterServer='dedicated'">Own Server</button>
+        <button [class.active]="filterServer==='all'"       (click)="filterServer='all'">{{ i18n.t('filter_all') }}</button>
+        <button [class.active]="filterServer==='shared'"    (click)="filterServer='shared'">{{ i18n.t('filter_traci') }}</button>
+        <button [class.active]="filterServer==='dedicated'" (click)="filterServer='dedicated'">{{ i18n.t('filter_own') }}</button>
       </div>
-      <span class="result-count">{{ filtered.length }} reseller{{ filtered.length !== 1 ? 's' : '' }}</span>
+      <span class="result-count">{{ filtered.length }} {{ i18n.t('page_resellers').toLowerCase() }}</span>
     </div>
 
     <div class="table-wrap">
       <table class="data-table">
         <thead>
           <tr>
-            <th (click)="sortBy('id')">#  {{ sortIcon('id') }}</th>
-            <th (click)="sortBy('name')">Name  {{ sortIcon('name') }}</th>
-            <th (click)="sortBy('companyName')">Company  {{ sortIcon('companyName') }}</th>
-            <th (click)="sortBy('region')">Region  {{ sortIcon('region') }}</th>
-            <th (click)="sortBy('address')">Address  {{ sortIcon('address') }}</th>
-            <th (click)="sortBy('totalClients')">Clients  {{ sortIcon('totalClients') }}</th>
-            <th (click)="sortBy('serverType')">Server  {{ sortIcon('serverType') }}</th>
-            <th (click)="sortBy('joinDate')">Joined  {{ sortIcon('joinDate') }}</th>
-            <th>Actions</th>
+            <th class="col-id"  (click)="sortBy('id')"># {{ sortIcon('id') }}</th>
+            <th (click)="sortBy('name')">{{ i18n.t('col_name') }} {{ sortIcon('name') }}</th>
+            <th (click)="sortBy('companyName')">{{ i18n.t('col_company') }} {{ sortIcon('companyName') }}</th>
+            <th (click)="sortBy('region')">{{ i18n.t('col_region') }} {{ sortIcon('region') }}</th>
+            <th (click)="sortBy('address')">{{ i18n.t('col_address') }} {{ sortIcon('address') }}</th>
+            <th (click)="sortBy('totalClients')">{{ i18n.t('col_clients') }} {{ sortIcon('totalClients') }}</th>
+            <th (click)="sortBy('serverType')">{{ i18n.t('col_server') }} {{ sortIcon('serverType') }}</th>
+            <th (click)="sortBy('joinDate')">{{ i18n.t('col_joined') }} {{ sortIcon('joinDate') }}</th>
+            <th class="col-actions">{{ i18n.t('col_actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let r of filtered" (click)="openDetail(r)" class="table-row">
-
-            <td><span class="id-badge">#{{ r.id }}</span></td>
-
+            <td class="col-id"><span class="id-badge">#{{ r.id }}</span></td>
             <td>
               <div class="name-cell">
                 <div class="avatar">{{ r.name.charAt(0) }}</div>
@@ -57,13 +55,9 @@
                 </div>
               </div>
             </td>
-
             <td>{{ r.companyName }}</td>
-
             <td><span class="region-pill">{{ r.region }}</span></td>
-
             <td class="address-cell">{{ r.address }}</td>
-
             <td>
               <div class="clients-cell">
                 <span class="clients-count">{{ r.totalClients }}</span>
@@ -72,43 +66,35 @@
                 </span>
               </div>
             </td>
-
             <td>
               <span class="server-badge"
                 [class.server-badge--shared]="r.serverType === 'shared'"
                 [class.server-badge--dedicated]="r.serverType === 'dedicated'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <ng-container *ngIf="r.serverType === 'shared'">
-                    <rect x="2" y="3" width="20" height="4" rx="1"/>
-                    <rect x="2" y="10" width="20" height="4" rx="1"/>
-                    <rect x="2" y="17" width="20" height="4" rx="1"/>
+                    <rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/>
                   </ng-container>
                   <ng-container *ngIf="r.serverType === 'dedicated'">
-                    <rect x="2" y="2" width="20" height="20" rx="2"/>
-                    <line x1="12" y1="6" x2="12" y2="12"/>
-                    <circle cx="12" cy="15" r="1" fill="currentColor"/>
+                    <rect x="2" y="2" width="20" height="20" rx="2"/><line x1="12" y1="6" x2="12" y2="12"/><circle cx="12" cy="15" r="1" fill="currentColor"/>
                   </ng-container>
                 </svg>
-                {{ r.serverType === 'shared' ? 'Traci' : 'Own' }}
+                {{ r.serverType === 'shared' ? i18n.t('server_traci_label') : i18n.t('server_own_label') }}
               </span>
             </td>
-
             <td>{{ formatDate(r.joinDate) }}</td>
-
-            <td (click)="$event.stopPropagation()">
-              <button class="action-btn action-btn--edit"   (click)="openEdit(r, $event)" title="Edit">
+            <td class="col-actions" (click)="$event.stopPropagation()">
+              <button class="action-btn action-btn--edit"   (click)="openEdit(r, $event)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
-              <button class="action-btn action-btn--delete" (click)="askDelete(r, $event)" title="Delete">
+              <button class="action-btn action-btn--delete" (click)="askDelete(r, $event)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
               </button>
             </td>
           </tr>
-
           <tr *ngIf="filtered.length === 0">
             <td colspan="9" class="empty-state">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <p>No resellers found</p>
+              <p>{{ i18n.t('no_resellers') }}</p>
             </td>
           </tr>
         </tbody>
@@ -124,20 +110,19 @@
       <div class="detail-header-left">
         <button class="back-btn" (click)="backToTable()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Back
+          {{ i18n.t('btn_back') }}
         </button>
         <div>
-          <p class="page-eyebrow">Reseller Profile</p>
+          <p class="page-eyebrow">{{ i18n.t('reseller_profile') }}</p>
           <h1 class="page-title">{{ selected.companyName }}</h1>
         </div>
       </div>
       <div class="detail-header-actions">
-        <button class="btn-secondary" (click)="openEdit(selected, $event)">Edit</button>
-        <button class="btn-danger"    (click)="askDelete(selected, $event)">Delete</button>
+        <button class="btn-secondary" (click)="openEdit(selected, $event)">{{ i18n.t('btn_edit') }}</button>
+        <button class="btn-danger"    (click)="askDelete(selected, $event)">{{ i18n.t('btn_delete') }}</button>
       </div>
     </header>
 
-    <!-- Profile card -->
     <div class="profile-card">
       <div class="profile-avatar">{{ selected.name.charAt(0) }}</div>
       <div class="profile-info">
@@ -146,7 +131,7 @@
           <span class="server-badge"
             [class.server-badge--shared]="selected.serverType === 'shared'"
             [class.server-badge--dedicated]="selected.serverType === 'dedicated'">
-            {{ selected.serverType === 'shared' ? '🖥 Traci Server' : '🔒 Own Server' }}
+            {{ selected.serverType === 'shared' ? i18n.t('server_traci_full') : i18n.t('server_own_full') }}
           </span>
         </div>
         <p class="profile-company">{{ selected.companyName }}</p>
@@ -165,37 +150,37 @@
           </span>
           <span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Member since {{ formatDate(selected.joinDate) }}
+            {{ i18n.t('member_since') }} {{ formatDate(selected.joinDate) }}
           </span>
         </div>
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="detail-stats">
       <div class="detail-stat">
         <p class="detail-stat-value">{{ selected.totalClients }}</p>
-        <p class="detail-stat-label">Total Clients</p>
+        <p class="detail-stat-label">{{ i18n.t('total_clients') }}</p>
       </div>
       <div class="detail-stat">
         <p class="detail-stat-value">{{ selected.clientIds.length }}</p>
-        <p class="detail-stat-label">Linked Client IDs</p>
+        <p class="detail-stat-label">{{ i18n.t('linked_client_ids') }}</p>
       </div>
       <div class="detail-stat">
-        <p class="detail-stat-value">{{ selected.region }}</p>
-        <p class="detail-stat-label">Region</p>
+        <p class="detail-stat-value" style="font-size:1rem;letter-spacing:0;font-weight:700">{{ selected.region }}</p>
+        <p class="detail-stat-label">{{ i18n.t('col_region') }}</p>
       </div>
       <div class="detail-stat">
-        <p class="detail-stat-value" [style.color]="selected.serverType === 'dedicated' ? '#a78bfa' : '#34d399'">
-          {{ selected.serverType === 'shared' ? 'Traci' : 'Own' }}
+        <p class="detail-stat-value"
+          [style.color]="selected.serverType === 'dedicated' ? 'var(--purple)' : 'var(--teal)'"
+          style="font-size:1rem;letter-spacing:0;font-weight:700">
+          {{ selected.serverType === 'shared' ? i18n.t('server_traci_label') : i18n.t('server_own_label') }}
         </p>
-        <p class="detail-stat-label">Server Type</p>
+        <p class="detail-stat-label">{{ i18n.t('col_server') }}</p>
       </div>
     </div>
 
-    <!-- Client IDs panel -->
     <div class="client-ids-panel" *ngIf="selected.clientIds.length">
-      <p class="panel-title">Linked Client IDs</p>
+      <p class="panel-title">{{ i18n.t('linked_client_ids') }}</p>
       <div class="client-ids-grid">
         <span class="client-id-chip" *ngFor="let cid of selected.clientIds">#{{ cid }}</span>
       </div>
@@ -206,68 +191,65 @@
   <!-- ═══════════════════ ADD / EDIT MODAL ═════════════ -->
   <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
-
       <div class="modal-header">
-        <h2 class="modal-title">{{ modalMode === 'add' ? 'Add Reseller' : 'Edit Reseller' }}</h2>
+        <h2 class="modal-title">{{ modalMode === 'add' ? i18n.t('modal_add_reseller') : i18n.t('modal_edit_reseller') }}</h2>
         <button class="modal-close" (click)="closeModal()">✕</button>
       </div>
-
       <div class="modal-body">
         <div class="form-row">
           <div class="form-group">
-            <label>Full Name</label>
+            <label>{{ i18n.t('form_full_name') }}</label>
             <input type="text" [(ngModel)]="formData.name" placeholder="e.g. Khalil Mansour"/>
           </div>
           <div class="form-group">
-            <label>Company Name</label>
+            <label>{{ i18n.t('form_company') }}</label>
             <input type="text" [(ngModel)]="formData.companyName" placeholder="e.g. TechVision SARL"/>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Email</label>
+            <label>{{ i18n.t('form_email') }}</label>
             <input type="email" [(ngModel)]="formData.email" placeholder="email@company.tn"/>
           </div>
           <div class="form-group">
-            <label>Phone</label>
+            <label>{{ i18n.t('form_phone') }}</label>
             <input type="text" [(ngModel)]="formData.phone" placeholder="+216 XX XXX XXX"/>
           </div>
         </div>
         <div class="form-group">
-          <label>Address</label>
+          <label>{{ i18n.t('form_address') }}</label>
           <input type="text" [(ngModel)]="formData.address" placeholder="e.g. 12 Rue de Marseille, Tunis 1000"/>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Region</label>
+            <label>{{ i18n.t('form_region') }}</label>
             <select [(ngModel)]="formData.region">
               <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Server Type</label>
+            <label>{{ i18n.t('form_server_type') }}</label>
             <div class="server-toggle">
               <div class="server-option"
                 [class.server-option--active]="formData.serverType === 'shared'"
                 (click)="formData.serverType = 'shared'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/></svg>
-                Traci Server
+                {{ i18n.t('filter_traci') }}
               </div>
               <div class="server-option"
                 [class.server-option--active]="formData.serverType === 'dedicated'"
                 (click)="formData.serverType = 'dedicated'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="12" y1="6" x2="12" y2="12"/><circle cx="12" cy="15" r="1" fill="currentColor"/></svg>
-                Own Server
+                {{ i18n.t('filter_own') }}
               </div>
             </div>
           </div>
         </div>
       </div>
-
       <div class="modal-footer">
-        <button class="btn-ghost"   (click)="closeModal()">Cancel</button>
+        <button class="btn-ghost"   (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
         <button class="btn-primary" (click)="saveForm()">
-          {{ modalMode === 'add' ? 'Add Reseller' : 'Save Changes' }}
+          {{ modalMode === 'add' ? i18n.t('add_reseller') : i18n.t('btn_save') }}
         </button>
       </div>
     </div>
@@ -279,13 +261,13 @@
       <div class="delete-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </div>
-      <h2 class="modal-title" style="text-align:center">Delete Reseller?</h2>
+      <h2 class="modal-title" style="text-align:center">{{ i18n.t('delete_reseller_title') }}</h2>
       <p class="delete-msg">
-        You are about to delete <strong>{{ toDelete?.name }}</strong> from <strong>{{ toDelete?.companyName }}</strong>. This cannot be undone.
+        {{ i18n.t('delete_confirm_pre') }} <strong>{{ toDelete?.name }}</strong> ({{ toDelete?.companyName }}){{ i18n.t('delete_confirm_post') }}
       </p>
       <div class="modal-footer" style="justify-content:center">
-        <button class="btn-ghost"  (click)="cancelDelete()">Cancel</button>
-        <button class="btn-danger" (click)="confirmDelete()">Yes, Delete</button>
+        <button class="btn-ghost"  (click)="cancelDelete()">{{ i18n.t('btn_cancel') }}</button>
+        <button class="btn-danger" (click)="confirmDelete()">{{ i18n.t('btn_confirm_delete') }}</button>
       </div>
     </div>
   </div>

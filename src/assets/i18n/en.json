@@ -7,7 +7,6 @@
   "nav_superadmin": "Super Admin",
 
   "topbar_panel":   "Admin Panel",
-
   "notif_title":    "Notifications",
 
   "dash_eyebrow":   "Admin Panel",
@@ -23,15 +22,99 @@
   "pct_active":       "% active",
   "pct_inactive":     "% inactive",
 
-  "device_status": "Device Status",
-  "active":        "Active",
-  "inactive":      "Inactive",
+  "device_status":    "Device Status",
+  "active":           "Active",
+  "inactive":         "Inactive",
 
   "recent_activity":  "Recent Activity",
   "act_reseller_reg": "New reseller registered",
   "act_client_added": "New client added",
   "act_device_off":   "Device went offline",
   "act_reseller_upd": "Reseller updated",
-  "min_ago": "min ago",
-  "hr_ago":  "h ago"
+  "min_ago":          "min ago",
+  "hr_ago":           "h ago",
+
+  "page_management":  "Management",
+  "page_clients":     "Clients",
+  "page_resellers":   "Resellers",
+
+  "add_client":       "+ Add Client",
+  "add_reseller":     "+ Add Reseller",
+
+  "search_clients":   "Search by name, reseller, region…",
+  "search_resellers": "Search by name, company, address…",
+
+  "filter_all":       "All",
+  "filter_active":    "Active",
+  "filter_inactive":  "Inactive",
+  "filter_traci":     "Traci Server",
+  "filter_own":       "Own Server",
+
+  "col_name":     "Name",
+  "col_reseller": "Reseller",
+  "col_region":   "Region",
+  "col_devices":  "Devices",
+  "col_status":   "Status",
+  "col_actions":  "Actions",
+  "col_company":  "Company",
+  "col_address":  "Address",
+  "col_clients":  "Clients",
+  "col_server":   "Server",
+  "col_joined":   "Joined",
+
+  "status_active":   "Active",
+  "status_inactive": "Inactive",
+
+  "btn_back":           "Back",
+  "btn_edit":           "Edit",
+  "btn_delete":         "Delete",
+  "btn_cancel":         "Cancel",
+  "btn_save":           "Save Changes",
+  "btn_confirm_delete": "Yes, Delete",
+
+  "client_profile":   "Client Profile",
+  "reseller_profile": "Reseller Profile",
+
+  "under_reseller":    "Under",
+  "member_since":      "Member since",
+
+  "total_devices":     "Total Devices",
+  "active_devices":    "Active Devices",
+  "inactive_devices":  "Inactive Devices",
+  "assigned_reseller": "Assigned Reseller",
+  "device_connectivity": "Device Connectivity",
+  "online":            "Online",
+  "offline":           "Offline",
+
+  "total_clients":     "Total Clients",
+  "linked_client_ids": "Linked Client IDs",
+
+  "server_traci_label": "Traci",
+  "server_own_label":   "Own",
+  "server_traci_full":  "🖥 Traci Server",
+  "server_own_full":    "🔒 Own Server",
+
+  "modal_add_client":     "Add Client",
+  "modal_edit_client":    "Edit Client",
+  "modal_add_reseller":   "Add Reseller",
+  "modal_edit_reseller":  "Edit Reseller",
+
+  "form_name":        "Full Name / Company",
+  "form_full_name":   "Full Name",
+  "form_email":       "Email",
+  "form_phone":       "Phone",
+  "form_region":      "Region",
+  "form_reseller":    "Assigned Reseller",
+  "form_status":      "Account Status",
+  "form_company":     "Company Name",
+  "form_address":     "Address",
+  "form_server_type": "Server Type",
+
+  "delete_client_title":   "Delete Client?",
+  "delete_reseller_title": "Delete Reseller?",
+  "delete_confirm_pre":    "You are about to permanently delete",
+  "delete_confirm_post":   ". This action cannot be undone.",
+
+  "no_clients":   "No clients found",
+  "no_resellers": "No resellers found"
 }
