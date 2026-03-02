@@ -1,0 +1,767 @@
+/* ══════════════════════════════════════════════════════════════
+   PAYMENT MODAL - TRACI
+   Professional Payment Interface
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Modal Backdrop ────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1.5rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* ── Payment Modal Container ───────────────────────────────── */
+.payment-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+/* ── Close Button ──────────────────────────────────────────── */
+.modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-500);
+  cursor: pointer;
+  transition: all var(--t);
+  z-index: 10;
+}
+
+.modal-close:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+  transform: rotate(90deg);
+}
+
+.modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PAYMENT STEP CONTAINER
+   ══════════════════════════════════════════════════════════════ */
+
+.payment-step {
+  padding: 3rem 2.5rem 2.5rem;
+}
+
+/* ── Step Header ───────────────────────────────────────────── */
+.step-header {
+  margin-bottom: 2rem;
+}
+
+.step-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-900);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.step-subtitle {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-500);
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STEP 1: PAYMENT METHODS
+   ══════════════════════════════════════════════════════════════ */
+
+.payment-methods {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.payment-method-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all var(--t);
+}
+
+.payment-method-card:hover {
+  background: var(--card);
+  border-color: var(--primary);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+}
+
+.payment-method-card.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  border-width: 2px;
+  box-shadow: 0 8px 16px rgba(20, 184, 166, 0.2);
+}
+
+/* Payment Method Logo */
+.method-logo {
+  width: 60px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.method-logo svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.method-logo.visa {
+  color: #1434CB;
+}
+
+.method-logo.paypal {
+  color: #003087;
+}
+
+/* Payment Method Name */
+.method-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-900);
+  flex: 1;
+}
+
+/* Check Icon */
+.check-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: scaleIn 0.2s ease-out;
+}
+
+.check-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STEP 2: CARD FORM
+   ══════════════════════════════════════════════════════════════ */
+
+/* Back Button */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-500);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--t);
+  margin-bottom: 1.5rem;
+}
+
+.back-btn:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.back-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Card Preview ──────────────────────────────────────────── */
+.card-preview {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+  color: white;
+  animation: slideIn 0.5s ease-out;
+}
+
+.card-preview.visa {
+  background: linear-gradient(135deg, #1434CB 0%, #2563eb 100%);
+}
+
+.card-preview.mastercard {
+  background: linear-gradient(135deg, #EB001B 0%, #F79E1B 100%);
+}
+
+.card-preview.paypal {
+  background: linear-gradient(135deg, #003087 0%, #009cde 100%);
+}
+
+.card-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  border-radius: 16px;
+}
+
+/* Card Chip */
+.card-chip {
+  width: 48px;
+  height: 36px;
+  background: linear-gradient(135deg, #f4d03f 0%, #c9932c 100%);
+  border-radius: 6px;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem;
+  gap: 2px;
+}
+
+.chip-line {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 1px;
+}
+
+/* Card Number */
+.card-number {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  margin-bottom: 1.5rem;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Card Footer */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.card-holder {
+  flex: 1;
+}
+
+.card-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 0.25rem;
+}
+
+.card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.card-expiry-wrapper {
+  text-align: right;
+}
+
+.card-expiry {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Card Logo */
+.card-logo {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mc-logo {
+  display: flex;
+  gap: -8px;
+  position: relative;
+}
+
+.mc-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.mc-circle.red {
+  background: #EB001B;
+  position: relative;
+  z-index: 2;
+}
+
+.mc-circle.orange {
+  background: #F79E1B;
+  margin-left: -12px;
+  z-index: 1;
+}
+
+/* ── Card Form ─────────────────────────────────────────────── */
+.card-form {
+  margin-bottom: 2rem;
+}
+
+.form-field {
+  margin-bottom: 1.25rem;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-700);
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-900);
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--t);
+  font-family: 'Manrope', sans-serif;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--card);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.form-input::placeholder {
+  color: var(--text-300);
+}
+
+.form-input.uppercase {
+  text-transform: uppercase;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ── Payment Footer ────────────────────────────────────────── */
+.payment-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+
+.total-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-700);
+}
+
+.total-amount {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--primary);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STEP 3: SUCCESS
+   ══════════════════════════════════════════════════════════════ */
+
+.success-step {
+  text-align: center;
+}
+
+/* Success Icon */
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 2rem;
+  border-radius: 50%;
+  background: var(--success-light);
+  border: 3px solid var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: successPulse 0.6s ease-out;
+}
+
+.success-icon svg {
+  width: 48px;
+  height: 48px;
+  color: var(--success);
+  stroke-width: 2.5;
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Success Content */
+.success-title {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  color: var(--text-900);
+  margin-bottom: 0.5rem;
+}
+
+.success-subtitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-500);
+  margin-bottom: 2rem;
+}
+
+.success-details {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.success-amount {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-700);
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+}
+
+.success-amount strong {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.success-email {
+  font-size: 0.875rem;
+  color: var(--text-500);
+  margin-bottom: 1.5rem;
+}
+
+.order-id-box {
+  background: var(--card);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.order-id-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-300);
+  margin-bottom: 0.5rem;
+}
+
+.order-id {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-900);
+  font-family: 'Courier New', monospace;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTONS
+   ══════════════════════════════════════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: all var(--t);
+  font-family: 'Manrope', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════════════════ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 1rem;
+  }
+
+  .payment-modal {
+    max-width: 100%;
+    border-radius: 20px;
+  }
+
+  .payment-step {
+    padding: 2.5rem 1.75rem 2rem;
+  }
+
+  .step-title {
+    font-size: 1.5rem;
+  }
+
+  .card-preview {
+    height: 180px;
+    padding: 1.25rem;
+  }
+
+  .card-number {
+    font-size: 1.25rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .success-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .success-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .success-title {
+    font-size: 1.5rem;
+  }
+
+  .order-id {
+    font-size: 1.25rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE
+   ══════════════════════════════════════════════════════════════ */
+
+.dark .payment-modal {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+.dark .method-logo {
+  background: #ffffff;
+}
+
+.dark .card-preview {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .payment-modal,
+  .payment-method-card,
+  .check-icon,
+  .card-preview,
+  .success-icon {
+    animation: none !important;
+  }
+
+  .btn-primary:hover {
+    transform: none;
+  }
+}
+
+/* Focus visible */
+.payment-method-card:focus-visible,
+.form-input:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ══════════════════════════════════════════════════════════════ */
+
+.text-center {
+  text-align: center;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}

@@ -1,0 +1,293 @@
+<!-- Dashboard Client - TRACI Professional -->
+<div class="dashboard-page">
+
+  @if (abonnement(); as abo) {
+
+    <!-- Welcome Section -->
+    <div class="welcome-section animate-fade-in">
+      <div class="welcome-content">
+        <p class="page-eyebrow">CLIENT SPACE</p>
+        <h1 class="page-title">
+          {{ i18n.t('dash_welcome') }}, {{ user.prenom }}! 👋
+        </h1>
+        <p class="page-subtitle">{{ i18n.t('dash_overview') }}</p>
+      </div>
+    </div>
+
+    <!-- Main Grid Layout -->
+    <div class="dashboard-grid">
+
+      <!-- LEFT COLUMN - Subscription Card -->
+      <div class="left-column">
+        <div class="subscription-card card animate-slide-in">
+          <!-- Header -->
+          <div class="card-header">
+            <div class="subscription-info">
+              <div class="service-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="service-name">{{ abo.serviceNom }}</h3>
+                <p class="service-package">{{ i18n.t('dash_package') }}: {{ abo.dureeLabel }}</p>
+              </div>
+            </div>
+
+            <!-- Status Badge -->
+            @if (isExpiringSoon(abo.joursRestants)) {
+              <span class="status-badge expiring">
+                <span class="badge-dot"></span>
+                {{ i18n.t('dash_expiring_soon') }}
+              </span>
+            } @else if (abo.statut === StatutAbonnement.ACTIF) {
+              <span class="status-badge active">
+                <span class="badge-dot"></span>
+                {{ i18n.t('status_active') }}
+              </span>
+            }
+          </div>
+
+          <!-- Countdown Section -->
+          <div class="countdown-section">
+            <div class="countdown-main">
+              <div class="countdown-box" [ngClass]="getCountdownColor()">
+                <div class="countdown-number">{{ abo.joursRestants }}</div>
+                <div class="countdown-label">{{ i18n.t('dash_days') }}</div>
+              </div>
+              <div class="countdown-details">
+                <p class="detail-label">{{ i18n.t('dash_expires_on') }}</p>
+                <p class="detail-value">{{ abo.dateFin | date: 'dd MMM yyyy' }}</p>
+                <p class="detail-hint">{{ abo.dateDebut | date: 'dd MMM yyyy' }} - {{ abo.dateFin | date: 'dd MMM yyyy' }}</p>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-wrapper">
+              <div class="progress-bar">
+                <div
+                  [ngClass]="'progress-fill ' + getProgressColor()"
+                  [style.width.%]="getProgressPercentage()">
+                  <span class="progress-percentage">{{ getProgressPercentage() | number:'1.0-0' }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="card-actions">
+            <button
+              (click)="openForfaitsModal()"
+              class="btn btn-primary btn-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {{ i18n.t('dash_renew_subscription') }}
+            </button>
+
+            <button
+              (click)="telechargerFacture()"
+              class="btn btn-secondary btn-lg">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {{ i18n.t('dash_download_invoice') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN - Stats Cards -->
+      <div class="right-column">
+        <div class="stats-grid">
+
+          <!-- Total Payé -->
+          <div class="stat-card card animate-fade-in" style="animation-delay: 0s">
+            <div class="stat-icon-wrapper blue">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">{{ i18n.t('dash_total_paid') }}</p>
+              <p class="stat-value">{{ stats.totalPaye }}</p>
+              <p class="stat-unit">TND</p>
+            </div>
+          </div>
+
+          <!-- Factures -->
+          <div class="stat-card card animate-fade-in" style="animation-delay: 0.1s">
+            <div class="stat-icon-wrapper green">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">{{ i18n.t('dash_invoices') }}</p>
+              <p class="stat-value">{{ stats.nombreFactures }}</p>
+              <p class="stat-unit">{{ i18n.t('inv_filter_paid') }}</p>
+            </div>
+          </div>
+
+          <!-- Support 24/7 -->
+          <div class="stat-card card animate-fade-in" style="animation-delay: 0.2s">
+            <div class="stat-icon-wrapper teal">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">{{ i18n.t('dash_support') }}</p>
+              <p class="stat-value">{{ stats.support }}</p>
+              <p class="stat-unit">Disponible</p>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="stat-card card animate-fade-in" style="animation-delay: 0.3s">
+            <div class="stat-icon-wrapper purple">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div class="stat-content">
+              <p class="stat-label">{{ i18n.t('dash_quick_actions') }}</p>
+              <p class="stat-value">4</p>
+              <p class="stat-unit">{{ i18n.t('dash_available') }}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  }
+
+  <!-- Warning Modal -->
+  @if (showWarningModal()) {
+    <div class="modal-backdrop" (click)="closeWarningModal()">
+      <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+        <button
+          (click)="closeWarningModal()"
+          class="modal-close">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div class="modal-body text-center">
+          <!-- Warning Icon -->
+          <div class="modal-icon warning">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <!-- Content -->
+          <h3 class="modal-title">{{ i18n.t('warning_expiring_title') }}</h3>
+          <p class="modal-text">
+            {{ i18n.t('warning_expiring_msg') }}
+            <strong class="text-orange-500">{{ abonnement()?.joursRestants }} {{ i18n.t('warning_expiring_days') }}</strong>.
+          </p>
+
+          <!-- Actions -->
+          <div class="modal-actions-vertical">
+            <button
+              (click)="openForfaitsModal()"
+              class="btn btn-primary btn-lg w-full">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {{ i18n.t('warning_renew_now') }}
+            </button>
+
+            <button
+              (click)="demanderProlongation()"
+              class="btn btn-secondary btn-lg w-full">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ i18n.t('warning_request_extension') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Forfaits Modal -->
+  @if (showForfaitsModal()) {
+    <div class="modal-backdrop" (click)="closeForfaitsModal()">
+      <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+        <button
+          (click)="closeForfaitsModal()"
+          class="modal-close">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div class="modal-header text-center">
+          <h3 class="modal-title">{{ i18n.t('modal_choose_package') }}</h3>
+          <p class="modal-subtitle">{{ i18n.t('modal_select_duration') }}</p>
+        </div>
+
+        <div class="modal-body">
+          <!-- Forfaits Grid -->
+          <div class="forfaits-grid">
+            @for (forfait of forfaits; track forfait.duree) {
+              <div
+                [ngClass]="{'popular': forfait.populaire}"
+                class="forfait-card"
+                (click)="selectForfait(forfait)">
+
+                <!-- Popular Badge -->
+                @if (forfait.populaire) {
+                  <div class="popular-badge">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    {{ i18n.t('modal_popular') }}
+                  </div>
+                }
+
+                <!-- Duration -->
+                <div class="forfait-duration">{{ forfait.dureeLabel }}</div>
+
+                <!-- Economy Badge -->
+                @if (forfait.economie) {
+                  <div class="economy-badge">
+                    {{ i18n.t('modal_save') }} {{ forfait.economie }}%
+                  </div>
+                }
+
+                <!-- Price -->
+                <div class="forfait-price">
+                  <span class="price-amount">{{ forfait.prix }}</span>
+                  <span class="price-currency">TND</span>
+                </div>
+
+                <!-- Subscribe Button -->
+                <button class="btn btn-forfait w-full">
+                  {{ i18n.t('modal_subscribe') }}
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Payment Modal -->
+  @if (showPaymentModal() && selectedForfaitForPayment(); as forfait) {
+    <app-payment
+      [amount]="forfait.prix"
+      [serviceNom]="abonnement()?.serviceNom || 'Service IoT'"
+      [dureeLabel]="forfait.dureeLabel"
+      (close)="showPaymentModal.set(false)"
+      (paymentSuccess)="onPaymentSuccess($event)">
+    </app-payment>
+  }
+
+</div>

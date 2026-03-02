@@ -1,0 +1,281 @@
+<!-- Abonnements Client - TRACI -->
+<div class="abonnements-page">
+
+  <!-- Header -->
+  <div class="page-header animate-fade-in">
+    <p class="page-eyebrow">{{ i18n.t('topbar_panel') }}</p>
+    <h1 class="page-title">{{ i18n.t('sub_title') }}</h1>
+    <p class="page-subtitle">{{ i18n.t('sub_subtitle') }}</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <!-- Total -->
+    <div class="stat-card" style="animation-delay: 0s">
+      <div class="stat-card__header">
+        <p class="stat-label">{{ i18n.t('sub_stat_total') }}</p>
+        <div class="stat-icon blue">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+      </div>
+      <p class="stat-value">{{ abonnementsStats().total }}</p>
+    </div>
+
+    <!-- Actifs -->
+    <div class="stat-card" style="animation-delay: 0.1s">
+      <div class="stat-card__header">
+        <p class="stat-label">{{ i18n.t('sub_stat_active') }}</p>
+        <div class="stat-icon teal">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+      <p class="stat-value">{{ abonnementsStats().actifs }}</p>
+    </div>
+
+    <!-- Expirés -->
+    <div class="stat-card" style="animation-delay: 0.2s">
+      <div class="stat-card__header">
+        <p class="stat-label">{{ i18n.t('sub_stat_expired') }}</p>
+        <div class="stat-icon gray">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+      <p class="stat-value">{{ abonnementsStats().expires }}</p>
+    </div>
+
+    <!-- Annulés -->
+    <div class="stat-card" style="animation-delay: 0.3s">
+      <div class="stat-card__header">
+        <p class="stat-label">{{ i18n.t('sub_stat_cancelled') }}</p>
+        <div class="stat-icon red">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+      <p class="stat-value">{{ abonnementsStats().annules }}</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <button
+        (click)="setFilter('ALL')"
+        [ngClass]="{'active': isFilterActive('ALL')}"
+        class="filter-btn">
+        {{ i18n.t('sub_filter_all') }}
+      </button>
+
+      <button
+        (click)="setFilter('ACTIVE')"
+        [ngClass]="{'active-success': isFilterActive('ACTIVE')}"
+        class="filter-btn">
+        {{ i18n.t('sub_filter_active') }}
+      </button>
+
+      <button
+        (click)="setFilter('EXPIRED')"
+        [ngClass]="{'active-gray': isFilterActive('EXPIRED')}"
+        class="filter-btn">
+        {{ i18n.t('sub_filter_expired') }}
+      </button>
+
+      <button
+        (click)="setFilter('CANCELLED')"
+        [ngClass]="{'active-danger': isFilterActive('CANCELLED')}"
+        class="filter-btn">
+        {{ i18n.t('sub_filter_cancelled') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Subscriptions List -->
+  @if (filteredAbonnements().length > 0) {
+    <div class="subscriptions-list">
+      @for (abo of filteredAbonnements(); track abo.id) {
+        <div class="subscription-item">
+          <!-- Header -->
+          <div class="subscription-header">
+            <h3 class="subscription-title">{{ abo.serviceNom }}</h3>
+
+            <span [ngClass]="getStatutBadgeClass(abo.statut)" class="subscription-badge">
+              {{ getStatutLabel(abo.statut) }}
+            </span>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="subscription-details">
+            <div class="detail-item">
+              <label>{{ i18n.t('sub_duration') }}</label>
+              <p class="value">{{ abo.dureeLabel }}</p>
+            </div>
+
+            <div class="detail-item">
+              <label>{{ i18n.t('sub_period') }}</label>
+              <p class="value">
+                {{ abo.dateDebut | date: 'dd/MM/yyyy' }} - {{ abo.dateFin | date: 'dd/MM/yyyy' }}
+              </p>
+            </div>
+
+            <div class="detail-item">
+              <label>{{ i18n.t('sub_price') }}</label>
+              <p class="value">{{ abo.prix }} TND</p>
+            </div>
+          </div>
+
+          <!-- Progress Bar (if active) -->
+          @if (abo.statut === StatutAbonnement.ACTIF) {
+            <div class="subscription-progress">
+              <div class="progress-info">
+                <p class="progress-label">
+                  {{ abo.joursRestants }} {{ i18n.t('sub_days_remaining') }}
+                </p>
+                <p class="progress-percentage">
+                  {{ getProgressPercentage(abo) | number:'1.0-0' }}%
+                </p>
+              </div>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  [style.width.%]="getProgressPercentage(abo)">
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- Actions -->
+          <div class="subscription-actions">
+            <button
+              (click)="openDetails(abo)"
+              class="btn-details">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {{ i18n.t('sub_details') }}
+            </button>
+
+            @if (abo.statut === StatutAbonnement.ACTIF || abo.statut === StatutAbonnement.EXPIRE) {
+              <button
+                (click)="renouvelerAbonnement(abo)"
+                class="btn-renew">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ i18n.t('sub_renew') }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Empty State -->
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 class="empty-title">{{ i18n.t('sub_no_subscriptions') }}</h3>
+      <p class="empty-subtitle">{{ i18n.t('sub_try_filters') }}</p>
+    </div>
+  }
+
+  <!-- Details Modal -->
+  @if (showDetailsModal() && selectedAbonnement(); as abo) {
+    <div class="modal-backdrop" (click)="closeDetails()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <button
+            (click)="closeDetails()"
+            class="modal-close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <h3 class="modal-title">{{ i18n.t('sub_subscription_number') }} #{{ abo.id }}</h3>
+          <p class="modal-subtitle">{{ abo.serviceNom }}</p>
+        </div>
+
+        <div class="modal-body">
+          <!-- Details Grid -->
+          <div class="modal-details-grid">
+            <div class="detail-box">
+              <label>{{ i18n.t('sub_duration') }}</label>
+              <p class="value">{{ abo.dureeLabel }}</p>
+            </div>
+
+            <div class="detail-box">
+              <label>{{ i18n.t('sub_price') }}</label>
+              <p class="value">{{ abo.prix }} TND</p>
+            </div>
+
+            <div class="detail-box">
+              <label>{{ i18n.t('sub_start_date') }}</label>
+              <p class="value">{{ abo.dateDebut | date: 'dd/MM/yyyy' }}</p>
+            </div>
+
+            <div class="detail-box">
+              <label>{{ i18n.t('sub_end_date') }}</label>
+              <p class="value">{{ abo.dateFin | date: 'dd/MM/yyyy' }}</p>
+            </div>
+
+            @if (abo.statut === StatutAbonnement.ACTIF) {
+              <div class="detail-box">
+                <label>{{ i18n.t('sub_days_remaining') }}</label>
+                <p class="value">{{ abo.joursRestants }} {{ i18n.t('dash_days') }}</p>
+              </div>
+            }
+
+            <div class="detail-box">
+              <label>{{ i18n.t('sub_auto_renewal') }}</label>
+              <p class="value">
+                {{ abo.autoRenouvellement ? i18n.t('sub_enabled') : i18n.t('sub_disabled') }}
+              </p>
+            </div>
+
+            <div class="detail-box full-width">
+              <label>Statut</label>
+              <span [ngClass]="getStatutBadgeClass(abo.statut)" class="subscription-badge">
+                {{ getStatutLabel(abo.statut) }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="modal-actions">
+            <button
+              (click)="closeDetails()"
+              class="btn-download">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              {{ i18n.t('btn_download') }}
+            </button>
+
+            @if (abo.statut === StatutAbonnement.ACTIF || abo.statut === StatutAbonnement.EXPIRE) {
+              <button
+                (click)="renouvelerAbonnement(abo)"
+                class="btn-renew">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {{ i18n.t('sub_renew') }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
