@@ -1,0 +1,368 @@
+<div class="page">
+
+  <!-- ── Header ───────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">{{ i18n.t('res_eyebrow') }}</p>
+      <h1 class="page-title">{{ i18n.t('nav_clients') }}</h1>
+    </div>
+    <button class="btn-add" (click)="openAdd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      {{ i18n.t('res_add_client') }}
+    </button>
+  </div>
+
+  <!-- ── Summary pills ─────────────────────────────────── -->
+  <div class="summary-row">
+    <div class="summary-pill">
+      <span class="pill-num">{{ totalCount }}</span>
+      <span class="pill-label">{{ i18n.t('filter_all') }}</span>
+    </div>
+    <div class="summary-pill summary-pill--active">
+      <span class="pill-num">{{ activeCount }}</span>
+      <span class="pill-label">{{ i18n.t('filter_active') }}</span>
+    </div>
+    <div class="summary-pill summary-pill--inactive">
+      <span class="pill-num">{{ inactiveCount }}</span>
+      <span class="pill-label">{{ i18n.t('filter_inactive') }}</span>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ────────────────────────────────────────── -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('res_search_clients')"/>
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="filterStatus==='all'"      (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='active'"   (click)="filterStatus='active'">{{ i18n.t('filter_active') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='inactive'" (click)="filterStatus='inactive'">{{ i18n.t('filter_inactive') }}</button>
+    </div>
+    <span class="result-count">{{ filtered.length }} {{ i18n.t('res_clients_found') }}</span>
+  </div>
+
+  <!-- ── Table ──────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-scroll">
+      <table class="clients-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{ i18n.t('col_name') }}</th>
+            <th>{{ i18n.t('form_region') }}</th>
+            <th>{{ i18n.t('res_device_source') }}</th>
+            <th>{{ i18n.t('res_sim_source') }}</th>
+            <th>{{ i18n.t('form_server_type') }}</th>
+            <th>{{ i18n.t('res_amount_paid') }}</th>
+            <th>{{ i18n.t('col_status') }}</th>
+            <th>{{ i18n.t('col_actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filtered" class="table-row" (click)="openPanel(c)">
+            <td class="cell-id">#{{ c.id }}</td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar">{{ initials(c) }}</div>
+                <div class="client-info">
+                  <p class="client-name">{{ c.firstName }} {{ c.lastName }}</p>
+                  <p class="client-email">{{ c.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td><span class="region-pill">{{ c.region }}</span></td>
+            <td>
+              <span class="source-badge" [class.badge--own]="c.deviceSource==='own'" [class.badge--ext]="c.deviceSource==='external'">
+                {{ i18n.t(c.deviceSource === 'own' ? 'res_device_own' : 'res_device_external') }}
+              </span>
+            </td>
+            <td>
+              <span class="source-badge" [class.badge--own]="c.simSource==='own'" [class.badge--res]="c.simSource==='reseller'">
+                {{ i18n.t(c.simSource === 'own' ? 'res_sim_own' : 'res_sim_reseller') }}
+              </span>
+            </td>
+            <td>
+              <span class="server-badge" [class.server--traci]="c.serverType==='traci'" [class.server--own]="c.serverType==='own'">
+                {{ c.serverType === 'traci' ? '🖥 Traci' : '🔒 Own' }}
+              </span>
+            </td>
+            <td class="cell-amount">{{ fmt(c.amountPaid) }} TND</td>
+            <td>
+              <span class="status-pill" [class.status--active]="c.status==='active'" [class.status--inactive]="c.status==='inactive'">
+                <span class="status-dot"></span>
+                {{ i18n.t('status_' + c.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="row-actions" (click)="$event.stopPropagation()">
+                <button class="row-btn" (click)="openEdit(c)" title="Edit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="row-btn row-btn--danger" (click)="openDelete(c)" title="Delete">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filtered.length === 0">
+            <td colspan="9" class="empty-row">{{ i18n.t('no_clients') }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ SLIDE-OVER PANEL ════════════════════════════════════ -->
+<div class="panel-backdrop" *ngIf="panelOpen" (click)="closePanel()"></div>
+
+<div class="slide-panel" [class.slide-panel--open]="panelOpen" *ngIf="panelClient">
+
+  <!-- Panel header -->
+  <div class="panel-topbar">
+    <button class="panel-back" (click)="closePanel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+      {{ i18n.t('btn_back') }}
+    </button>
+    <div class="panel-header-actions">
+      <button class="panel-btn-edit" (click)="openEdit(panelClient)">{{ i18n.t('btn_edit') }}</button>
+      <button class="panel-btn-delete" (click)="openDelete(panelClient)">{{ i18n.t('btn_delete') }}</button>
+    </div>
+  </div>
+
+  <div class="panel-eyebrow">{{ i18n.t('client_profile') }}</div>
+  <h2 class="panel-title">{{ panelClient.firstName }} {{ panelClient.lastName }}</h2>
+
+  <div class="panel-body">
+
+    <!-- Profile card -->
+    <div class="profile-card">
+      <div class="profile-avatar">{{ initials(panelClient) }}</div>
+      <div class="profile-main">
+        <div class="profile-name-row">
+          <p class="profile-name">{{ panelClient.firstName }} {{ panelClient.lastName }}</p>
+          <span class="status-pill" [class.status--active]="panelClient.status==='active'" [class.status--inactive]="panelClient.status==='inactive'">
+            <span class="status-dot"></span>
+            {{ i18n.t('status_' + panelClient.status) }}
+          </span>
+        </div>
+        <p class="profile-under">{{ i18n.t('under_reseller') }} {{ reseller.companyName }}</p>
+        <div class="profile-contacts">
+          <span class="contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            {{ panelClient.email }}
+          </span>
+          <span class="contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16l.19.92z"/>
+            </svg>
+            {{ panelClient.phone }}
+          </span>
+          <span class="contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            {{ panelClient.region }}
+          </span>
+          <span class="contact-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            {{ i18n.t('member_since') }} {{ panelClient.joinDate }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-row">
+      <div class="mini-stat">
+        <p class="mini-val">{{ panelClient.devices }}</p>
+        <p class="mini-label">{{ i18n.t('total_devices') }}</p>
+      </div>
+      <div class="mini-stat mini-stat--active">
+        <p class="mini-val">{{ panelClient.active }}</p>
+        <p class="mini-label">{{ i18n.t('active_devices') }}</p>
+      </div>
+      <div class="mini-stat mini-stat--inactive">
+        <p class="mini-val">{{ panelInactive }}</p>
+        <p class="mini-label">{{ i18n.t('inactive_devices') }}</p>
+      </div>
+      <div class="mini-stat">
+        <p class="mini-val mini-val--sm">{{ reseller.companyName }}</p>
+        <p class="mini-label">{{ i18n.t('assigned_reseller') }}</p>
+      </div>
+    </div>
+
+    <!-- Device connectivity bar -->
+    <div class="connectivity-card">
+      <p class="connectivity-title">{{ i18n.t('device_connectivity') }}</p>
+      <div class="conn-bar">
+        <div class="conn-bar__online"  [style.flex]="panelClient.active"></div>
+        <div class="conn-bar__offline" [style.flex]="panelInactive"></div>
+      </div>
+      <div class="conn-legend">
+        <span class="legend-dot legend-dot--online"></span>
+        {{ i18n.t('online') }} ({{ panelClient.active }})
+        <span class="legend-dot legend-dot--offline" style="margin-left:1.2rem"></span>
+        {{ i18n.t('offline') }} ({{ panelInactive }})
+      </div>
+    </div>
+
+    <!-- Extra info -->
+    <div class="extra-grid">
+      <div class="extra-item">
+        <p class="extra-label">{{ i18n.t('res_device_source') }}</p>
+        <span class="source-badge" [class.badge--own]="panelClient.deviceSource==='own'" [class.badge--ext]="panelClient.deviceSource==='external'">
+          {{ i18n.t(panelClient.deviceSource === 'own' ? 'res_device_own' : 'res_device_external') }}
+        </span>
+      </div>
+      <div class="extra-item">
+        <p class="extra-label">{{ i18n.t('res_sim_source') }}</p>
+        <span class="source-badge" [class.badge--own]="panelClient.simSource==='own'" [class.badge--res]="panelClient.simSource==='reseller'">
+          {{ i18n.t(panelClient.simSource === 'own' ? 'res_sim_own' : 'res_sim_reseller') }}
+        </span>
+      </div>
+      <div class="extra-item">
+        <p class="extra-label">{{ i18n.t('form_server_type') }}</p>
+        <span class="server-badge" [class.server--traci]="panelClient.serverType==='traci'" [class.server--own]="panelClient.serverType==='own'">
+          {{ panelClient.serverType === 'traci' ? '🖥 Traci' : '🔒 Own' }}
+        </span>
+      </div>
+      <div class="extra-item">
+        <p class="extra-label">{{ i18n.t('res_amount_paid') }}</p>
+        <p class="extra-value">{{ fmt(panelClient.amountPaid) }} TND</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ ADD / EDIT MODAL ════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ isEdit ? i18n.t('res_edit_client') : i18n.t('res_add_client') }}</h2>
+      <button class="modal-close" (click)="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>{{ i18n.t('profile_first_name') }}</label>
+          <input type="text" [(ngModel)]="form.firstName" [placeholder]="i18n.t('profile_first_name')"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('profile_last_name') }}</label>
+          <input type="text" [(ngModel)]="form.lastName" [placeholder]="i18n.t('profile_last_name')"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_email') }}</label>
+          <input type="email" [(ngModel)]="form.email" placeholder="email@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_phone') }}</label>
+          <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_region') }}</label>
+          <input type="text" [(ngModel)]="form.region" [placeholder]="i18n.t('form_region')"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_amount_paid') }} (TND)</label>
+          <input type="number" [(ngModel)]="form.amountPaid" placeholder="0"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_device_source') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="form.deviceSource==='own'">
+              <input type="radio" [(ngModel)]="form.deviceSource" value="own"/>{{ i18n.t('res_device_own') }}
+            </label>
+            <label class="radio-opt" [class.selected]="form.deviceSource==='external'">
+              <input type="radio" [(ngModel)]="form.deviceSource" value="external"/>{{ i18n.t('res_device_external') }}
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_sim_source') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="form.simSource==='own'">
+              <input type="radio" [(ngModel)]="form.simSource" value="own"/>{{ i18n.t('res_sim_own') }}
+            </label>
+            <label class="radio-opt" [class.selected]="form.simSource==='reseller'">
+              <input type="radio" [(ngModel)]="form.simSource" value="reseller"/>{{ i18n.t('res_sim_reseller') }}
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_server_type') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="form.serverType==='traci'">
+              <input type="radio" [(ngModel)]="form.serverType" value="traci"/>🖥 Traci
+            </label>
+            <label class="radio-opt" [class.selected]="form.serverType==='own'">
+              <input type="radio" [(ngModel)]="form.serverType" value="own"/>🔒 Own
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_status') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="form.status==='active'">
+              <input type="radio" [(ngModel)]="form.status" value="active"/>{{ i18n.t('status_active') }}
+            </label>
+            <label class="radio-opt" [class.selected]="form.status==='inactive'">
+              <input type="radio" [(ngModel)]="form.status" value="inactive"/>{{ i18n.t('status_inactive') }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save"   (click)="saveClient()">{{ i18n.t('btn_save') }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showDelete" (click)="closeDelete()">
+  <div class="modal modal--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title modal-title--danger">{{ i18n.t('delete_client_title') }}</h2>
+      <button class="modal-close" (click)="closeDelete()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <p class="delete-msg">
+        {{ i18n.t('delete_confirm_pre') }}
+        <strong>{{ selected?.firstName }} {{ selected?.lastName }}</strong>
+        {{ i18n.t('delete_confirm_post') }}
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDelete()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-delete" (click)="confirmDelete()">{{ i18n.t('btn_confirm_delete') }}</button>
+    </div>
+  </div>
+</div>

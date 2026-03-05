@@ -1,150 +1,266 @@
 <div class="page">
 
-  <!-- ── Header ─────────────────────────────────── -->
+  <!-- ══ HEADER ════════════════════════════════════════════ -->
   <div class="page-header">
     <div>
       <p class="page-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
       <h1 class="page-title">{{ i18n.t('dash_title') }}</h1>
     </div>
-    <div class="live-pill">
-      <span class="live-dot"></span>
-      {{ i18n.t('dash_live') }}
+    <div class="header-right">
+      <div class="live-pill">
+        <span class="live-dot"></span>
+        Live — {{ systemUptime }}% uptime
+      </div>
+      <div class="quick-actions">
+        <button class="qa-btn qa-btn--primary" (click)="navigateTo('/admin/resellers')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+          {{ i18n.t('adm_add_reseller') }}
+        </button>
+        <button class="qa-btn" (click)="navigateTo('/admin/clients')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+          {{ i18n.t('adm_add_client') }}
+        </button>
+        <button class="qa-btn qa-btn--amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          {{ i18n.t('adm_view_alerts') }} <span class="qa-badge">{{ riskAlerts.length }}</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- ── Stat cards ─────────────────────────────── -->
-  <div class="cards-row">
+  <!-- ══ KPI STRIP ══════════════════════════════════════════ -->
+  <div class="kpi-strip">
+    <div class="kpi-item">
+      <p class="kpi-val">{{ fmt(totalUsers) }}</p>
+      <p class="kpi-label">{{ i18n.t('adm_kpi_total_users') }}</p>
+    </div>
+    <div class="kpi-div"></div>
+    <div class="kpi-item">
+      <p class="kpi-val">{{ activePercent }}<span class="kpi-unit">%</span></p>
+      <p class="kpi-label">{{ i18n.t('adm_kpi_active_devices') }}</p>
+    </div>
+    <div class="kpi-div"></div>
+    <div class="kpi-item">
+      <p class="kpi-val">{{ avgDeviceUptime }}<span class="kpi-unit">%</span></p>
+      <p class="kpi-label">{{ i18n.t('adm_kpi_avg_uptime') }}</p>
+    </div>
+    <div class="kpi-div"></div>
+    <div class="kpi-item">
+      <p class="kpi-val">{{ systemUptime }}<span class="kpi-unit">%</span></p>
+      <p class="kpi-label">{{ i18n.t('adm_kpi_system_avail') }}</p>
+    </div>
+    <div class="kpi-div"></div>
+    <div class="kpi-item">
+      <p class="kpi-val kpi-val--red">{{ systemHealth.criticalAlerts }}</p>
+      <p class="kpi-label">{{ i18n.t('adm_kpi_critical') }}</p>
+    </div>
+  </div>
+
+  <!-- ══ TOP ROW — 4 GROWTH CARDS ══════════════════════════ -->
+  <div class="top-row">
 
     <!-- Resellers -->
     <div class="stat-card" (click)="navigateTo('/admin/resellers')">
-      <div class="stat-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
+      <div class="stat-card__top">
+        <div class="stat-icon stat-icon--purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <span class="growth-chip">+{{ growthResellers }}%</span>
       </div>
-      <div class="stat-card__body">
-        <p class="stat-label">{{ i18n.t('stat_resellers') }}</p>
-        <p class="stat-value">{{ fmt(totalResellers) }}</p>
-        <p class="stat-hint">{{ i18n.t('manage_resellers') }}</p>
-      </div>
+      <p class="stat-num">{{ fmt(totalResellers) }}</p>
+      <p class="stat-label">{{ i18n.t('stat_resellers') }}</p>
+      <p class="stat-sub">+{{ newResellersMonth }} {{ i18n.t('adm_this_month') }}</p>
+      <svg class="sparkline" viewBox="0 0 80 28" preserveAspectRatio="none">
+        <path [attr.d]="buildPath(sparkResellers)" fill="none" stroke="var(--purple)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
 
     <!-- Clients -->
     <div class="stat-card" (click)="navigateTo('/admin/clients')">
-      <div class="stat-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
+      <div class="stat-card__top">
+        <div class="stat-icon stat-icon--teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <span class="growth-chip growth-chip--teal">+{{ growthClients }}%</span>
       </div>
-      <div class="stat-card__body">
-        <p class="stat-label">{{ i18n.t('stat_clients') }}</p>
-        <p class="stat-value">{{ fmt(totalClients) }}</p>
-        <p class="stat-hint">{{ i18n.t('manage_clients') }}</p>
-      </div>
+      <p class="stat-num">{{ fmt(totalClients) }}</p>
+      <p class="stat-label">{{ i18n.t('stat_clients') }}</p>
+      <p class="stat-sub">+{{ newClientsMonth }} {{ i18n.t('adm_this_month') }}</p>
+      <svg class="sparkline" viewBox="0 0 80 28" preserveAspectRatio="none">
+        <path [attr.d]="buildPath(sparkClients)" fill="none" stroke="var(--orange)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
 
     <!-- Devices -->
-    <div class="stat-card" (click)="navigateTo('/admin/devices')">
-      <div class="stat-card__icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="2" width="14" height="20" rx="2"/>
-          <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
-        </svg>
-      </div>
-      <div class="stat-card__body">
-        <p class="stat-label">{{ i18n.t('stat_devices') }}</p>
-        <p class="stat-value">{{ fmt(totalDevices) }}</p>
-        <div class="device-bar">
-          <div class="device-bar__fill" [style.width.%]="activePercent"></div>
+    <div class="stat-card">
+      <div class="stat-card__top">
+        <div class="stat-icon stat-icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+          </svg>
         </div>
-        <div class="device-bar__labels">
-          <span class="bar-active">{{ activePercent }}{{ i18n.t('pct_active') }}</span>
-          <span class="bar-inactive">{{ 100 - activePercent }}{{ i18n.t('pct_inactive') }}</span>
+        <span class="growth-chip growth-chip--blue">+{{ growthDevices }}%</span>
+      </div>
+      <p class="stat-num">{{ fmt(totalDevices) }}</p>
+      <p class="stat-label">{{ i18n.t('stat_devices') }}</p>
+      <p class="stat-sub">+{{ newDevicesMonth }} {{ i18n.t('adm_this_month') }}</p>
+      <svg class="sparkline" viewBox="0 0 80 28" preserveAspectRatio="none">
+        <path [attr.d]="buildPath(sparkDevices)" fill="none" stroke="#3B82F6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Active % -->
+    <div class="stat-card stat-card--donut">
+      <div class="stat-card__top">
+        <p class="stat-label">{{ i18n.t('stat_active') }}</p>
+        <span class="growth-chip growth-chip--green">{{ activePercent }}%</span>
+      </div>
+      <div class="donut-wrap">
+        <svg width="96" height="96" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border)" stroke-width="9"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--orange)" stroke-width="9"
+            stroke-linecap="round"
+            [attr.stroke-dasharray]="circumference"
+            [attr.stroke-dashoffset]="activeOffset"
+            transform="rotate(-90 50 50)"/>
+        </svg>
+        <div class="donut-center">
+          <p class="donut-num">{{ activePercent }}%</p>
+          <p class="donut-sub">ACTIVE</p>
+        </div>
+      </div>
+      <div class="donut-legend">
+        <span><span class="dot dot--teal"></span>{{ fmt(activeDevices) }}</span>
+        <span><span class="dot dot--gray"></span>{{ fmt(offlineDevices) }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ MIDDLE ROW — SYSTEM HEALTH + RISK ══════════════════ -->
+  <div class="mid-row">
+
+    <!-- System Health -->
+    <div class="card health-card">
+      <div class="card-header">
+        <p class="card-title">{{ i18n.t('adm_system_health') }}</p>
+        <div class="live-pill live-pill--sm">
+          <span class="live-dot"></span> Live
+        </div>
+      </div>
+
+      <div class="health-grid">
+        <div class="health-item" [class]="healthColor(systemHealth.server)">
+          <div class="health-dot-wrap">
+            <span class="health-dot"></span>
+          </div>
+          <div class="health-body">
+            <p class="health-label">{{ i18n.t('adm_server_status') }}</p>
+            <p class="health-val">{{ systemHealth.server | titlecase }}</p>
+          </div>
+          <svg class="health-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </div>
+
+        <div class="health-item" [class]="healthColor(systemHealth.api)">
+          <div class="health-dot-wrap"><span class="health-dot"></span></div>
+          <div class="health-body">
+            <p class="health-label">{{ i18n.t('adm_api_status') }}</p>
+            <p class="health-val">{{ systemHealth.api | titlecase }}</p>
+          </div>
+          <svg class="health-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+
+        <div class="health-item health--amber">
+          <div class="health-dot-wrap"><span class="health-dot"></span></div>
+          <div class="health-body">
+            <p class="health-label">{{ i18n.t('adm_devices_offline') }}</p>
+            <p class="health-val">{{ fmt(systemHealth.offlineDevices) }}</p>
+          </div>
+          <svg class="health-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="10" x2="15" y2="16"/><line x1="15" y1="10" x2="9" y2="16"/></svg>
+        </div>
+
+        <div class="health-item" [class]="systemHealth.criticalAlerts > 0 ? 'health--red' : 'health--green'">
+          <div class="health-dot-wrap"><span class="health-dot"></span></div>
+          <div class="health-body">
+            <p class="health-label">{{ i18n.t('adm_critical_alerts') }}</p>
+            <p class="health-val">{{ systemHealth.criticalAlerts }}</p>
+          </div>
+          <svg class="health-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk & Alerts -->
+    <div class="card risk-card">
+      <p class="card-title">{{ i18n.t('adm_risk_title') }}</p>
+      <div class="risk-list">
+        <div class="risk-item" *ngFor="let r of riskAlerts" [class]="riskClass(r.level)">
+          <div class="risk-icon">
+            <svg *ngIf="r.level === 'critical'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg *ngIf="r.level === 'warning'"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <svg *ngIf="r.level === 'info'"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </div>
+          <p class="risk-msg">{{ i18n.t(r.message) }}</p>
+          <span class="risk-count">{{ r.count }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity feed -->
+    <div class="card activity-card">
+      <p class="card-title">{{ i18n.t('recent_activity') }}</p>
+      <div class="act-list">
+        <div class="act-item" *ngFor="let a of recentActivity">
+          <div class="act-icon" [class]="actClass(a.icon)">
+            <svg *ngIf="a.icon==='reseller'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <svg *ngIf="a.icon==='client'"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <svg *ngIf="a.icon==='device'"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="10" x2="15" y2="16"/><line x1="15" y1="10" x2="9" y2="16"/></svg>
+          </div>
+          <div class="act-body">
+            <p class="act-label">{{ i18n.t(a.labelKey) }}</p>
+            <p class="act-sub">{{ a.sub }}</p>
+          </div>
+          <span class="act-time">{{ a.time }}{{ i18n.t(a.unit) }}</span>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- ── Bottom section ─────────────────────────── -->
+  <!-- ══ BOTTOM ROW — TOP RESELLERS ═════════════════════════ -->
   <div class="bottom-row">
-
-    <!-- Donut chart card -->
-    <div class="donut-card">
-      <div class="section-header">
-        <p class="section-title">{{ i18n.t('device_status') }}</p>
+    <div class="card top-resellers-card">
+      <div class="card-header">
+        <p class="card-title">{{ i18n.t('adm_top_resellers') }}</p>
+        <button class="view-all-btn" (click)="navigateTo('/admin/resellers')">{{ i18n.t('adm_view_all') }} →</button>
       </div>
-
-      <div class="donut-body">
-        <div class="donut-wrap">
-          <svg viewBox="0 0 100 100" class="donut-svg">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#E5E7EB" stroke-width="10"/>
-            <circle
-              cx="50" cy="50" r="42"
-              fill="none"
-              stroke="#0D9488"
-              stroke-width="10"
-              stroke-linecap="round"
-              [attr.stroke-dasharray]="circumference"
-              [attr.stroke-dashoffset]="activeOffset"
-              transform="rotate(-90 50 50)"
-              class="donut-arc"
-            />
-          </svg>
-          <div class="donut-center">
-            <span class="donut-pct">{{ activePercent }}%</span>
-            <span class="donut-sub">{{ i18n.t('active') }}</span>
-          </div>
+      <div class="top-table">
+        <div class="top-table__head">
+          <span>#</span>
+          <span>{{ i18n.t('col_name') }}</span>
+          <span>{{ i18n.t('stat_clients') }}</span>
+          <span>{{ i18n.t('stat_devices') }}</span>
+          <span>{{ i18n.t('active') }}</span>
         </div>
-
-        <div class="donut-legend">
-          <div class="legend-row">
-            <span class="legend-dot legend-dot--active"></span>
-            <span class="legend-key">{{ i18n.t('active') }}</span>
-            <span class="legend-val">{{ fmt(activeDevices) }}</span>
-          </div>
-          <div class="legend-row">
-            <span class="legend-dot legend-dot--inactive"></span>
-            <span class="legend-key">{{ i18n.t('inactive') }}</span>
-            <span class="legend-val">{{ fmt(inactiveDevices) }}</span>
-          </div>
+        <div class="top-table__row" *ngFor="let r of topResellers; let i = index">
+          <span class="rank" [class.rank--gold]="i===0" [class.rank--silver]="i===1" [class.rank--bronze]="i===2">{{ i + 1 }}</span>
+          <span class="res-name">{{ r.name }}</span>
+          <span class="res-num">{{ r.clients }}</span>
+          <span class="res-num">{{ r.devices }}</span>
+          <span>
+            <div class="rate-bar">
+              <div class="rate-bar__fill" [style.width.%]="r.activeRate" [class.rate--high]="r.activeRate>=90" [class.rate--mid]="r.activeRate>=80 && r.activeRate<90" [class.rate--low]="r.activeRate<80"></div>
+            </div>
+            <span class="rate-label" [class.rate-label--high]="r.activeRate>=90">{{ r.activeRate }}%</span>
+          </span>
         </div>
       </div>
     </div>
-
-    <!-- Recent activity card -->
-    <div class="activity-card">
-      <div class="section-header">
-        <p class="section-title">{{ i18n.t('recent_activity') }}</p>
-      </div>
-
-      <div class="activity-list">
-        <div class="activity-item" *ngFor="let a of recentActivity">
-          <div class="activity-icon" [class]="'activity-icon--' + a.icon">
-            <svg *ngIf="a.icon === 'reseller'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <svg *ngIf="a.icon === 'client'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
-            <svg *ngIf="a.icon === 'device'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
-            </svg>
-          </div>
-          <div class="activity-body">
-            <p class="activity-label">{{ i18n.t(a.labelKey) }}</p>
-            <p class="activity-sub">{{ a.sub }}</p>
-          </div>
-          <span class="activity-time">{{ a.time }}{{ i18n.t(a.unit) }}</span>
-        </div>
-      </div>
-    </div>
-
   </div>
 
 </div>

@@ -80,6 +80,30 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
+  // RESELLER PAGES
+  // ══════════════════════════════════════════════════════════
+  {
+    path: 'reseller-dashboard',
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/reseller/dashboard/dashboard').then(m => m.default),
+      },
+      {
+        path: 'clients',
+        loadComponent: () =>
+          import('./features/reseller/client/client').then(m => m.default),
+      },
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      }
+    ]
+  },
+
+  // ══════════════════════════════════════════════════════════
   // LOGIN PAGES (public, no sidebar)
   // ══════════════════════════════════════════════════════════
   { path: 'client',             component: LoginClient },
