@@ -1,7 +1,7 @@
-<div class="reseller-shell" [class.sidebar-collapsed]="collapsed">
+<div class="reseller-shell">
 
   <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
-  <aside class="sidebar">
+  <aside class="sidebar" [style.width]="collapsed ? '64px' : '240px'">
 
     <!-- Logo -->
     <div class="sidebar-logo">
@@ -44,7 +44,7 @@
   </aside>
 
   <!-- ══ RIGHT SIDE ════════════════════════════════════════════ -->
-  <div class="right-side">
+  <div class="right-side" [style.marginLeft]="collapsed ? '64px' : '240px'">
 
     <!-- Topbar -->
     <header class="topbar">

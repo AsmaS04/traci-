@@ -22,7 +22,7 @@
   <div class="top-row">
 
     <!-- Total Clients -->
-    <div class="stat-card" (click)="navigateTo('/reseller/clients')">
+    <div class="stat-card" (click)="navigateTo('/reseller-dashboard/clients')">
       <div class="stat-card__icon stat-icon--teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -42,7 +42,7 @@
     </div>
 
     <!-- Devices Under Management -->
-    <div class="stat-card" (click)="navigateTo('/reseller/devices')">
+    <div class="stat-card" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="stat-card__icon stat-icon--blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="2"/>
@@ -81,7 +81,7 @@
     </div>
 
     <!-- Alerts -->
-    <div class="stat-card stat-card--alert" [class.stat-card--has-alerts]="alertsCount > 0" (click)="navigateTo('/reseller/devices')">
+    <div class="stat-card stat-card--alert" [class.stat-card--has-alerts]="alertsCount > 0" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="stat-card__icon stat-icon--amber">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -278,7 +278,7 @@
         <span class="expiring-badge" *ngIf="expiringDevices.length > 0">{{ expiringDevices.length }}</span>
       </div>
       <div class="expiring-list">
-        <div class="expiring-item" *ngFor="let d of expiringDevices" [class]="urgencyClass(d.daysLeft)" (click)="navigateTo('/reseller/devices')">
+        <div class="expiring-item" *ngFor="let d of expiringDevices" [class]="urgencyClass(d.daysLeft)" (click)="navigateTo('/reseller-dashboard/devices')">
           <div class="expiring-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="5" y="2" width="14" height="20" rx="2"/>
@@ -298,7 +298,7 @@
     <div class="card quick-card">
       <p class="card-title">{{ i18n.t('res_quick_actions') }}</p>
       <div class="quick-list">
-        <button class="quick-btn quick-btn--primary" (click)="navigateTo('/reseller/clients')">
+        <button class="quick-btn quick-btn--primary" (click)="openAddClient()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
@@ -307,7 +307,7 @@
           </svg>
           {{ i18n.t('res_add_client') }}
         </button>
-        <button class="quick-btn" (click)="navigateTo('/reseller/devices')">
+        <button class="quick-btn" (click)="navigateTo('/reseller-dashboard/devices')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <rect x="5" y="2" width="14" height="20" rx="2"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
@@ -315,7 +315,7 @@
           </svg>
           {{ i18n.t('res_assign_device') }}
         </button>
-        <button class="quick-btn quick-btn--danger" (click)="navigateTo('/reseller/devices')">
+        <button class="quick-btn quick-btn--danger" (click)="navigateTo('/reseller-dashboard/devices')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <rect x="5" y="2" width="14" height="20" rx="2"/>
             <line x1="9" y1="10" x2="15" y2="16"/>
@@ -323,7 +323,7 @@
           </svg>
           {{ i18n.t('res_deactivate_device') }}
         </button>
-        <button class="quick-btn quick-btn--amber" (click)="navigateTo('/reseller/devices')">
+        <button class="quick-btn quick-btn--amber" (click)="navigateTo('/reseller-dashboard/devices')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/>
@@ -334,5 +334,91 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ ADD CLIENT MODAL ═════════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showAddModal" (click)="closeAddModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('res_add_client') }}</h2>
+      <button class="modal-close" (click)="closeAddModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>{{ i18n.t('profile_first_name') }}</label>
+          <input type="text" [(ngModel)]="addForm.firstName" [placeholder]="i18n.t('profile_first_name')"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('profile_last_name') }}</label>
+          <input type="text" [(ngModel)]="addForm.lastName" [placeholder]="i18n.t('profile_last_name')"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_email') }}</label>
+          <input type="email" [(ngModel)]="addForm.email" placeholder="email@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_phone') }}</label>
+          <input type="tel" [(ngModel)]="addForm.phone" placeholder="+216 XX XXX XXX"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_region') }}</label>
+          <input type="text" [(ngModel)]="addForm.region" [placeholder]="i18n.t('form_region')"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_amount_paid') }} (TND)</label>
+          <input type="number" [(ngModel)]="addForm.amountPaid" placeholder="0"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_device_source') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="addForm.deviceSource==='own'">
+              <input type="radio" [(ngModel)]="addForm.deviceSource" value="own"/>{{ i18n.t('res_device_own') }}
+            </label>
+            <label class="radio-opt" [class.selected]="addForm.deviceSource==='external'">
+              <input type="radio" [(ngModel)]="addForm.deviceSource" value="external"/>{{ i18n.t('res_device_external') }}
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_sim_source') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="addForm.simSource==='own'">
+              <input type="radio" [(ngModel)]="addForm.simSource" value="own"/>{{ i18n.t('res_sim_own') }}
+            </label>
+            <label class="radio-opt" [class.selected]="addForm.simSource==='reseller'">
+              <input type="radio" [(ngModel)]="addForm.simSource" value="reseller"/>{{ i18n.t('res_sim_reseller') }}
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_server_type') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="addForm.serverType==='traci'">
+              <input type="radio" [(ngModel)]="addForm.serverType" value="traci"/>🖥 Traci
+            </label>
+            <label class="radio-opt" [class.selected]="addForm.serverType==='own'">
+              <input type="radio" [(ngModel)]="addForm.serverType" value="own"/>🔒 Own
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('form_status') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="addForm.status==='active'">
+              <input type="radio" [(ngModel)]="addForm.status" value="active"/>{{ i18n.t('status_active') }}
+            </label>
+            <label class="radio-opt" [class.selected]="addForm.status==='inactive'">
+              <input type="radio" [(ngModel)]="addForm.status" value="inactive"/>{{ i18n.t('status_inactive') }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeAddModal()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save"   (click)="saveNewClient()">{{ i18n.t('btn_save') }}</button>
+    </div>
   </div>
 </div>

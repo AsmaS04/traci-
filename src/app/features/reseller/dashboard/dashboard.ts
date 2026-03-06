@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import {
@@ -21,7 +22,7 @@ interface SparkPoint { day: number; value: number; }
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
 })
 export default class ResellerDashboardComponent {
 
@@ -116,4 +117,31 @@ export default class ResellerDashboardComponent {
     return '';
   }
   navigateTo(path: string) { this.router.navigate([path]); }
+  // ── Add Client modal ──────────────────────────────────
+  showAddModal = false;
+  addForm: any = {};
+
+  openAddClient() {
+    this.addForm = {
+      firstName: '', lastName: '', email: '', phone: '',
+      region: '', deviceSource: 'own', simSource: 'reseller',
+      serverType: 'traci', amountPaid: 0, status: 'active',
+    };
+    this.showAddModal = true;
+  }
+
+  saveNewClient() {
+    const newId = Math.max(...this.clients.map((c: any) => c.id), 0) + 1;
+    (this.clients as any[]).push({
+      ...this.addForm,
+      id: newId,
+      devices: 0, active: 0,
+      lastActivity: 'just now',
+      joinDate: new Date().toISOString().slice(0, 10),
+    });
+    this.showAddModal = false;
+  }
+
+  closeAddModal() { this.showAddModal = false; }
+
 }

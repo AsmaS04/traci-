@@ -80,10 +80,12 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // RESELLER PAGES
+  // RESELLER SHELL (sidebar + router-outlet)
   // ══════════════════════════════════════════════════════════
   {
     path: 'reseller-dashboard',
+    loadComponent: () =>
+      import('./pages/reseller/reseller-layout/reseller-layout').then(m => m.default),
     children: [
       {
         path: 'dashboard',

@@ -12,7 +12,7 @@
         Live — {{ systemUptime }}% uptime
       </div>
       <div class="quick-actions">
-        <button class="qa-btn qa-btn--primary" (click)="navigateTo('/admin/resellers')">
+        <button class="qa-btn qa-btn--primary" (click)="openAddReseller()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
           {{ i18n.t('adm_add_reseller') }}
         </button>
@@ -263,4 +263,68 @@
     </div>
   </div>
 
+</div>
+
+<!-- ══ ADD RESELLER MODAL ═══════════════════════════════════ -->
+<div class="modal-backdrop" *ngIf="showAddReseller" (click)="closeAddReseller()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('adm_add_reseller') }}</h2>
+      <button class="modal-close" (click)="closeAddReseller()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>FULL NAME</label>
+          <input type="text" [(ngModel)]="resellerForm.name" placeholder="e.g. Khalil Mansour"/>
+        </div>
+        <div class="form-group">
+          <label>COMPANY NAME</label>
+          <input type="text" [(ngModel)]="resellerForm.company" placeholder="e.g. TechVision SARL"/>
+        </div>
+        <div class="form-group">
+          <label>EMAIL</label>
+          <input type="email" [(ngModel)]="resellerForm.email" placeholder="email@company.tn"/>
+        </div>
+        <div class="form-group">
+          <label>PHONE</label>
+          <input type="tel" [(ngModel)]="resellerForm.phone" placeholder="+216 XX XXX XXX"/>
+        </div>
+        <div class="form-group form-group--full">
+          <label>ADDRESS</label>
+          <input type="text" [(ngModel)]="resellerForm.address" placeholder="e.g. 12 Rue de Marseille, Tunis 1000"/>
+        </div>
+        <div class="form-group">
+          <label>REGION</label>
+          <select [(ngModel)]="resellerForm.region">
+            <option value="Tunis">Tunis</option>
+            <option value="Sfax">Sfax</option>
+            <option value="Sousse">Sousse</option>
+            <option value="Bizerte">Bizerte</option>
+            <option value="Nabeul">Nabeul</option>
+            <option value="Kairouan">Kairouan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>SERVER TYPE</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="resellerForm.serverType==='traci'">
+              <input type="radio" [(ngModel)]="resellerForm.serverType" value="traci"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+              Traci Server
+            </label>
+            <label class="radio-opt" [class.selected]="resellerForm.serverType==='own'">
+              <input type="radio" [(ngModel)]="resellerForm.serverType" value="own"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Own Server
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeAddReseller()">Cancel</button>
+      <button class="btn-save" (click)="saveReseller()">+ Add Reseller</button>
+    </div>
+  </div>
 </div>

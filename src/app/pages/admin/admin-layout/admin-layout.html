@@ -1,7 +1,7 @@
-<div class="admin-shell" [class.sidebar-collapsed]="collapsed">
+<div class="admin-shell">
 
   <!-- ═══════════════════ SIDEBAR ═══════════════════ -->
-  <aside class="sidebar">
+  <aside class="sidebar" [style.width]="collapsed ? '64px' : '240px'">
 
     <div class="sidebar-logo">
       <span class="logo-text" *ngIf="!collapsed">TRACI</span>
@@ -41,7 +41,7 @@
   </aside>
 
   <!-- ═══════════════════ RIGHT SIDE ════════════════ -->
-  <div class="right-side">
+  <div class="right-side" [style.marginLeft]="collapsed ? '64px' : '240px'">
 
     <header class="topbar">
       <span class="topbar-brand">{{ i18n.t('topbar_panel') }}</span>

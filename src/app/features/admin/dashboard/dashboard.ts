@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 
@@ -12,7 +13,7 @@ interface RiskAlert   { level: 'critical' | 'warning' | 'info'; message: string;
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
 })
 export class Dashboard {
 
@@ -122,6 +123,25 @@ export class Dashboard {
     return 'act--red';
   }
 
+
+  // ── Add Reseller modal ────────────────────────────────
+  showAddReseller = false;
+  resellerForm: any = {};
+
+  openAddReseller() {
+    this.resellerForm = { name: '', company: '', email: '', phone: '', address: '', region: 'Tunis', serverType: 'traci' };
+    this.showAddReseller = true;
+  }
+  closeAddReseller() { this.showAddReseller = false; }
+  saveReseller() {
+    this.totalResellers++;
+    this.newResellersMonth++;
+    this.topResellers = [
+      { name: this.resellerForm.company || this.resellerForm.name, clients: 0, devices: 0, activeRate: 100 },
+      ...this.topResellers.slice(0, 4)
+    ];
+    this.showAddReseller = false;
+  }
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
   navigateTo(p: string) { this.router.navigate([p]); }
 }
