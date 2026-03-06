@@ -64,7 +64,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let c of filtered" class="table-row" (click)="openPanel(c)">
+          @for (c of filtered; track c.id) {
+          <tr class="table-row" (click)="openPanel(c)">
             <td class="cell-id">#{{ c.id }}</td>
             <td>
               <div class="client-cell">
@@ -116,9 +117,12 @@
               </div>
             </td>
           </tr>
-          <tr *ngIf="filtered.length === 0">
-            <td colspan="9" class="empty-row">{{ i18n.t('no_clients') }}</td>
-          </tr>
+          }
+          @if (filtered.length === 0) {
+            <tr>
+              <td colspan="9" class="empty-row">{{ i18n.t('no_clients') }}</td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
@@ -127,9 +131,10 @@
 </div>
 
 <!-- ══ SLIDE-OVER PANEL ════════════════════════════════════ -->
-<div class="panel-backdrop" *ngIf="panelOpen" (click)="closePanel()"></div>
+@if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
 
-<div class="slide-panel" [class.slide-panel--open]="panelOpen" *ngIf="panelClient">
+@if (panelClient) {
+<div class="slide-panel" [class.slide-panel--open]="panelOpen">
 
   <!-- Panel header -->
   <div class="panel-topbar">
@@ -259,9 +264,11 @@
 
   </div>
 </div>
+}
 
 <!-- ══ ADD / EDIT MODAL ════════════════════════════════════ -->
-<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+@if (showModal) {
+<div class="modal-backdrop" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2 class="modal-title">{{ isEdit ? i18n.t('res_edit_client') : i18n.t('res_add_client') }}</h2>
@@ -345,9 +352,11 @@
     </div>
   </div>
 </div>
+}
 
 <!-- ══ DELETE CONFIRM ══════════════════════════════════════ -->
-<div class="modal-backdrop" *ngIf="showDelete" (click)="closeDelete()">
+@if (showDelete) {
+<div class="modal-backdrop" (click)="closeDelete()">
   <div class="modal modal--sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2 class="modal-title modal-title--danger">{{ i18n.t('delete_client_title') }}</h2>
@@ -366,3 +375,4 @@
     </div>
   </div>
 </div>
+}

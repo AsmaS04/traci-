@@ -1,7 +1,7 @@
 <div class="page">
 
   <!-- ═══════════════════ TABLE VIEW ═══════════════════ -->
-  <ng-container *ngIf="view === 'table'">
+  @if (view === 'table') {
 
     <header class="page-header">
       <div>
@@ -18,7 +18,7 @@
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" type="text" [placeholder]="i18n.t('search_clients')" [(ngModel)]="searchQuery"/>
-        <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery=''">✕</button>
+        @if (searchQuery) { <button class="search-clear" (click)="searchQuery=''">✕</button> }
       </div>
       <div class="filter-tabs">
         <button [class.active]="filterActive==='all'"      (click)="filterActive='all'">{{ i18n.t('filter_all') }}</button>
@@ -42,7 +42,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let c of filtered" (click)="openDetail(c)" class="table-row">
+          @for (c of filtered; track c.id) {
+          <tr (click)="openDetail(c)" class="table-row">
             <td class="col-id"><span class="id-badge">#{{ c.id }}</span></td>
             <td>
               <div class="name-cell">
@@ -81,20 +82,23 @@
               </button>
             </td>
           </tr>
-          <tr *ngIf="filtered.length === 0">
-            <td colspan="7" class="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <p>{{ i18n.t('no_clients') }}</p>
-            </td>
-          </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="7" class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <p>{{ i18n.t('no_clients') }}</p>
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
 
-  </ng-container>
+  }
 
   <!-- ═══════════════════ DETAIL VIEW ══════════════════ -->
-  <ng-container *ngIf="view === 'detail' && selected">
+  @if (view === 'detail' && selected) {
 
     <header class="page-header">
       <div class="detail-header-left">
@@ -164,24 +168,27 @@
       </div>
     </div>
 
-    <div class="connectivity-card" *ngIf="selected.totalDevices > 0">
-      <p class="connectivity-title">{{ i18n.t('device_connectivity') }}</p>
-      <div class="connectivity-bar">
-        <div class="connectivity-fill connectivity-fill--active"
-          [style.width.%]="selected.activeDevices / selected.totalDevices * 100"></div>
-        <div class="connectivity-fill connectivity-fill--inactive"
-          [style.width.%]="(selected.totalDevices - selected.activeDevices) / selected.totalDevices * 100"></div>
+    @if (selected.totalDevices > 0) {
+      <div class="connectivity-card">
+        <p class="connectivity-title">{{ i18n.t('device_connectivity') }}</p>
+        <div class="connectivity-bar">
+          <div class="connectivity-fill connectivity-fill--active"
+            [style.width.%]="selected.activeDevices / selected.totalDevices * 100"></div>
+          <div class="connectivity-fill connectivity-fill--inactive"
+            [style.width.%]="(selected.totalDevices - selected.activeDevices) / selected.totalDevices * 100"></div>
+        </div>
+        <div class="connectivity-legend">
+          <span><span class="cleg-dot" style="background:var(--teal)"></span>{{ i18n.t('online') }} ({{ selected.activeDevices }})</span>
+          <span><span class="cleg-dot" style="background:var(--red)"></span>{{ i18n.t('offline') }} ({{ selected.totalDevices - selected.activeDevices }})</span>
+        </div>
       </div>
-      <div class="connectivity-legend">
-        <span><span class="cleg-dot" style="background:var(--teal)"></span>{{ i18n.t('online') }} ({{ selected.activeDevices }})</span>
-        <span><span class="cleg-dot" style="background:var(--red)"></span>{{ i18n.t('offline') }} ({{ selected.totalDevices - selected.activeDevices }})</span>
-      </div>
-    </div>
+    }
 
-  </ng-container>
+  }
 
   <!-- ═══════════════════ ADD/EDIT MODAL ═══════════════ -->
-  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  @if (showModal) {
+  <div class="modal-backdrop" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">{{ modalMode === 'add' ? i18n.t('modal_add_client') : i18n.t('modal_edit_client') }}</h2>
@@ -206,7 +213,7 @@
           <div class="form-group">
             <label>{{ i18n.t('form_region') }}</label>
             <select [(ngModel)]="formData.region">
-              <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+              @for (r of regions; track r) { <option [value]="r">{{ r }}</option> }
             </select>
           </div>
         </div>
@@ -214,7 +221,7 @@
           <div class="form-group">
             <label>{{ i18n.t('form_reseller') }}</label>
             <select [(ngModel)]="formData.resellerId" (ngModelChange)="onResellerChange()">
-              <option *ngFor="let r of resellers" [value]="r.id">{{ r.companyName }}</option>
+              @for (r of resellers; track r.id) { <option [value]="r.id">{{ r.companyName }}</option> }
             </select>
           </div>
           <div class="form-group form-group--toggle">
@@ -236,9 +243,11 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- ═══════════════════ DELETE CONFIRM ═══════════════ -->
-  <div class="modal-backdrop" *ngIf="showDeleteModal" (click)="cancelDelete()">
+  @if (showDeleteModal) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
     <div class="modal modal--sm" (click)="$event.stopPropagation()">
       <div class="delete-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -251,5 +260,6 @@
       </div>
     </div>
   </div>
+  }
 
 </div>

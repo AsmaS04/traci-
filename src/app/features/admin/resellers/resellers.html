@@ -1,7 +1,7 @@
 <div class="page">
 
   <!-- ═══════════════════ TABLE VIEW ═══════════════════ -->
-  <ng-container *ngIf="view === 'table'">
+  @if (view === 'table') {
 
     <header class="page-header">
       <div>
@@ -18,7 +18,7 @@
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" type="text" [placeholder]="i18n.t('search_resellers')" [(ngModel)]="searchQuery"/>
-        <button class="search-clear" *ngIf="searchQuery" (click)="searchQuery=''">✕</button>
+        @if (searchQuery) { <button class="search-clear" (click)="searchQuery=''">✕</button> }
       </div>
       <div class="filter-tabs">
         <button [class.active]="filterServer==='all'"       (click)="filterServer='all'">{{ i18n.t('filter_all') }}</button>
@@ -44,67 +44,73 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let r of filtered" (click)="openDetail(r)" class="table-row">
-            <td class="col-id"><span class="id-badge">#{{ r.id }}</span></td>
-            <td>
-              <div class="name-cell">
-                <div class="avatar">{{ r.name.charAt(0) }}</div>
-                <div>
-                  <p class="name-primary">{{ r.name }}</p>
-                  <p class="name-secondary">{{ r.email }}</p>
+          @for (r of filtered; track r.id) {
+            <tr (click)="openDetail(r)" class="table-row">
+              <td class="col-id"><span class="id-badge">#{{ r.id }}</span></td>
+              <td>
+                <div class="name-cell">
+                  <div class="avatar">{{ r.name.charAt(0) }}</div>
+                  <div>
+                    <p class="name-primary">{{ r.name }}</p>
+                    <p class="name-secondary">{{ r.email }}</p>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td>{{ r.companyName }}</td>
-            <td><span class="region-pill">{{ r.region }}</span></td>
-            <td class="address-cell">{{ r.address }}</td>
-            <td>
-              <div class="clients-cell">
-                <span class="clients-count">{{ r.totalClients }}</span>
-                <span class="clients-ids" *ngIf="r.clientIds.length">
-                  IDs: {{ r.clientIds.slice(0,4).join(', ') }}{{ r.clientIds.length > 4 ? '…' : '' }}
+              </td>
+              <td>{{ r.companyName }}</td>
+              <td><span class="region-pill">{{ r.region }}</span></td>
+              <td class="address-cell">{{ r.address }}</td>
+              <td>
+                <div class="clients-cell">
+                  <span class="clients-count">{{ r.totalClients }}</span>
+                  @if (r.clientIds.length) {
+                    <span class="clients-ids">
+                      IDs: {{ r.clientIds.slice(0,4).join(', ') }}{{ r.clientIds.length > 4 ? '…' : '' }}
+                    </span>
+                  }
+                </div>
+              </td>
+              <td>
+                <span class="server-badge"
+                  [class.server-badge--shared]="r.serverType === 'shared'"
+                  [class.server-badge--dedicated]="r.serverType === 'dedicated'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    @if (r.serverType === 'shared') {
+                      <rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/>
+                    }
+                    @if (r.serverType === 'dedicated') {
+                      <rect x="2" y="2" width="20" height="20" rx="2"/><line x1="12" y1="6" x2="12" y2="12"/><circle cx="12" cy="15" r="1" fill="currentColor"/>
+                    }
+                  </svg>
+                  {{ r.serverType === 'shared' ? i18n.t('server_traci_label') : i18n.t('server_own_label') }}
                 </span>
-              </div>
-            </td>
-            <td>
-              <span class="server-badge"
-                [class.server-badge--shared]="r.serverType === 'shared'"
-                [class.server-badge--dedicated]="r.serverType === 'dedicated'">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <ng-container *ngIf="r.serverType === 'shared'">
-                    <rect x="2" y="3" width="20" height="4" rx="1"/><rect x="2" y="10" width="20" height="4" rx="1"/><rect x="2" y="17" width="20" height="4" rx="1"/>
-                  </ng-container>
-                  <ng-container *ngIf="r.serverType === 'dedicated'">
-                    <rect x="2" y="2" width="20" height="20" rx="2"/><line x1="12" y1="6" x2="12" y2="12"/><circle cx="12" cy="15" r="1" fill="currentColor"/>
-                  </ng-container>
-                </svg>
-                {{ r.serverType === 'shared' ? i18n.t('server_traci_label') : i18n.t('server_own_label') }}
-              </span>
-            </td>
-            <td>{{ formatDate(r.joinDate) }}</td>
-            <td class="col-actions" (click)="$event.stopPropagation()">
-              <button class="action-btn action-btn--edit"   (click)="openEdit(r, $event)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </button>
-              <button class="action-btn action-btn--delete" (click)="askDelete(r, $event)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="filtered.length === 0">
-            <td colspan="9" class="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <p>{{ i18n.t('no_resellers') }}</p>
-            </td>
-          </tr>
+              </td>
+              <td>{{ formatDate(r.joinDate) }}</td>
+              <td class="col-actions" (click)="$event.stopPropagation()">
+                <button class="action-btn action-btn--edit"   (click)="openEdit(r, $event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="action-btn action-btn--delete" (click)="askDelete(r, $event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="9" class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <p>{{ i18n.t('no_resellers') }}</p>
+              </td>
+            </tr>
+          }
         </tbody>
       </table>
     </div>
 
-  </ng-container>
+  }
 
   <!-- ═══════════════════ DETAIL VIEW ══════════════════ -->
-  <ng-container *ngIf="view === 'detail' && selected">
+  @if (view === 'detail' && selected) {
 
     <header class="page-header">
       <div class="detail-header-left">
@@ -179,17 +185,22 @@
       </div>
     </div>
 
-    <div class="client-ids-panel" *ngIf="selected.clientIds.length">
-      <p class="panel-title">{{ i18n.t('linked_client_ids') }}</p>
-      <div class="client-ids-grid">
-        <span class="client-id-chip" *ngFor="let cid of selected.clientIds">#{{ cid }}</span>
+    @if (selected.clientIds.length) {
+      <div class="client-ids-panel">
+        <p class="panel-title">{{ i18n.t('linked_client_ids') }}</p>
+        <div class="client-ids-grid">
+          @for (cid of selected.clientIds; track cid) {
+            <span class="client-id-chip">#{{ cid }}</span>
+          }
+        </div>
       </div>
-    </div>
+    }
 
-  </ng-container>
+  }
 
   <!-- ═══════════════════ ADD / EDIT MODAL ═════════════ -->
-  <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  @if (showModal) {
+  <div class="modal-backdrop" (click)="closeModal()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-title">{{ modalMode === 'add' ? i18n.t('modal_add_reseller') : i18n.t('modal_edit_reseller') }}</h2>
@@ -224,7 +235,7 @@
           <div class="form-group">
             <label>{{ i18n.t('form_region') }}</label>
             <select [(ngModel)]="formData.region">
-              <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+              @for (r of regions; track r) { <option [value]="r">{{ r }}</option> }
             </select>
           </div>
           <div class="form-group">
@@ -254,9 +265,11 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- ═══════════════════ DELETE CONFIRM ═══════════════ -->
-  <div class="modal-backdrop" *ngIf="showDeleteModal" (click)="cancelDelete()">
+  @if (showDeleteModal) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
     <div class="modal modal--sm" (click)="$event.stopPropagation()">
       <div class="delete-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -271,5 +284,6 @@
       </div>
     </div>
   </div>
+  }
 
 </div>
