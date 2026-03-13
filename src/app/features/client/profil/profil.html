@@ -331,7 +331,9 @@
               <input
                 type="email"
                 [(ngModel)]="edit.email"
-                class="form-input">
+                class="form-input"
+                [class.input--error]="editEmailError">
+              @if (editEmailError) { <span class="field-error">{{ i18n.t(editEmailError) }}</span> }
             </div>
 
             <div class="form-field">
@@ -339,7 +341,9 @@
               <input
                 type="tel"
                 [(ngModel)]="edit.telephone"
-                class="form-input">
+                class="form-input"
+                [class.input--error]="editPhoneError">
+              @if (editPhoneError) { <span class="field-error">{{ i18n.t(editPhoneError) }}</span> }
             </div>
 
             <div class="form-field full-width">

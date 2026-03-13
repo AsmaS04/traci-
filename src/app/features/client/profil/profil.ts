@@ -72,9 +72,29 @@ export default class ProfilComponent implements OnInit {  // ✅ CORRIGÉ ICI!
     this.showEditModal.set(false);
   }
 
+  // ── Validation ────────────────────────────────────────
+  isValidEmail(e: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+  }
+  isValidPhone(p: string): boolean {
+    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
+  }
+  get editEmailError(): string {
+    const e = this.profilEdit()?.email ?? '';
+    return e && !this.isValidEmail(e) ? 'msg_error_invalid_email' : '';
+  }
+  get editPhoneError(): string {
+    const p = this.profilEdit()?.telephone ?? '';
+    return p && !this.isValidPhone(p) ? 'msg_error_invalid_phone' : '';
+  }
+
   saveProfile() {
     const updated = this.profilEdit();
     if (!updated) return;
+    if (!this.isValidEmail(updated.email ?? '') || !this.isValidPhone(updated.telephone ?? '')) {
+      this.showError(this.i18n.t('msg_error_invalid_email'));
+      return;
+    }
 
     // TODO: API call pour sauvegarder le profil
     this.profil.set({ ...updated });

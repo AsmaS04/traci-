@@ -128,12 +128,29 @@ export class Dashboard {
   showAddReseller = false;
   resellerForm: any = {};
 
+  // ── Validation ────────────────────────────────────────
+  isValidEmail(e: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+  }
+  isValidPhone(p: string): boolean {
+    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
+  }
+  get resellerEmailError(): string {
+    return (this.resellerForm.email ?? '') && !this.isValidEmail(this.resellerForm.email)
+      ? 'msg_error_invalid_email' : '';
+  }
+  get resellerPhoneError(): string {
+    return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone)
+      ? 'msg_error_invalid_phone' : '';
+  }
+
   openAddReseller() {
     this.resellerForm = { name: '', company: '', email: '', phone: '', address: '', region: 'Tunis', serverType: 'traci' };
     this.showAddReseller = true;
   }
   closeAddReseller() { this.showAddReseller = false; }
   saveReseller() {
+    if (!this.isValidEmail(this.resellerForm.email) || !this.isValidPhone(this.resellerForm.phone)) return;
     this.totalResellers++;
     this.newResellersMonth++;
     this.topResellers = [
@@ -142,6 +159,35 @@ export class Dashboard {
     ];
     this.showAddReseller = false;
   }
+
+  // ── Device Distribution ───────────────────────────────
+  deviceDistribution = [
+    { region: 'Tunis',    devices: 2840, pct: 100, color: '#0D9488' },
+    { region: 'Sfax',     devices: 1920, pct: 68,  color: '#3B82F6' },
+    { region: 'Sousse',   devices: 1450, pct: 51,  color: '#9333ea' },
+    { region: 'Bizerte',  devices:  820, pct: 29,  color: '#D97706' },
+    { region: 'Nabeul',   devices:  710, pct: 25,  color: '#16A34A' },
+    { region: 'Autres',   devices:  960, pct: 34,  color: '#9CA3AF' },
+  ];
+
+  // ── System Performance ────────────────────────────────
+  systemPerf = [
+    { labelKey: 'adm_perf_api',      value: '120 ms', pct: 24,   warn: false },
+    { labelKey: 'adm_perf_load',     value: '43%',    pct: 43,   warn: false },
+    { labelKey: 'adm_perf_db',       value: '2.3k/m', pct: 46,   warn: false },
+    { labelKey: 'adm_perf_memory',   value: '67%',    pct: 67,   warn: true  },
+    { labelKey: 'adm_perf_uptime',   value: '99.8%',  pct: null, warn: false },
+  ];
+
+  // ── Event Timeline ────────────────────────────────────
+  eventTimeline = [
+    { time: '10:32', type: 'reseller',   labelKey: 'act_reseller_reg', entity: 'TechVision SARL'  },
+    { time: '10:40', type: 'client',     labelKey: 'act_client_added', entity: 'Société Elyes'    },
+    { time: '11:05', type: 'device_on',  labelKey: 'adm_evt_assigned', entity: 'Device #4821'     },
+    { time: '11:30', type: 'device_off', labelKey: 'act_device_off',   entity: 'Device #2190'     },
+    { time: '12:15', type: 'client',     labelKey: 'act_client_added', entity: 'Alpha Corp'       },
+    { time: '14:02', type: 'reseller',   labelKey: 'act_reseller_upd', entity: 'NetPlus Tunis'    },
+  ];
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
   navigateTo(p: string) { this.router.navigate([p]); }
 }

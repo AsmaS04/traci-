@@ -1,53 +1,292 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { Clients } from './clients';
+import { TranslationService } from '../../../service/translation.service';
 import { Client } from '../../../models/client.model';
-import { Reseller } from '../../../models/reseller.model';
 
-@Component({
-  selector: 'app-clients',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './clients.html',
-  styleUrl: './clients.css',
-})
-export class Clients {
+describe('Clients', () => {
+  let component: Clients;
+  let fixture: ComponentFixture<Clients>;
+  let mockTranslationService: jasmine.SpyObj<TranslationService>;
 
-  view: 'table' | 'detail' = 'table';
-  selected: Client | null = null;
+  beforeEach(async () => {
+    mockTranslationService = jasmine.createSpyObj('TranslationService', [], {
+      // Add any properties if needed
+    });
 
-  showModal       = false;
-  showDeleteModal = false;
-  modalMode: 'add' | 'edit' = 'add';
-  toDelete: Client | null = null;
-  formData: Partial<Client> = {};
-  searchQuery = '';
-  filterActive: 'all' | 'active' | 'inactive' = 'all';
-  sortField: keyof Client = 'id';
-  sortAsc = true;
+    await TestBed.configureTestingModule({
+      imports: [Clients, FormsModule],
+      providers: [
+        { provide: TranslationService, useValue: mockTranslationService }
+      ]
+    }).compileComponents();
 
-  readonly regions = [
-    'Tunis','Ariana','Ben Arous','Manouba','Nabeul','Zaghouan',
-    'Bizerte','Béja','Jendouba','Le Kef','Siliana','Sousse',
-    'Monastir','Mahdia','Sfax','Kairouan','Kasserine','Sidi Bouzid',
-    'Gabès','Medenine','Tataouine','Gafsa','Tozeur','Kébili'
-  ];
+    fixture = TestBed.createComponent(Clients);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-  // Mock resellers for dropdown
-  readonly resellers: Pick<Reseller, 'id' | 'name' | 'companyName'>[] = [
-    { id:1, name:'Khalil Mansour',     companyName:'TechVision SARL'  },
-    { id:2, name:'Sana Trabelsi',      companyName:'NetPlus Solutions' },
-    { id:3, name:'Anis Belhaj',        companyName:'ConnectPro Tunis'  },
-    { id:4, name:'Rim Chaabane',       companyName:'Alpha Track'       },
-    { id:5, name:'Yassine Ferchichi',  companyName:'GPS Tunisie'       },
-    { id:6, name:'Mariem Saidi',       companyName:'FleetMaster TN'    },
-    { id:7, name:'Bassem Rekik',       companyName:'IoT Gabès'         },
-    { id:8, name:'Imen Jebali',        companyName:'TrackSud'          },
-  ];
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 
-  clients: Client[] = [
-    { id:1,  name:'Société Elyes',         email:'contact@elyes.tn',        phone:'+216 71 111 222', region:'Tunis',    resellerId:1, resellerName:'TechVision SARL',  totalDevices:12, activeDevices:10, isActive:true,  joinDate:'2023-03-10' },
-    { id:2,  name:'Transport Mrad',        email:'info@transportmrad.tn',   phone:'+216 73 222 333', region:'Sfax',     resellerId:2, resellerName:'NetPlus Solutions', totalDevices:8,  activeDevices:7,  isActive:true,  joinDate:'2023-06-15' },
+  it('should initialize with default values', () => {
+    expect(component.view).toBe('table');
+    expect(component.selected).toBeNull();
+    expect(component.showModal).toBeFalse();
+    expect(component.showDeleteModal).toBeFalse();
+    expect(component.modalMode).toBe('add');
+    expect(component.toDelete).toBeNull();
+    expect(component.formData).toEqual({});
+    expect(component.searchQuery).toBe('');
+    expect(component.filterActive).toBe('all');
+    expect(component.sortField).toBe('id');
+    expect(component.sortAsc).toBeTrue();
+  });
+
+  it('should have predefined regions', () => {
+    expect(component.regions).toBeDefined();
+    expect(component.regions.length).toBe(24);
+    expect(component.regions[0]).toBe('Tunis');
+  });
+
+  it('should have predefined resellers', () => {
+    expect(component.resellers).toBeDefined();
+    expect(component.resellers.length).toBe(8);
+    expect(component.resellers[0].name).toBe('Khalil Mansour');
+  });
+
+  it('should have initial clients data', () => {
+    expect(component.clients).toBeDefined();
+    expect(component.clients.length).toBe(12);
+    expect(component.clients[0].name).toBe('Société Elyes');
+  });
+
+  describe('filtered getter', () => {
+    it('should return all clients when no filters', () => {
+      expect(component.filtered.length).toBe(12);
+    });
+
+    it('should filter by search query', () => {
+      component.searchQuery = 'Elyes';
+      expect(component.filtered.length).toBe(1);
+      expect(component.filtered[0].name).toBe('Société Elyes');
+    });
+
+    it('should filter by active status', () => {
+      component.filterActive = 'active';
+      const activeCount = component.clients.filter(c => c.isActive).length;
+      expect(component.filtered.length).toBe(activeCount);
+    });
+
+    it('should filter by inactive status', () => {
+      component.filterActive = 'inactive';
+      const inactiveCount = component.clients.filter(c => !c.isActive).length;
+      expect(component.filtered.length).toBe(inactiveCount);
+    });
+
+    it('should sort by field ascending', () => {
+      component.sortField = 'name';
+      component.sortAsc = true;
+      const filtered = component.filtered;
+      expect(filtered[0].name.localeCompare(filtered[1].name)).toBeLessThanOrEqual(0);
+    });
+
+    it('should sort by field descending', () => {
+      component.sortField = 'name';
+      component.sortAsc = false;
+      const filtered = component.filtered;
+      expect(filtered[0].name.localeCompare(filtered[1].name)).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('sortBy', () => {
+    it('should toggle sort direction if same field', () => {
+      component.sortField = 'name';
+      component.sortAsc = true;
+      component.sortBy('name');
+      expect(component.sortAsc).toBeFalse();
+    });
+
+    it('should set new field and ascending if different field', () => {
+      component.sortField = 'id';
+      component.sortBy('name');
+      expect(component.sortField).toBe('name');
+      expect(component.sortAsc).toBeTrue();
+    });
+  });
+
+  describe('sortIcon', () => {
+    it('should return ↕ for unsorted field', () => {
+      expect(component.sortIcon('name')).toBe('↕');
+    });
+
+    it('should return ↑ for ascending sort', () => {
+      component.sortField = 'name';
+      component.sortAsc = true;
+      expect(component.sortIcon('name')).toBe('↑');
+    });
+
+    it('should return ↓ for descending sort', () => {
+      component.sortField = 'name';
+      component.sortAsc = false;
+      expect(component.sortIcon('name')).toBe('↓');
+    });
+  });
+
+  describe('openDetail and backToTable', () => {
+    it('should open detail view', () => {
+      const client = component.clients[0];
+      component.openDetail(client);
+      expect(component.view).toBe('detail');
+      expect(component.selected).toBe(client);
+    });
+
+    it('should go back to table view', () => {
+      component.view = 'detail';
+      component.selected = component.clients[0];
+      component.backToTable();
+      expect(component.view).toBe('table');
+      expect(component.selected).toBeNull();
+    });
+  });
+
+  describe('openAdd', () => {
+    it('should open add modal with default form data', () => {
+      component.openAdd();
+      expect(component.showModal).toBeTrue();
+      expect(component.modalMode).toBe('add');
+      expect(component.formData.region).toBe('Tunis');
+      expect(component.formData.isActive).toBeTrue();
+      expect(component.formData.resellerId).toBe(component.resellers[0].id);
+      expect(component.formData.resellerName).toBe(component.resellers[0].companyName);
+    });
+  });
+
+  describe('openEdit', () => {
+    it('should open edit modal with client data', () => {
+      const client = component.clients[0];
+      const event = new Event('click');
+      spyOn(event, 'stopPropagation');
+      component.openEdit(client, event);
+      expect(component.showModal).toBeTrue();
+      expect(component.modalMode).toBe('edit');
+      expect(component.formData).toEqual(client);
+      expect(event.stopPropagation).toHaveBeenCalled();
+    });
+  });
+
+  describe('onResellerChange', () => {
+    it('should update resellerName when resellerId changes', () => {
+      component.formData.resellerId = 2;
+      component.onResellerChange();
+      expect(component.formData.resellerName).toBe('NetPlus Solutions');
+    });
+  });
+
+  describe('saveForm', () => {
+    it('should add new client in add mode', () => {
+      const initialLength = component.clients.length;
+      component.modalMode = 'add';
+      component.formData = {
+        name: 'New Client',
+        email: 'new@client.com',
+        phone: '+216 70 123 456',
+        region: 'Sousse',
+        resellerId: 3,
+        resellerName: 'ConnectPro Tunis',
+        isActive: true
+      };
+      component.saveForm();
+      expect(component.clients.length).toBe(initialLength + 1);
+      const newClient = component.clients[component.clients.length - 1];
+      expect(newClient.name).toBe('New Client');
+      expect(newClient.id).toBeGreaterThan(0);
+      expect(component.showModal).toBeFalse();
+    });
+
+    it('should update existing client in edit mode', () => {
+      const client = component.clients[0];
+      component.modalMode = 'edit';
+      component.formData = { ...client, name: 'Updated Name' };
+      component.saveForm();
+      const updatedClient = component.clients.find(c => c.id === client.id);
+      expect(updatedClient?.name).toBe('Updated Name');
+      expect(component.showModal).toBeFalse();
+    });
+
+    it('should update selected client if editing selected', () => {
+      const client = component.clients[0];
+      component.selected = client;
+      component.modalMode = 'edit';
+      component.formData = { ...client, name: 'Updated Selected' };
+      component.saveForm();
+      expect(component.selected?.name).toBe('Updated Selected');
+    });
+  });
+
+  describe('closeModal', () => {
+    it('should close modal and reset form data', () => {
+      component.showModal = true;
+      component.formData = { name: 'Test' };
+      component.closeModal();
+      expect(component.showModal).toBeFalse();
+      expect(component.formData).toEqual({});
+    });
+  });
+
+  describe('askDelete', () => {
+    it('should set client to delete and show delete modal', () => {
+      const client = component.clients[0];
+      const event = new Event('click');
+      spyOn(event, 'stopPropagation');
+      component.askDelete(client, event);
+      expect(component.toDelete).toBe(client);
+      expect(component.showDeleteModal).toBeTrue();
+      expect(event.stopPropagation).toHaveBeenCalled();
+    });
+  });
+
+  describe('confirmDelete', () => {
+    it('should delete client and close modal', () => {
+      const client = component.clients[0];
+      component.toDelete = client;
+      component.selected = client;
+      const initialLength = component.clients.length;
+      component.confirmDelete();
+      expect(component.clients.length).toBe(initialLength - 1);
+      expect(component.clients.find(c => c.id === client.id)).toBeUndefined();
+      expect(component.selected).toBeNull();
+      expect(component.toDelete).toBeNull();
+      expect(component.showDeleteModal).toBeFalse();
+    });
+
+    it('should do nothing if no client to delete', () => {
+      component.toDelete = null;
+      const initialLength = component.clients.length;
+      component.confirmDelete();
+      expect(component.clients.length).toBe(initialLength);
+    });
+  });
+
+  describe('cancelDelete', () => {
+    it('should cancel delete and close modal', () => {
+      component.toDelete = component.clients[0];
+      component.showDeleteModal = true;
+      component.cancelDelete();
+      expect(component.toDelete).toBeNull();
+      expect(component.showDeleteModal).toBeFalse();
+    });
+  });
+
+  describe('formatDate', () => {
+    it('should format date correctly', () => {
+      const date = '2023-03-10';
+      const formatted = component.formatDate(date);
+      expect(formatted).toBe('10 mars 2023'); // Assuming fr-TN locale
+    });
+  });
+});
     { id:3,  name:'Alpha Logistics',       email:'ops@alphalog.tn',         phone:'+216 70 333 444', region:'Sousse',   resellerId:3, resellerName:'ConnectPro Tunis',  totalDevices:25, activeDevices:20, isActive:true,  joinDate:'2022-12-01' },
     { id:4,  name:'Ben Salem SARL',        email:'bensalem@gmail.com',      phone:'+216 74 444 555', region:'Bizerte',  resellerId:4, resellerName:'Alpha Track',       totalDevices:4,  activeDevices:2,  isActive:false, joinDate:'2024-01-20' },
     { id:5,  name:'Ferchichi Transport',   email:'info@ferchichi.tn',       phone:'+216 72 555 666', region:'Nabeul',   resellerId:5, resellerName:'GPS Tunisie',       totalDevices:15, activeDevices:14, isActive:true,  joinDate:'2023-09-05' },

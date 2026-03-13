@@ -121,6 +121,22 @@ export default class ResellerDashboardComponent {
   showAddModal = false;
   addForm: any = {};
 
+  // ── Validation ────────────────────────────────────────
+  isValidEmail(e: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+  }
+  isValidPhone(p: string): boolean {
+    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
+  }
+  get addEmailError(): string {
+    return (this.addForm.email ?? '') && !this.isValidEmail(this.addForm.email)
+      ? 'msg_error_invalid_email' : '';
+  }
+  get addPhoneError(): string {
+    return (this.addForm.phone ?? '') && !this.isValidPhone(this.addForm.phone)
+      ? 'msg_error_invalid_phone' : '';
+  }
+
   openAddClient() {
     this.addForm = {
       firstName: '', lastName: '', email: '', phone: '',
@@ -131,6 +147,7 @@ export default class ResellerDashboardComponent {
   }
 
   saveNewClient() {
+    if (!this.isValidEmail(this.addForm.email) || !this.isValidPhone(this.addForm.phone)) return;
     const newId = Math.max(...this.clients.map((c: any) => c.id), 0) + 1;
     (this.clients as any[]).push({
       ...this.addForm,

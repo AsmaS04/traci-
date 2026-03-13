@@ -248,6 +248,113 @@
 
   </div>
 
+
+  <!-- ══ NEW ROW — GROWTH + DISTRIBUTION + PERFORMANCE + TIMELINE ═══ -->
+  <div class="new-row">
+
+    <!-- 1. Platform Growth -->
+    <div class="card growth-card">
+      <div class="card-header">
+        <p class="card-title">{{ i18n.t('adm_growth_title') }}</p>
+        <span class="live-pill live-pill--sm"><span class="live-dot"></span>30d</span>
+      </div>
+      <div class="growth-list">
+        <div class="growth-item">
+          <div class="growth-item__icon growth-icon--purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </div>
+          <div class="growth-item__body">
+            <p class="growth-label">{{ i18n.t('adm_growth_resellers') }}</p>
+            <p class="growth-val">+{{ newResellersMonth }}</p>
+          </div>
+          <span class="growth-badge growth-badge--purple">+{{ growthResellers }}%</span>
+        </div>
+        <div class="growth-item">
+          <div class="growth-item__icon growth-icon--teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="growth-item__body">
+            <p class="growth-label">{{ i18n.t('adm_growth_clients') }}</p>
+            <p class="growth-val">+{{ newClientsMonth }}</p>
+          </div>
+          <span class="growth-badge growth-badge--teal">+{{ growthClients }}%</span>
+        </div>
+        <div class="growth-item">
+          <div class="growth-item__icon growth-icon--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+          </div>
+          <div class="growth-item__body">
+            <p class="growth-label">{{ i18n.t('adm_growth_devices') }}</p>
+            <p class="growth-val">+{{ newDevicesMonth }}</p>
+          </div>
+          <span class="growth-badge growth-badge--blue">+{{ growthDevices }}%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Device Distribution -->
+    <div class="card dist-card">
+      <div class="card-header">
+        <p class="card-title">{{ i18n.t('adm_dist_title') }}</p>
+        <span class="card-total">{{ fmt(totalDevices) }} {{ i18n.t('stat_devices').toLowerCase() }}</span>
+      </div>
+      <div class="dist-list">
+        <div class="dist-item" *ngFor="let r of deviceDistribution">
+          <div class="dist-item__top">
+            <span class="dist-region">{{ r.region }}</span>
+            <span class="dist-count">{{ r.devices }}</span>
+          </div>
+          <div class="dist-bar">
+            <div class="dist-bar__fill" [style.width.%]="r.pct" [style.background]="r.color"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. System Performance -->
+    <div class="card perf-card">
+      <div class="card-header">
+        <p class="card-title">{{ i18n.t('adm_perf_title') }}</p>
+        <div class="live-pill live-pill--sm"><span class="live-dot"></span> Live</div>
+      </div>
+      <div class="perf-list">
+        <div class="perf-item" *ngFor="let p of systemPerf">
+          <div class="perf-item__label">
+            <span class="perf-name">{{ i18n.t(p.labelKey) }}</span>
+            <span class="perf-val" [class.perf-val--warn]="p.warn" [class.perf-val--ok]="!p.warn">{{ p.value }}</span>
+          </div>
+          <div class="perf-bar" *ngIf="p.pct !== null">
+            <div class="perf-bar__fill" [style.width.%]="p.pct" [class.perf-bar--warn]="p.warn" [class.perf-bar--ok]="!p.warn"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. System Events Timeline -->
+    <div class="card timeline-card">
+      <div class="card-header">
+        <p class="card-title">{{ i18n.t('adm_timeline_title') }}</p>
+        <span class="card-date">{{ i18n.t('adm_timeline_today') }}</span>
+      </div>
+      <div class="timeline">
+        <div class="tl-item" *ngFor="let e of eventTimeline; let last=last">
+          <div class="tl-left">
+            <span class="tl-time">{{ e.time }}</span>
+          </div>
+          <div class="tl-center">
+            <div class="tl-dot" [class.tl-dot--teal]="e.type==='reseller'" [class.tl-dot--blue]="e.type==='client'" [class.tl-dot--red]="e.type==='device_off'" [class.tl-dot--amber]="e.type==='device_on'"></div>
+            <div class="tl-line" *ngIf="!last"></div>
+          </div>
+          <div class="tl-right">
+            <p class="tl-label">{{ i18n.t(e.labelKey) }}</p>
+            <p class="tl-sub">{{ e.entity }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- ══ BOTTOM ROW — TOP RESELLERS ═════════════════════════ -->
   <div class="bottom-row">
     <div class="card top-resellers-card">
@@ -303,11 +410,13 @@
         </div>
         <div class="form-group">
           <label>EMAIL</label>
-          <input type="email" [(ngModel)]="resellerForm.email" placeholder="email@company.tn"/>
+          <input type="email" [(ngModel)]="resellerForm.email" placeholder="email@company.tn" [class.input--error]="resellerEmailError"/>
+          @if (resellerEmailError) { <span class="field-error">{{ i18n.t(resellerEmailError) }}</span> }
         </div>
         <div class="form-group">
           <label>PHONE</label>
-          <input type="tel" [(ngModel)]="resellerForm.phone" placeholder="+216 XX XXX XXX"/>
+          <input type="tel" [(ngModel)]="resellerForm.phone" placeholder="+216 XX XXX XXX" [class.input--error]="resellerPhoneError"/>
+          @if (resellerPhoneError) { <span class="field-error">{{ i18n.t(resellerPhoneError) }}</span> }
         </div>
         <div class="form-group form-group--full">
           <label>ADDRESS</label>

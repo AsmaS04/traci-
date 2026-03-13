@@ -113,7 +113,24 @@ export class Clients {
     if (r) this.formData.resellerName = r.companyName;
   }
 
+  // ── Validation ────────────────────────────────────────
+  isValidEmail(e: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+  }
+  isValidPhone(p: string): boolean {
+    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
+  }
+  get formEmailError(): string {
+    return (this.formData.email ?? '') && !this.isValidEmail(this.formData.email ?? '')
+      ? 'msg_error_invalid_email' : '';
+  }
+  get formPhoneError(): string {
+    return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '')
+      ? 'msg_error_invalid_phone' : '';
+  }
+
   saveForm(): void {
+    if (!this.isValidEmail(this.formData.email ?? '') || !this.isValidPhone(this.formData.phone ?? '')) return;
     if (this.modalMode === 'add') {
       const newId = Math.max(0, ...this.clients.map(c => c.id)) + 1;
       this.clients = [...this.clients, {

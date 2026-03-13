@@ -286,11 +286,13 @@
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_email') }}</label>
-          <input type="email" [(ngModel)]="form.email" placeholder="email@example.com"/>
+          <input type="email" [(ngModel)]="form.email" placeholder="email@example.com" [class.input--error]="formEmailError"/>
+          @if (formEmailError) { <span class="field-error">{{ i18n.t(formEmailError) }}</span> }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_phone') }}</label>
-          <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX"/>
+          <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX" [class.input--error]="formPhoneError"/>
+          @if (formPhoneError) { <span class="field-error">{{ i18n.t(formPhoneError) }}</span> }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_region') }}</label>

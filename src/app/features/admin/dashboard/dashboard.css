@@ -281,3 +281,78 @@
   transition: background 0.15s;
 }
 .btn-save:hover { background: #0a7870; }
+/* ══ NEW ROW — 4 FEATURE WIDGETS ═══════════════════════════ */
+.new-row {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr 1fr;
+  gap: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+
+/* ── Platform Growth ─────────────────────────────────────── */
+.growth-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.growth-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.7rem 0.85rem; border-radius: 11px;
+  background: var(--bg); border: 1px solid var(--border);
+}
+.growth-item__icon {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.growth-item__icon svg { width: 14px; height: 14px; }
+.growth-icon--purple { background: rgba(147,51,234,0.12); color: #9333ea; }
+.growth-icon--teal   { background: rgba(13,148,136,0.12);  color: #0D9488; }
+.growth-icon--blue   { background: rgba(59,130,246,0.12);  color: #3B82F6; }
+.growth-item__body { flex: 1; min-width: 0; }
+.growth-label { font-size: 0.68rem; font-weight: 600; color: var(--text-300); text-transform: uppercase; letter-spacing: 0.06em; }
+.growth-val   { font-size: 1.1rem; font-weight: 800; color: var(--text-900); line-height: 1.1; margin-top: 1px; }
+.growth-badge { font-size: 0.66rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+.growth-badge--purple { background: rgba(147,51,234,0.12); color: #9333ea; }
+.growth-badge--teal   { background: rgba(13,148,136,0.12);  color: #0D9488; }
+.growth-badge--blue   { background: rgba(59,130,246,0.12);  color: #3B82F6; }
+
+/* ── Device Distribution ─────────────────────────────────── */
+.card-total { font-size: 0.7rem; font-weight: 600; color: var(--text-300); }
+.dist-list  { display: flex; flex-direction: column; gap: 0.65rem; }
+.dist-item__top { display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
+.dist-region { font-size: 0.78rem; font-weight: 600; color: var(--text-900); }
+.dist-count  { font-size: 0.78rem; font-weight: 700; color: var(--text-500); }
+.dist-bar    { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.dist-bar__fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+/* ── System Performance ──────────────────────────────────── */
+.perf-list  { display: flex; flex-direction: column; gap: 0.85rem; }
+.perf-item__label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; }
+.perf-name  { font-size: 0.75rem; font-weight: 600; color: var(--text-500); }
+.perf-val   { font-size: 0.78rem; font-weight: 800; }
+.perf-val--ok   { color: #16A34A; }
+.perf-val--warn { color: #D97706; }
+.perf-bar   { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.perf-bar__fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.perf-bar--ok   { background: #16A34A; }
+.perf-bar--warn { background: #D97706; }
+
+/* ── Events Timeline ─────────────────────────────────────── */
+.card-date { font-size: 0.68rem; font-weight: 600; color: var(--text-300); }
+.timeline  { display: flex; flex-direction: column; }
+.tl-item   { display: flex; align-items: flex-start; gap: 0.6rem; }
+.tl-left   { width: 42px; flex-shrink: 0; padding-top: 2px; }
+.tl-time   { font-size: 0.65rem; font-weight: 700; color: var(--text-300); white-space: nowrap; }
+.tl-center { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.tl-dot    { width: 10px; height: 10px; border-radius: 50%; margin-top: 2px; }
+.tl-dot--teal  { background: #0D9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+.tl-dot--blue  { background: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+.tl-dot--red   { background: #DC2626; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+.tl-dot--amber { background: #D97706; box-shadow: 0 0 0 3px rgba(217,119,6,0.15); }
+.tl-line   { width: 2px; flex: 1; background: var(--border); min-height: 20px; }
+.tl-right  { flex: 1; padding-bottom: 0.75rem; }
+.tl-label  { font-size: 0.78rem; font-weight: 600; color: var(--text-900); }
+.tl-sub    { font-size: 0.68rem; color: var(--text-300); margin-top: 1px; }
+
+@media (max-width: 1200px) {
+  .new-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 720px) {
+  .new-row { grid-template-columns: 1fr; }
+}

@@ -37,6 +37,11 @@ export const routes: Routes = [
           import('./features/admin/clients/clients').then(m => m.Clients),
       },
       {
+        path: 'profil',
+        loadComponent: () =>
+          import('./features/admin/profile/profile').then(m => m.AdminProfil),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'

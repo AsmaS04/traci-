@@ -4,7 +4,7 @@
   <aside class="sidebar" [style.width]="collapsed ? '64px' : '240px'">
 
     <div class="sidebar-logo">
-      @if (!collapsed) { <span class="logo-text">TRACI</span> }
+      <span class="logo-text" *ngIf="!collapsed">TRACI</span>
       <button class="collapse-btn" (click)="toggleSidebar()" [title]="collapsed ? 'Expand' : 'Collapse'">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="6"  x2="21" y2="6"/>
@@ -15,32 +15,23 @@
     </div>
 
     <nav class="sidebar-nav">
-      @if (!collapsed) { <p class="nav-section-label">{{ i18n.t('nav_main') }}</p> }
-      @for (item of navItems; track item.route) {
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="nav-item-active"
-          class="nav-item"
-          [title]="collapsed ? i18n.t(item.labelKey) : ''"
-        >
-          <span class="nav-icon" [innerHTML]="item.icon"></span>
-          @if (!collapsed) { <span class="nav-label">{{ i18n.t(item.labelKey) }}</span> }
-        </a>
-      }
+      <p class="nav-section-label" *ngIf="!collapsed">{{ i18n.t('nav_main') }}</p>
+      <a *ngFor="let item of navItems" [routerLink]="item.route" routerLinkActive="nav-item-active"
+        class="nav-item" [title]="collapsed ? i18n.t(item.labelKey) : ''">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-label" *ngIf="!collapsed">{{ i18n.t(item.labelKey) }}</span>
+      </a>
     </nav>
 
     <div class="sidebar-bottom">
       <div class="user-card">
         <div class="user-avatar">Ad</div>
-        @if (!collapsed) {
-          <div class="user-info">
-            <p class="user-name">Admin</p>
-            <p class="user-role">{{ i18n.t('nav_superadmin') }}</p>
-          </div>
-        }
+        <div class="user-info" *ngIf="!collapsed">
+          <p class="user-name">Admin</p>
+          <p class="user-role">{{ i18n.t('nav_superadmin') }}</p>
+        </div>
       </div>
     </div>
-
   </aside>
 
   <!-- ═══════════════════ RIGHT SIDE ════════════════ -->
@@ -49,31 +40,64 @@
     <header class="topbar">
       <span class="topbar-brand">{{ i18n.t('topbar_panel') }}</span>
 
-      <div class="topbar-right">
+      <!-- ── Global Search ─────────────────────────── -->
+      <div class="global-search">
+        <div class="search-box">
+          <svg class="search-box__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            class="search-box__input"
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (blur)="closeSearch()"
+            [placeholder]="i18n.t('adm_search_placeholder')"
+          />
+          <span class="search-box__kbd" *ngIf="!searchQuery">⌘K</span>
+          <button class="search-box__clear" *ngIf="searchQuery" (click)="searchQuery=''; searchOpen=false">✕</button>
+        </div>
 
-        <!-- Language toggle -->
-        <button class="topbar-btn lang-btn" (click)="toggleLang()" [title]="lang === 'en' ? 'Switch to French' : 'Passer en anglais'">
+        <div class="search-results" *ngIf="searchOpen && searchResults.length > 0">
+          <div class="search-result" *ngFor="let r of searchResults" (mousedown)="goToResult(r)">
+            <div class="sr-icon" [class.sr-icon--client]="r.type==='client'" [class.sr-icon--reseller]="r.type==='reseller'" [class.sr-icon--device]="r.type==='device'">
+              <svg *ngIf="r.type==='client'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <svg *ngIf="r.type==='reseller'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+              <svg *ngIf="r.type==='device'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+            </div>
+            <div class="sr-body">
+              <p class="sr-title">{{ r.title }}</p>
+              <p class="sr-sub">{{ r.subtitle }}</p>
+            </div>
+            <span class="sr-status" [class.sr-status--active]="r.active" [class.sr-status--inactive]="!r.active">{{ r.status }}</span>
+          </div>
+        </div>
+
+        <div class="search-results search-results--empty" *ngIf="searchOpen && searchQuery && searchResults.length === 0">
+          <p>{{ i18n.t('adm_search_empty') }} "<strong>{{ searchQuery }}</strong>"</p>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Language -->
+        <button class="topbar-btn lang-btn" (click)="toggleLang()">
           <span class="lang-current">{{ lang === 'en' ? 'FR' : 'EN' }}</span>
           <span class="lang-sep">|</span>
           <span class="lang-other">{{ lang === 'en' ? 'EN' : 'FR' }}</span>
         </button>
 
-        <!-- Theme toggle -->
-        <button class="topbar-btn" (click)="toggleDark()" title="Toggle theme">
-          @if (!darkMode) {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="5"/>
-              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-            </svg>
-          }
-          @if (darkMode) {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          }
+        <!-- Theme -->
+        <button class="topbar-btn" (click)="toggleDark()">
+          <svg *ngIf="!darkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg *ngIf="darkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
         </button>
 
         <!-- Notifications -->
@@ -83,39 +107,66 @@
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            @if (notifCount > 0) { <span class="notif-badge"></span> }
+            <span class="notif-badge" *ngIf="notifCount > 0"></span>
           </button>
-
-          @if (notifOpen) {
-            <div class="notif-dropdown">
-              <div class="notif-header">
-                <p class="notif-title">{{ i18n.t('notif_title') }}</p>
-                <button class="notif-close" (click)="closeNotif()">✕</button>
-              </div>
-              <div class="notif-list">
-                @for (n of notifications; track $index) {
-                  <div class="notif-item">
-                    <div class="notif-item-icon" [class]="'notif-icon--' + n.icon">
-                      @if (n.icon === 'reseller') {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                      }
-                      @if (n.icon === 'client') {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      }
-                      @if (n.icon === 'device') {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-                      }
-                    </div>
-                    <div class="notif-item-body">
-                      <p class="notif-item-text">{{ i18n.t(n.textKey) }}</p>
-                      <p class="notif-item-sub">{{ n.sub }}</p>
-                    </div>
-                    <span class="notif-item-time">{{ n.time }}</span>
-                  </div>
-                }
+          <div class="notif-dropdown" *ngIf="notifOpen">
+            <div class="notif-header">
+              <p class="notif-title">{{ i18n.t('notif_title') }}</p>
+              <button class="notif-close" (click)="closeNotif()">✕</button>
+            </div>
+            <div class="notif-list">
+              <div class="notif-item" *ngFor="let n of notifications">
+                <div class="notif-item-icon" [class]="'notif-icon--' + n.icon">
+                  <svg *ngIf="n.icon==='reseller'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <svg *ngIf="n.icon==='client'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <svg *ngIf="n.icon==='device'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+                </div>
+                <div class="notif-item-body">
+                  <p class="notif-item-text">{{ i18n.t(n.textKey) }}</p>
+                  <p class="notif-item-sub">{{ n.sub }}</p>
+                </div>
+                <span class="notif-item-time">{{ n.time }}</span>
               </div>
             </div>
-          }
+          </div>
+        </div>
+
+        <!-- Avatar -->
+        <div class="avatar-wrap" (click)="toggleAvatar()">
+          <div class="topbar-avatar">
+            <div class="topbar-avatar__img">Ad</div>
+            <span class="topbar-avatar__name">Admin</span>
+            <svg class="topbar-avatar__chevron" [class.rotated]="avatarOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+          <div class="avatar-dropdown" *ngIf="avatarOpen" (click)="$event.stopPropagation()">
+            <div class="avatar-dropdown__header">
+              <div class="avatar-dropdown__avatar">Ad</div>
+              <div>
+                <p class="avatar-dropdown__name">Admin User</p>
+                <p class="avatar-dropdown__email">admin&#64;traci.com</p>
+              </div>
+            </div>
+            <div class="avatar-dropdown__divider"></div>
+            <button class="avatar-menu-item" (click)="goToProfile()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              {{ i18n.t('adm_menu_edit_profile') }}
+            </button>
+            <button class="avatar-menu-item" (click)="goToProfile()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              {{ i18n.t('adm_menu_settings') }}
+            </button>
+            <button class="avatar-menu-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ i18n.t('adm_menu_support') }}
+            </button>
+            <div class="avatar-dropdown__divider"></div>
+            <button class="avatar-menu-item avatar-menu-item--danger" (click)="logout()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              {{ i18n.t('adm_menu_signout') }}
+            </button>
+          </div>
         </div>
 
       </div>
@@ -124,7 +175,5 @@
     <main class="main-content">
       <router-outlet />
     </main>
-
   </div>
-
 </div>

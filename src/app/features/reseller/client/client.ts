@@ -88,7 +88,24 @@ export default class ResellerClientsComponent {
     this.closePanel();
   }
 
+  // ── Validation ────────────────────────────────────────
+  isValidEmail(e: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+  }
+  isValidPhone(p: string): boolean {
+    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
+  }
+  get formEmailError(): string {
+    return (this.form.email ?? '') && !this.isValidEmail(this.form.email ?? '')
+      ? 'msg_error_invalid_email' : '';
+  }
+  get formPhoneError(): string {
+    return (this.form.phone ?? '') && !this.isValidPhone(this.form.phone ?? '')
+      ? 'msg_error_invalid_phone' : '';
+  }
+
   saveClient() {
+    if (!this.isValidEmail(this.form.email ?? '') || !this.isValidPhone(this.form.phone ?? '')) return;
     if (this.isEdit && this.selected) {
       const idx = this.clients.findIndex(c => c.id === this.selected!.id);
       if (idx > -1) this.clients[idx] = { ...this.selected, ...this.form } as ResellerClient;
