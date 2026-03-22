@@ -1,0 +1,378 @@
+<div class="page">
+
+  <!-- Page header -->
+  <p class="page-eyebrow">{{ i18n.t('topbar_reseller') }}</p>
+  <h1 class="page-title">{{ i18n.t('nav_profile') }}</h1>
+
+  <div class="profile-layout">
+
+    <!-- ══ LEFT: Identity Card ══════════════════════════════ -->
+    <div class="identity-card">
+
+      <!-- Avatar -->
+      <div class="avatar-upload-wrap">
+        @if (avatarPreview) {
+          <img class="identity-avatar identity-avatar--photo" [src]="avatarPreview" alt="avatar"/>
+        } @else {
+          <div class="identity-avatar">{{ initials }}</div>
+        }
+        <label class="avatar-upload-overlay" title="{{ i18n.t('res_upload_photo_hint') }}">
+          <input type="file" accept="image/*" class="avatar-file-input" (change)="onAvatarChange($event)"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </label>
+      </div>
+      @if (uploadError) {
+        <p class="avatar-upload-error">{{ i18n.t(uploadError) }}</p>
+      } @else {
+        <p class="avatar-upload-hint">{{ i18n.t('res_upload_photo_hint') }}</p>
+      }
+      @if (avatarPreview) {
+        <button class="avatar-remove-btn" (click)="removeAvatar()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          </svg>
+          {{ i18n.t('res_remove_photo') }}
+        </button>
+      }
+
+      <!-- Name & company -->
+      <h3 class="identity-name">{{ reseller.name }}</h3>
+      <p class="identity-company">{{ reseller.companyName }}</p>
+
+      <!-- Server badge -->
+      <span class="server-badge">
+        @if (reseller.serverType === 'shared') {
+          🖥 {{ i18n.t('server_traci_label') }} Server
+        } @else {
+          🔒 {{ i18n.t('server_own_label') }} Server
+        }
+      </span>
+
+      <!-- Contact info -->
+      <div class="contact-list">
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          <span>{{ reseller.email }}</span>
+        </div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.59 3.41 2 2 0 0 1 3.56 1.2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.32-1.32a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2z"/>
+          </svg>
+          <span>{{ reseller.phone }}</span>
+        </div>
+        <div class="contact-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>{{ reseller.region }}</span>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="identity-stats">
+        <div class="istat">
+          <span class="istat-val">{{ fmt(totalClients) }}</span>
+          <span class="istat-label">{{ i18n.t('res_stat_clients') }}</span>
+        </div>
+        <div class="istat-sep"></div>
+        <div class="istat">
+          <span class="istat-val">{{ fmt(totalDevices) }}</span>
+          <span class="istat-label">{{ i18n.t('stat_devices') }}</span>
+        </div>
+        <div class="istat-sep"></div>
+        <div class="istat">
+          <span class="istat-val istat-val--teal">{{ fmt(totalRevenue) }}</span>
+          <span class="istat-label">TND</span>
+        </div>
+      </div>
+
+      <!-- Sign out -->
+      <button class="identity-signout" (click)="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        {{ i18n.t('nav_logout') }}
+      </button>
+    </div>
+
+    <!-- ══ RIGHT: Tabs + Content ═════════════════════════════ -->
+    <div class="profile-main">
+
+      <!-- Horizontal tab nav -->
+      <div class="tab-nav">
+        <button class="tab-nav__btn" [class.tab-nav__btn--active]="activeTab==='profile'" (click)="switchTab('profile')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          {{ i18n.t('adm_tab_profile') }}
+        </button>
+        <button class="tab-nav__btn" [class.tab-nav__btn--active]="activeTab==='security'" (click)="switchTab('security')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          {{ i18n.t('adm_tab_security') }}
+        </button>
+        <button class="tab-nav__btn" [class.tab-nav__btn--active]="activeTab==='notifications'" (click)="switchTab('notifications')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          {{ i18n.t('adm_tab_notifications') }}
+        </button>
+        <button class="tab-nav__btn" [class.tab-nav__btn--active]="activeTab==='activity'" (click)="switchTab('activity')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          {{ i18n.t('adm_tab_activity') }}
+        </button>
+        <button class="tab-nav__btn" [class.tab-nav__btn--active]="activeTab==='preferences'" (click)="switchTab('preferences')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          {{ i18n.t('adm_tab_preferences') }}
+        </button>
+      </div>
+
+      <!-- ── PROFILE TAB ──────────────────────────────────── -->
+      @if (activeTab==='profile') {
+        <div class="panel-body">
+          <p class="section-title">{{ i18n.t('adm_profile_personal') }}</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>{{ i18n.t('form_full_name') }}</label>
+              <input type="text" [(ngModel)]="profile.name"/>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('form_company') }}</label>
+              <input type="text" [(ngModel)]="profile.companyName"/>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('profile_email') }}</label>
+              <input type="email" [(ngModel)]="profile.email" [class.input--error]="profileEmailError"/>
+              @if (profileEmailError) { <span class="field-error">{{ i18n.t(profileEmailError) }}</span> }
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('profile_phone') }}</label>
+              <input type="tel" [(ngModel)]="profile.phone" [class.input--error]="profilePhoneError"/>
+              @if (profilePhoneError) { <span class="field-error">{{ i18n.t(profilePhoneError) }}</span> }
+            </div>
+            <div class="form-group form-group--full">
+              <label>{{ i18n.t('profile_address') }}</label>
+              <input type="text" [(ngModel)]="profile.address"/>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('form_region') }}</label>
+              <input type="text" [(ngModel)]="profile.region"/>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" (click)="saveProfile()">{{ i18n.t('btn_save_changes') }}</button>
+          </div>
+        </div>
+      }
+
+      <!-- ── SECURITY TAB ─────────────────────────────────── -->
+      @if (activeTab==='security') {
+        <div class="panel-body">
+          <div class="section-card">
+            <p class="section-title">{{ i18n.t('adm_change_password') }}</p>
+            <div class="form-grid form-grid--3">
+              <div class="form-group">
+                <label>{{ i18n.t('adm_current_password') }}</label>
+                <input type="password" [(ngModel)]="security.currentPassword" placeholder="••••••••"/>
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('adm_new_password') }}</label>
+                <input type="password" [(ngModel)]="security.newPassword" placeholder="••••••••"/>
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('adm_confirm_password') }}</label>
+                <input type="password" [(ngModel)]="security.confirmPassword" placeholder="••••••••"/>
+              </div>
+            </div>
+            <div class="pwd-strength">
+              <div class="pwd-bar">
+                <div class="pwd-bar__fill"
+                  [class.pwd-bar--strong]="passwordStrength==='strong'"
+                  [class.pwd-bar--medium]="passwordStrength==='medium'"
+                  [class.pwd-bar--weak]="passwordStrength==='weak'">
+                </div>
+              </div>
+              <span class="pwd-label" [class.pwd-label--strong]="passwordStrength==='strong'">
+                {{ passwordStrength | titlecase }}
+              </span>
+            </div>
+            <div class="form-actions" style="margin-top:1rem">
+              <button class="btn-save" (click)="updatePassword()">{{ i18n.t('adm_update_password') }}</button>
+            </div>
+          </div>
+
+          <div class="section-card" style="margin-top:1.2rem">
+            <p class="section-title">{{ i18n.t('adm_active_sessions') }}</p>
+            <div class="session-list">
+              @for (s of sessions; track s.device; let i = $index) {
+                <div class="session-item" [class.session-item--current]="s.current">
+                  <div class="session-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                  </div>
+                  <div class="session-info">
+                    <p class="session-name">
+                      {{ s.device }}
+                      @if (s.current) { <span class="current-badge">{{ i18n.t('adm_session_current') }}</span> }
+                    </p>
+                    <p class="session-meta">{{ s.location }} · Active {{ s.lastActive }}</p>
+                  </div>
+                  @if (!s.current) {
+                    <button class="session-revoke" (click)="revokeSession(i)">{{ i18n.t('adm_session_revoke') }}</button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="section-card" style="margin-top:1.2rem">
+            <div class="tfa-row">
+              <div>
+                <p class="section-title" style="margin-bottom:0.2rem">{{ i18n.t('adm_tfa_title') }}</p>
+                <p class="panel-sub" style="margin-bottom:0">{{ i18n.t('adm_tfa_sub') }}</p>
+              </div>
+              <div class="toggle-wrap">
+                <span class="toggle-label" [class.toggle-label--on]="twoFaEnabled" [class.toggle-label--off]="!twoFaEnabled">
+                  {{ twoFaEnabled ? i18n.t('adm_tfa_enabled') : i18n.t('adm_tfa_disabled') }}
+                </span>
+                <button class="toggle" [class.toggle--on]="twoFaEnabled" (click)="twoFaEnabled=!twoFaEnabled"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── NOTIFICATIONS TAB ────────────────────────────── -->
+      @if (activeTab==='notifications') {
+        <div class="panel-body">
+          <div class="section-card">
+            <p class="section-title">{{ i18n.t('profile_notifications') }}</p>
+            <div class="notif-list">
+              @for (n of notifications; track n.nameKey) {
+                <div class="notif-row">
+                  <div class="notif-info">
+                    <p class="notif-name">{{ i18n.t(n.nameKey) }}</p>
+                    <p class="notif-desc">{{ i18n.t(n.descKey) }}</p>
+                  </div>
+                  <button class="toggle" [class.toggle--on]="n.enabled" (click)="n.enabled=!n.enabled"></button>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── ACTIVITY TAB ─────────────────────────────────── -->
+      @if (activeTab==='activity') {
+        <div class="panel-body">
+          <div class="today-summary">
+            <div class="today-stat">
+              <span class="today-val">{{ totalClients }}</span>
+              <span class="today-label">{{ i18n.t('res_stat_clients') }}</span>
+            </div>
+            <div class="today-stat">
+              <span class="today-val">{{ totalDevices }}</span>
+              <span class="today-label">{{ i18n.t('stat_devices') }}</span>
+            </div>
+            <div class="today-stat">
+              <span class="today-val">{{ activeDevices }}</span>
+              <span class="today-label">{{ i18n.t('active_devices') }}</span>
+            </div>
+            <div class="today-stat">
+              <span class="today-val">{{ totalTransactions }}</span>
+              <span class="today-label">{{ i18n.t('res_total_transactions') }}</span>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="act-timeline">
+              @for (a of activityLog; track a.date; let last = $last) {
+                <div class="act-entry">
+                  <div class="act-dot" [ngClass]="dotClass(a.icon)"></div>
+                  @if (!last) { <div class="act-line"></div> }
+                  <div class="act-body">
+                    <p class="act-title">{{ i18n.t(a.labelKey) }} <strong>{{ a.entity }}</strong></p>
+                    <p class="act-time">{{ a.date }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── PREFERENCES TAB ──────────────────────────────── -->
+      @if (activeTab==='preferences') {
+        <div class="panel-body">
+          <div class="section-card">
+            <p class="section-title">{{ i18n.t('adm_pref_theme') }}</p>
+            <div class="theme-options">
+              <label class="theme-opt" [class.theme-opt--selected]="preferences.theme==='light'">
+                <input type="radio" name="theme" value="light" [(ngModel)]="preferences.theme"/>
+                <div class="theme-preview theme-preview--light"></div>
+                <span>{{ i18n.t('adm_pref_light') }}</span>
+              </label>
+              <label class="theme-opt" [class.theme-opt--selected]="preferences.theme==='dark'">
+                <input type="radio" name="theme" value="dark" [(ngModel)]="preferences.theme"/>
+                <div class="theme-preview theme-preview--dark"></div>
+                <span>{{ i18n.t('adm_pref_dark') }}</span>
+              </label>
+              <label class="theme-opt" [class.theme-opt--selected]="preferences.theme==='system'">
+                <input type="radio" name="theme" value="system" [(ngModel)]="preferences.theme"/>
+                <div class="theme-preview theme-preview--system"></div>
+                <span>{{ i18n.t('adm_pref_system') }}</span>
+              </label>
+            </div>
+          </div>
+          <div class="section-card" style="margin-top:1.2rem">
+            <p class="section-title">{{ i18n.t('adm_pref_language') }}</p>
+            <div class="lang-options">
+              <label class="lang-opt" [class.lang-opt--selected]="preferences.language==='en'">
+                <input type="radio" name="lang" value="en" [(ngModel)]="preferences.language"/>
+                <span class="lang-flag">🇬🇧</span> {{ i18n.t('profile_english') }}
+              </label>
+              <label class="lang-opt" [class.lang-opt--selected]="preferences.language==='fr'">
+                <input type="radio" name="lang" value="fr" [(ngModel)]="preferences.language"/>
+                <span class="lang-flag">🇫🇷</span> {{ i18n.t('profile_french') }}
+              </label>
+            </div>
+          </div>
+          <div class="section-card" style="margin-top:1.2rem">
+            <p class="section-title">{{ i18n.t('adm_pref_timezone') }}</p>
+            <div class="form-group" style="max-width:300px">
+              <select [(ngModel)]="preferences.timezone">
+                <option value="GMT+1">GMT +1 (Tunisia)</option>
+                <option value="GMT+0">GMT +0 (London)</option>
+                <option value="GMT+2">GMT +2 (Cairo)</option>
+                <option value="GMT+3">GMT +3 (Riyadh)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:1.4rem">
+            <button class="btn-cancel">{{ i18n.t('adm_pref_reset') }}</button>
+            <button class="btn-save" (click)="savePreferences()">{{ i18n.t('adm_pref_save') }}</button>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

@@ -845,3 +845,45 @@
 :host-context(.dark) .form-group select { background: #0F172A; }
 :host-context(.dark) .modal-footer    { background: #1E293B; }
 :host-context(.dark) .server-option   { background: #0F172A; } 
+/* ══ LINKED DEVICES & TRANSACTIONS IN RESELLER DETAIL ═══════ */
+.linked-devices-section { margin-top: 1.4rem; }
+.section-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.85rem; }
+.section-title  { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-300); }
+.device-count-badge { background: var(--teal, #0D9488); color: #fff; border-radius: 99px; padding: 1px 8px; font-size: 0.62rem; font-weight: 800; }
+
+.linked-device-list { display: flex; flex-direction: column; gap: 0.65rem; }
+.linked-device-card {
+  display: flex; align-items: flex-start; gap: 0.85rem;
+  padding: 0.9rem 1rem; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+.linked-device-card:hover { border-color: var(--teal, #0D9488); }
+.ld-icon { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; background: rgba(13,148,136,0.10); color: var(--teal, #0D9488); display: flex; align-items: center; justify-content: center; }
+.ld-icon svg { width: 16px; height: 16px; }
+.ld-body { flex: 1; min-width: 0; }
+.ld-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem; }
+.ld-model  { font-size: 0.84rem; font-weight: 700; color: var(--text-900); }
+.ld-serial { font-size: 0.7rem; color: var(--text-300); font-family: monospace; margin-bottom: 0.35rem; }
+.ld-status { font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.dev-badge--active   { background: rgba(22,163,74,0.12);   color: #16A34A; }
+.dev-badge--expired  { background: rgba(239,68,68,0.10);   color: #DC2626; }
+.dev-badge--inactive { background: rgba(107,114,128,0.12); color: #6B7280; }
+.ld-dates  { font-size: 0.7rem; color: var(--text-500); margin-bottom: 0.3rem; }
+.ld-dates .expiry--soon    { color: #D97706; font-weight: 700; }
+.ld-dates .expiry--expired { color: #DC2626; font-weight: 700; }
+.ld-sim    { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 600; color: var(--teal, #0D9488); }
+.ld-sim svg { width: 12px; height: 12px; flex-shrink: 0; }
+.ld-sim-num { color: var(--text-300); font-family: monospace; font-size: 0.68rem; }
+.ld-price  { font-size: 0.82rem; font-weight: 800; color: var(--text-900); white-space: nowrap; flex-shrink: 0; }
+
+.tx-mini-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.tx-mini-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--card); border: 1px solid var(--border); }
+.tx-mini-icon { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; background: rgba(13,148,136,0.10); color: var(--teal, #0D9488); display: flex; align-items: center; justify-content: center; }
+.tx-mini-icon svg { width: 13px; height: 13px; }
+.tx-mini-body { flex: 1; min-width: 0; }
+.tx-mini-model  { font-size: 0.8rem; font-weight: 700; color: var(--text-900); }
+.tx-mini-serial { font-size: 0.68rem; color: var(--text-300); font-family: monospace; }
+.tx-mini-right  { text-align: right; flex-shrink: 0; }
+.tx-mini-amount { font-size: 0.84rem; font-weight: 800; color: var(--text-900); }
+.tx-mini-date   { font-size: 0.67rem; color: var(--text-300); margin-top: 1px; }

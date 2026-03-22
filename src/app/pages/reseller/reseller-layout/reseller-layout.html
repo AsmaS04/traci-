@@ -3,38 +3,32 @@
   <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
   <aside class="sidebar" [style.width]="collapsed ? '64px' : '240px'">
 
-    <!-- Logo -->
     <div class="sidebar-logo">
       @if (!collapsed) { <span class="logo-text">TRACI</span> }
       <button class="collapse-btn" (click)="toggleCollapse()" title="Toggle sidebar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           @if (!collapsed) { <path d="M15 19l-7-7 7-7"/> }
-          @if (collapsed) { <path d="M9 5l7 7-7 7"/> }
+          @if (collapsed)  { <path d="M9 5l7 7-7 7"/> }
         </svg>
       </button>
     </div>
 
-    <!-- Navigation -->
     <nav class="sidebar-nav">
       @if (!collapsed) { <p class="nav-section-label">RESELLER</p> }
-
       @for (item of navItems; track item.route) {
-        <a
-          [routerLink]="item.route"
-          routerLinkActive="nav-item-active"
-          class="nav-item"
-          [title]="collapsed ? i18n.t(item.labelKey) : ''">
+        <a [routerLink]="item.route" routerLinkActive="nav-item-active"
+          class="nav-item" [title]="collapsed ? i18n.t(item.labelKey) : ''">
           <span class="nav-icon" [innerHTML]="item.icon"></span>
           @if (!collapsed) { <span class="nav-label">{{ i18n.t(item.labelKey) }}</span> }
         </a>
       }
     </nav>
 
-    <!-- Bottom user card -->
     <div class="sidebar-bottom">
       <div class="user-card">
-        <div class="user-avatar">{{ initials }}</div>
+        <!-- Show avatar image if uploaded, else initials -->
+        @if (!reseller.avatarUrl) { <div class="user-avatar">{{ initials }}</div> }
+        @if (reseller.avatarUrl) { <img class="user-avatar user-avatar--img" [src]="reseller.avatarUrl" alt="avatar"/> }
         @if (!collapsed) {
           <div class="user-info">
             <p class="user-name">{{ reseller.name }}</p>
@@ -43,13 +37,11 @@
         }
       </div>
     </div>
-
   </aside>
 
   <!-- ══ RIGHT SIDE ════════════════════════════════════════════ -->
   <div class="right-side" [style.marginLeft]="collapsed ? '64px' : '240px'">
 
-    <!-- Topbar -->
     <header class="topbar">
       <span class="topbar-brand">{{ i18n.t('topbar_reseller') || 'Reseller Panel' }}</span>
 
@@ -65,22 +57,16 @@
         <!-- Theme -->
         <button class="topbar-btn" (click)="toggleDark()" title="Toggle theme">
           @if (!darkMode) {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="5"/>
-              <line x1="12" y1="1"  x2="12" y2="3"/>
-              <line x1="12" y1="21" x2="12" y2="23"/>
-              <line x1="4.22" y1="4.22"   x2="5.64"  y2="5.64"/>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-              <line x1="1" y1="12" x2="3" y2="12"/>
-              <line x1="21" y1="12" x2="23" y2="12"/>
-              <line x1="4.22" y1="19.78" x2="5.64"  y2="18.36"/>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
           }
           @if (darkMode) {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           }
@@ -89,26 +75,23 @@
         <!-- Notifications -->
         <div class="notif-wrap">
           <button class="topbar-btn" (click)="toggleNotif()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
             @if (notifCount > 0) { <span class="notif-badge"></span> }
           </button>
-
           @if (notifOpen) {
             <div class="notif-dropdown">
               <div class="notif-header">
-                <p class="notif-title">Notifications</p>
+                <p class="notif-title">{{ i18n.t('notif_title') }}</p>
                 <button class="notif-close" (click)="closeNotif()">&#x2715;</button>
               </div>
               <div class="notif-list">
                 @for (n of notifications; track $index) {
                   <div class="notif-item">
                     <div class="notif-item-icon notif-icon--device">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="5" y="2" width="14" height="20" rx="2"/>
                         <circle cx="12" cy="17" r="1" fill="currentColor"/>
                       </svg>
@@ -124,14 +107,70 @@
           }
         </div>
 
+        <!-- ── Avatar Dropdown ─────────────────────────── -->
+        <div class="avatar-wrap" (click)="toggleAvatar()">
+          <div class="topbar-avatar">
+            @if (!reseller.avatarUrl) { <div class="topbar-avatar__img">{{ initials }}</div> }
+            @if (reseller.avatarUrl) { <img class="topbar-avatar__img topbar-avatar__img--photo" [src]="reseller.avatarUrl" alt="avatar"/> }
+            <span class="topbar-avatar__name">{{ reseller.name.split(' ')[0] }}</span>
+            <svg class="topbar-avatar__chevron" [class.rotated]="avatarOpen"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+
+          @if (avatarOpen) {
+          <div class="avatar-dropdown" (click)="$event.stopPropagation()">
+            <!-- Header -->
+            <div class="avatar-dropdown__header">
+              @if (!reseller.avatarUrl) { <div class="avatar-dropdown__avatar">{{ initials }}</div> }
+              @if (reseller.avatarUrl) { <img class="avatar-dropdown__avatar avatar-dropdown__avatar--photo" [src]="reseller.avatarUrl" alt="avatar"/> }
+              <div>
+                <p class="avatar-dropdown__name">{{ reseller.name }}</p>
+                <p class="avatar-dropdown__email">{{ reseller.email }}</p>
+              </div>
+            </div>
+            <div class="avatar-dropdown__divider"></div>
+
+            <!-- Edit profile -->
+            <button class="avatar-menu-item" (click)="goToProfile()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+              {{ i18n.t('adm_menu_edit_profile') }}
+            </button>
+
+            <!-- Support -->
+            <button class="avatar-menu-item" (click)="openSupport()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {{ i18n.t('adm_menu_support') }}
+            </button>
+
+            <div class="avatar-dropdown__divider"></div>
+
+            <!-- Sign out -->
+            <button class="avatar-menu-item avatar-menu-item--danger" (click)="logout()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              {{ i18n.t('adm_menu_signout') }}
+            </button>
+          </div>
+          }
+        </div>
+
       </div>
     </header>
 
-    <!-- Page content -->
     <main class="main-content">
       <router-outlet />
     </main>
-
   </div>
-
 </div>

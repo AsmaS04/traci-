@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { MOCK_RESELLER } from '../../../data/reseller-mock-data';
 
@@ -17,6 +17,7 @@ export default class ResellerLayout {
   darkMode   = false;
   notifOpen  = false;
   notifCount = 3;
+  avatarOpen = false;
 
   reseller = MOCK_RESELLER;
 
@@ -29,15 +30,32 @@ export default class ResellerLayout {
       .slice(0, 2);
   }
 
-  constructor(public i18n: TranslationService) {}
+  constructor(public i18n: TranslationService, private router: Router) {}
 
   toggleCollapse(): void { this.collapsed = !this.collapsed; }
   toggleDark(): void     { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark', this.darkMode); }
-  toggleNotif(): void    { this.notifOpen = !this.notifOpen; if (this.notifOpen) this.notifCount = 0; }
+  toggleNotif(): void    { this.notifOpen = !this.notifOpen; this.avatarOpen = false; if (this.notifOpen) this.notifCount = 0; }
   closeNotif(): void     { this.notifOpen = false; }
+  toggleAvatar(): void   { this.avatarOpen = !this.avatarOpen; this.notifOpen = false; }
+  closeAvatar(): void    { this.avatarOpen = false; }
   async toggleLang(): Promise<void> { await this.i18n.toggle(); }
-
   get lang(): string { return this.i18n.lang(); }
+
+  goToProfile(): void {
+    this.avatarOpen = false;
+    this.router.navigate(['/reseller-dashboard/profile']);
+  }
+
+  openSupport(): void {
+    this.avatarOpen = false;
+    // TODO: open support dialog or navigate to support page
+    alert('Support: contact@traci.tn');
+  }
+
+  logout(): void {
+    this.avatarOpen = false;
+    this.router.navigate(['/bo-reseller-access']);
+  }
 
   notifications = [
     { text: 'New client subscription',   time: '5 min ago'  },
@@ -60,6 +78,11 @@ export default class ResellerLayout {
       labelKey: 'nav_devices',
       route: '/reseller-dashboard/devices',
       icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>`
+    },
+    {
+      labelKey: 'nav_profile',
+      route: '/reseller-dashboard/profile',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
     },
   ];
 }

@@ -1,19 +1,52 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Reseller } from '../../../models/reseller.model';
 import { TranslationService } from '../../../service/translation.service';
+import { MOCK_DEVICES, MOCK_DEVICE_TRANSACTIONS } from '../../../data/device-mock-data';
+import { ClientDevice, DeviceTransaction } from '../../../models/device.model';
 
 @Component({
   selector: 'app-resellers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './resellers.html',
   styleUrl: './resellers.css',
 })
 export class Resellers {
 
   constructor(public i18n: TranslationService) {}
+
+  // ── Device & transaction helpers ──────────────────────
+  readonly allDevices      = MOCK_DEVICES;
+  readonly allTransactions = MOCK_DEVICE_TRANSACTIONS;
+
+  devicesForReseller(resellerId: number): ClientDevice[] {
+    return this.allDevices.filter(d => d.resellerId === resellerId);
+  }
+  transactionsForReseller(resellerId: number): DeviceTransaction[] {
+    return this.allTransactions.filter(t => t.resellerId === resellerId);
+  }
+  revenueForReseller(resellerId: number): number {
+    return this.transactionsForReseller(resellerId).reduce((s, t) => s + t.amount, 0);
+  }
+  activeDevicesForReseller(resellerId: number): number {
+    return this.devicesForReseller(resellerId).filter(d => d.status === 'active').length;
+  }
+  deviceStatusClass(s: string): string {
+    if (s === 'active')  return 'dev-badge--active';
+    if (s === 'expired') return 'dev-badge--expired';
+    return 'dev-badge--inactive';
+  }
+  daysUntilExpiry(date: string): number {
+    return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
+  }
+  expiryUrgency(date: string): string {
+    const d = this.daysUntilExpiry(date);
+    if (d < 0)   return 'expiry--expired';
+    if (d <= 30) return 'expiry--soon';
+    return '';
+  }
+  fmt(n: number) { return new Intl.NumberFormat().format(n); }
 
   view: 'table' | 'detail' = 'table';
   selected: Reseller | null = null;

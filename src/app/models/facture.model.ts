@@ -1,8 +1,8 @@
 // src/app/models/facture.model.ts
 
 export enum StatutFacture {
-  PAYEE = 'PAYEE',
-  EN_ATTENTE = 'EN_ATTENTE',
+  PAYEE = 'PAYED',
+  EN_ATTENTE = 'PENDING',
   ECHUE = 'ECHUE'
 }
 

@@ -185,6 +185,102 @@
       </div>
     </div>
 
+
+    <!-- ── Revenue + Device stats ──────────────────────── -->
+    <div class="detail-stats" style="margin-top:1.2rem">
+      <div class="detail-stat">
+        <p class="detail-stat-value" style="color:var(--teal)">{{ fmt(revenueForReseller(selected.id)) }}</p>
+        <p class="detail-stat-label">{{ i18n.t('adm_tx_total_revenue') }} (TND)</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-value">{{ devicesForReseller(selected.id).length }}</p>
+        <p class="detail-stat-label">{{ i18n.t('stat_devices') }}</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-value" style="color:var(--teal)">{{ activeDevicesForReseller(selected.id) }}</p>
+        <p class="detail-stat-label">{{ i18n.t('active_devices') }}</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-value">{{ transactionsForReseller(selected.id).length }}</p>
+        <p class="detail-stat-label">{{ i18n.t('adm_tx_total_count') }}</p>
+      </div>
+    </div>
+
+    <!-- ── Linked Devices ───────────────────────────────── -->
+    @if (devicesForReseller(selected.id).length > 0) {
+    <div class="linked-devices-section">
+      <div class="section-header">
+        <p class="section-title">{{ i18n.t('nav_devices') }}</p>
+        <span class="device-count-badge">{{ devicesForReseller(selected.id).length }}</span>
+      </div>
+      <div class="linked-device-list">
+        @for (d of devicesForReseller(selected.id); track d.serialNumber) {
+        <div class="linked-device-card">
+          <div class="ld-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="ld-body">
+            <div class="ld-top-row">
+              <p class="ld-model">{{ d.model }}</p>
+              <span class="ld-status" [class]="deviceStatusClass(d.status)">{{ d.status }}</span>
+            </div>
+            <p class="ld-serial">{{ d.serialNumber }}</p>
+            <div class="ld-dates">
+              <span [class]="expiryUrgency(d.expirationDate)">
+                {{ i18n.t('res_expires') }}: {{ d.expirationDate }}
+                @if (daysUntilExpiry(d.expirationDate) >= 0 && daysUntilExpiry(d.expirationDate) <= 30) {
+                  <strong>({{ daysUntilExpiry(d.expirationDate) }}d)</strong>
+                }
+              </span>
+            </div>
+            @if (d.hasSim) {
+            <div class="ld-sim">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/>
+              </svg>
+              {{ d.simProvider }}
+              @if (d.simNumber) { <span class="ld-sim-num">· {{ d.simNumber }}</span> }
+            </div>
+            }
+          </div>
+          <p class="ld-price">{{ d.price }} TND</p>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- ── Transaction history ───────────────────────────── -->
+    @if (transactionsForReseller(selected.id).length > 0) {
+    <div class="linked-devices-section">
+      <div class="section-header">
+        <p class="section-title">{{ i18n.t('res_device_transactions') }}</p>
+        <span class="device-count-badge">{{ transactionsForReseller(selected.id).length }}</span>
+      </div>
+      <div class="tx-mini-list">
+        @for (t of transactionsForReseller(selected.id); track t.serial) {
+        <div class="tx-mini-item">
+          <div class="tx-mini-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="tx-mini-body">
+            <p class="tx-mini-model">{{ t.model }}</p>
+            <p class="tx-mini-serial">{{ t.serial }}</p>
+          </div>
+          <div class="tx-mini-right">
+            <p class="tx-mini-amount">{{ fmt(t.amount) }} TND</p>
+            <p class="tx-mini-date">{{ t.date }}</p>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
     @if (selected.clientIds.length) {
       <div class="client-ids-panel">
         <p class="panel-title">{{ i18n.t('linked_client_ids') }}</p>

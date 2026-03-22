@@ -20,6 +20,48 @@ export class AdminProfil {
   activeTab: TabName = 'profile';
   switchTab(tab: TabName) { this.activeTab = tab; }
 
+  // ── Avatar / photo upload ─────────────────────────────
+  avatarPreview: string | null = null;
+  avatarFile: File | null = null;
+  uploadError = '';
+
+  onAvatarChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.uploadError = 'adm_upload_type_error';
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      this.uploadError = 'adm_upload_size_error';
+      return;
+    }
+    
+    this.uploadError = '';
+    this.avatarFile = file;
+    
+    // Preview the image
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.avatarPreview = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeAvatar(): void {
+    this.avatarPreview = null;
+    this.avatarFile = null;
+  }
+
+  get initials(): string {
+    return `${this.profile.firstName[0]}${this.profile.lastName[0]}`.toUpperCase();
+  }
+
   // ── Profile form ──────────────────────────────────────
   profile = {
     firstName: 'Asma',
@@ -49,8 +91,7 @@ export class AdminProfil {
 
   saveProfile() {
     if (!this.isValidEmail(this.profile.email) || !this.isValidPhone(this.profile.phone)) return;
-    // TODO: call AuthService.updateProfile(this.profile)
-    console.log('Profile saved', this.profile);
+    console.log('Profile saved', this.profile, 'Avatar:', this.avatarFile?.name);
   }
 
   // ── Security form ─────────────────────────────────────
@@ -65,9 +106,14 @@ export class AdminProfil {
     return 'strong';
   }
 
+  get strengthWidth(): number {
+    if (this.passwordStrength === 'strong') return 100;
+    if (this.passwordStrength === 'medium') return 60;
+    return this.security.newPassword.length ? 25 : 0;
+  }
+
   updatePassword() {
     if (this.security.newPassword !== this.security.confirmPassword) return;
-    // TODO: call AuthService.changePassword(...)
     this.security = { currentPassword: '', newPassword: '', confirmPassword: '' };
   }
 
@@ -103,7 +149,6 @@ export class AdminProfil {
   preferences = { theme: 'light', language: 'en', timezone: 'GMT+1' };
 
   savePreferences() {
-    // TODO: apply theme and language changes
     this.i18n.loadTranslations(this.preferences.language as 'en' | 'fr');
   }
 }

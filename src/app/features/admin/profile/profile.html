@@ -6,16 +6,42 @@
     <div class="header-content">
       <div class="avatar-section">
         <div class="avatar-wrap">
-          <div class="avatar">Ad</div>
-          <button class="avatar-upload-btn" title="Upload photo">
+          <!-- Show avatar photo if uploaded, otherwise show initials -->
+          @if (avatarPreview) {
+            <img class="avatar avatar--photo" [src]="avatarPreview" alt="Admin avatar"/>
+          } @else {
+            <div class="avatar">{{ initials }}</div>
+          }
+
+          <!-- Upload button overlay -->
+          <label class="avatar-upload-btn" title="{{ i18n.t('adm_upload_photo_hint') }}">
+            <input type="file" accept="image/*" class="avatar-file-input" (change)="onAvatarChange($event)"/>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-          </button>
+          </label>
+
           <span class="avatar-status"></span>
         </div>
+
+        <!-- Upload hint or error -->
+        @if (uploadError) {
+          <p class="avatar-upload-error">{{ i18n.t(uploadError) }}</p>
+        } @else {
+          <p class="avatar-upload-hint">{{ i18n.t('adm_upload_photo_hint') }}</p>
+        }
+
+        <!-- Remove photo button -->
+        @if (avatarPreview) {
+          <button class="avatar-remove-btn" (click)="removeAvatar()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            {{ i18n.t('adm_remove_photo') }}
+          </button>
+        }
       </div>
       <div class="header-info">
         <div class="header-name-row">
@@ -89,7 +115,8 @@
     <div class="tab-content">
 
       <!-- ── PROFILE TAB ─────────────────────────────────── -->
-      <div class="tab-panel" *ngIf="activeTab==='profile'">
+      @if (activeTab==='profile') {
+      <div class="tab-panel">
         <div class="panel-header">
           <h2 class="panel-title">{{ i18n.t('adm_profile_personal') }}</h2>
           <p class="panel-sub">{{ i18n.t('adm_profile_personal_sub') }}</p>
@@ -133,9 +160,11 @@
           </div>
         </div>
       </div>
+      }
 
       <!-- ── SECURITY TAB ────────────────────────────────── -->
-      <div class="tab-panel" *ngIf="activeTab==='security'">
+      @if (activeTab==='security') {
+      <div class="tab-panel">
         <div class="panel-header">
           <h2 class="panel-title">{{ i18n.t('adm_profile_security') }}</h2>
           <p class="panel-sub">{{ i18n.t('adm_profile_security_sub') }}</p>
@@ -177,8 +206,8 @@
         <div class="section-card" style="margin-top:1.2rem">
           <p class="section-title">{{ i18n.t('adm_active_sessions') }}</p>
           <div class="session-list">
-            <div class="session-item" *ngFor="let s of sessions; let i = index"
-              [class.session-item--current]="s.current">
+            @for (s of sessions; track $index; let i = $index) {
+            <div class="session-item" [class.session-item--current]="s.current">
               <div class="session-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2"/>
@@ -189,12 +218,15 @@
               <div class="session-info">
                 <p class="session-name">
                   {{ s.device }}
-                  <span class="current-badge" *ngIf="s.current">{{ i18n.t('adm_session_current') }}</span>
+                  @if (s.current) { <span class="current-badge">{{ i18n.t('adm_session_current') }}</span> }
                 </p>
                 <p class="session-meta">{{ s.location }} · Active {{ s.lastActive }}</p>
               </div>
-              <button class="session-revoke" *ngIf="!s.current" (click)="revokeSession(i)">{{ i18n.t('adm_session_revoke') }}</button>
+              @if (!s.current) {
+              <button class="session-revoke" (click)="revokeSession(i)">{{ i18n.t('adm_session_revoke') }}</button>
+              }
             </div>
+            }
           </div>
         </div>
 
@@ -215,9 +247,11 @@
           </div>
         </div>
       </div>
+      }
 
       <!-- ── NOTIFICATIONS TAB ───────────────────────────── -->
-      <div class="tab-panel" *ngIf="activeTab==='notifications'">
+      @if (activeTab==='notifications') {
+      <div class="tab-panel">
         <div class="panel-header">
           <h2 class="panel-title">{{ i18n.t('adm_profile_notifications') }}</h2>
           <p class="panel-sub">{{ i18n.t('adm_profile_notifications_sub') }}</p>
@@ -225,19 +259,23 @@
         <div class="section-card">
           <p class="section-title">{{ i18n.t('profile_notifications') }}</p>
           <div class="notif-list">
-            <div class="notif-row" *ngFor="let n of notifications">
+            @for (n of notifications; track $index) {
+            <div class="notif-row">
               <div class="notif-info">
                 <p class="notif-name">{{ i18n.t(n.nameKey) }}</p>
                 <p class="notif-desc">{{ i18n.t(n.descKey) }}</p>
               </div>
               <button class="toggle" [class.toggle--on]="n.enabled" (click)="n.enabled=!n.enabled"></button>
             </div>
+            }
           </div>
         </div>
       </div>
+      }
 
       <!-- ── ACTIVITY TAB ────────────────────────────────── -->
-      <div class="tab-panel" *ngIf="activeTab==='activity'">
+      @if (activeTab==='activity') {
+      <div class="tab-panel">
         <div class="panel-header">
           <h2 class="panel-title">{{ i18n.t('adm_profile_activity') }}</h2>
           <p class="panel-sub">{{ i18n.t('adm_profile_activity_sub') }}</p>
@@ -262,25 +300,29 @@
         </div>
         <div class="section-card">
           <div class="act-timeline">
-            <div class="act-entry" *ngFor="let a of activityLog; let last = last">
+            @for (a of activityLog; track $index; let last = $last) {
+            <div class="act-entry">
               <div class="act-dot"
                 [class.act-dot--teal]="a.icon==='teal'"
                 [class.act-dot--blue]="a.icon==='blue'"
                 [class.act-dot--red]="a.icon==='red'"
                 [class.act-dot--amber]="a.icon==='amber'">
               </div>
-              <div class="act-line" *ngIf="!last"></div>
+              @if (!last) { <div class="act-line"></div> }
               <div class="act-body">
                 <p class="act-title">{{ i18n.t(a.labelKey) }} <strong>{{ a.entity }}</strong></p>
                 <p class="act-time">{{ a.date }}</p>
               </div>
             </div>
+            }
           </div>
         </div>
       </div>
+      }
 
       <!-- ── PREFERENCES TAB ─────────────────────────────── -->
-      <div class="tab-panel" *ngIf="activeTab==='preferences'">
+      @if (activeTab==='preferences') {
+      <div class="tab-panel">
         <div class="panel-header">
           <h2 class="panel-title">{{ i18n.t('adm_profile_preferences') }}</h2>
           <p class="panel-sub">{{ i18n.t('adm_profile_preferences_sub') }}</p>
@@ -334,6 +376,7 @@
           <button class="btn-save" (click)="savePreferences()">Save {{ i18n.t('adm_profile_preferences') }}</button>
         </div>
       </div>
+      }
 
     </div>
   </div>

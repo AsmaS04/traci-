@@ -46,6 +46,62 @@
   background: #16A34A; border: 2px solid var(--card);
 }
 
+/* Avatar photo variant */
+.avatar--photo {
+  object-fit: cover;
+  font-size: 0; /* hide alt text */
+}
+
+/* Hidden file input */
+.avatar-file-input {
+  display: none;
+}
+
+/* Avatar upload hint text */
+.avatar-upload-hint {
+  font-size: 0.65rem;
+  color: var(--text-300);
+  margin-top: 0.6rem;
+  text-align: center;
+}
+
+/* Avatar upload error text */
+.avatar-upload-error {
+  font-size: 0.65rem;
+  color: #DC2626;
+  margin-top: 0.6rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Remove avatar button */
+.avatar-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin: 0.5rem auto 0;
+  padding: 0.3rem 0.8rem;
+  background: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 99px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.avatar-remove-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.avatar-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.14);
+}
+
 /* Header info */
 .header-info { flex: 1; min-width: 0; }
 .header-name-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.6rem; flex-wrap: wrap; }

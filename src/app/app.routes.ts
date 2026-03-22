@@ -15,7 +15,7 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // ADMIN SHELL (sidebar + router-outlet)
+  // ADMIN SHELL
   // ══════════════════════════════════════════════════════════
   {
     path: 'admin',
@@ -42,6 +42,16 @@ export const routes: Routes = [
           import('./features/admin/profile/profile').then(m => m.AdminProfil),
       },
       {
+        path: 'devices',
+        loadComponent: () =>
+          import('./features/admin/devices/devices').then(m => m.AdminDevices),
+      },
+      {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./features/admin/transactions/transaction').then(m => m.Transactions),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
@@ -50,7 +60,7 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // CLIENT SHELL (sidebar + router-outlet)
+  // CLIENT SHELL
   // ══════════════════════════════════════════════════════════
   {
     path: 'client-dashboard',
@@ -85,7 +95,7 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // RESELLER SHELL (sidebar + router-outlet)
+  // RESELLER SHELL
   // ══════════════════════════════════════════════════════════
   {
     path: 'reseller-dashboard',
@@ -103,6 +113,16 @@ export const routes: Routes = [
           import('./features/reseller/client/client').then(m => m.default),
       },
       {
+        path: 'devices',
+        loadComponent: () =>
+          import('./features/reseller/devices/devices').then(m => m.default),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./features/reseller/profile/profile').then(m => m.default),
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
@@ -111,7 +131,7 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // LOGIN PAGES (public, no sidebar)
+  // LOGIN PAGES
   // ══════════════════════════════════════════════════════════
   { path: 'client',             component: LoginClient },
   { path: 'bo-admin-access',    component: LoginAdmin },

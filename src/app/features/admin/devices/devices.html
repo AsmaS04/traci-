@@ -1,0 +1,254 @@
+<div class="page">
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <p class="page-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
+      <h1 class="page-title">{{ i18n.t('nav_devices') }}</h1>
+    </div>
+  </div>
+
+  <!-- ── Summary pills ──────────────────────────────────── -->
+  <div class="summary-row">
+    <div class="summary-pill">
+      <span class="pill-num">{{ totalCount }}</span>
+      <span class="pill-label">{{ i18n.t('filter_all') }}</span>
+    </div>
+    <div class="summary-pill summary-pill--active">
+      <span class="pill-num">{{ activeCount }}</span>
+      <span class="pill-label">{{ i18n.t('filter_active') }}</span>
+    </div>
+    <div class="summary-pill summary-pill--expired">
+      <span class="pill-num">{{ expiredCount }}</span>
+      <span class="pill-label">{{ i18n.t('dev_expired') }}</span>
+    </div>
+    <div class="summary-pill summary-pill--inactive">
+      <span class="pill-num">{{ inactiveCount }}</span>
+      <span class="pill-label">{{ i18n.t('filter_inactive') }}</span>
+    </div>
+    @if (expiringSoon > 0) {
+    <div class="summary-pill summary-pill--warn">
+      <span class="pill-num">{{ expiringSoon }}</span>
+      <span class="pill-label">{{ i18n.t('dev_expiring_soon') }}</span>
+    </div>
+    }
+  </div>
+
+  <!-- ── Toolbar ────────────────────────────────────────── -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" type="text" [(ngModel)]="search"
+        [placeholder]="i18n.t('dev_search_placeholder')"/>
+    </div>
+
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="filterStatus==='all'"      (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='active'"   (click)="filterStatus='active'">{{ i18n.t('filter_active') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='expired'"  (click)="filterStatus='expired'">{{ i18n.t('dev_expired') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='inactive'" (click)="filterStatus='inactive'">{{ i18n.t('filter_inactive') }}</button>
+    </div>
+
+    <select class="filter-select" [(ngModel)]="filterModel">
+      @for (m of modelOptions; track m) {
+      <option [value]="m">
+        {{ m === 'all' ? i18n.t('dev_all_models') : m }}
+      </option>
+      }
+    </select>
+
+    <span class="result-count">{{ filtered.length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
+  </div>
+
+  <!-- ── Table ──────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-scroll">
+      <table class="dev-table">
+        <thead>
+          <tr>
+            <th class="col-id">#</th>
+            <th>{{ i18n.t('res_serial_number') }}</th>
+            <th>{{ i18n.t('res_device_model') }}</th>
+            <th>{{ i18n.t('nav_clients') }}</th>
+            <th>{{ i18n.t('nav_resellers') }}</th>
+            <th>{{ i18n.t('res_sim_card') }}</th>
+            <th>{{ i18n.t('res_expiration_date') }}</th>
+            <th>{{ i18n.t('res_device_price') }}</th>
+            <th>{{ i18n.t('col_status') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of filtered; track d.id) {
+          <tr class="table-row" (click)="openPanel(d)">
+            <td class="col-id"><span class="id-badge">#{{ d.id }}</span></td>
+            <td>
+              <div class="serial-cell">
+                <div class="device-icon" [class.device-icon--expired]="d.status==='expired'" [class.device-icon--inactive]="d.status==='inactive'">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <span class="serial-text">{{ d.serialNumber }}</span>
+              </div>
+            </td>
+            <td><span class="model-badge" [class]="modelColor(d.model)">{{ d.model }}</span></td>
+            <td class="name-cell">{{ d.clientName }}</td>
+            <td><span class="reseller-pill">{{ d.resellerName }}</span></td>
+            <td>
+              @if (d.hasSim) {
+              <span class="sim-cell">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/>
+                </svg>
+                {{ d.simProvider }}
+              </span>
+              }
+              @if (!d.hasSim) {
+              <span class="no-sim-cell">—</span>
+              }
+            </td>
+            <td>
+              <span [class]="expiryUrgency(d.expirationDate)" class="expiry-cell">
+                {{ d.expirationDate }}
+                @if (daysUntilExpiry(d.expirationDate) >= 0 && daysUntilExpiry(d.expirationDate) <= 30) {
+                <span class="expiry-days">({{ daysUntilExpiry(d.expirationDate) }}d)</span>
+                }
+              </span>
+            </td>
+            <td class="amount-cell">{{ fmt(d.price) }} TND</td>
+            <td>
+              <span class="status-pill" [class]="statusClass(d.status)">
+                <span class="status-dot"></span>{{ d.status }}
+              </span>
+            </td>
+            <td (click)="$event.stopPropagation()">
+              <button class="row-btn" (click)="openPanel(d)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+          }
+          @if (filtered.length === 0) {
+          <tr>
+            <td colspan="10" class="empty-row">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+              </svg>
+              <p>{{ i18n.t('res_no_devices') }}</p>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DETAIL PANEL ════════════════════════════════════════ -->
+@if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
+
+@if (panelDevice) {
+<div class="slide-panel" [class.slide-panel--open]="panelOpen">
+
+  <div class="panel-topbar">
+    <button class="panel-back" (click)="closePanel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+      </svg>
+      {{ i18n.t('btn_back') }}
+    </button>
+  </div>
+
+  <div class="panel-eyebrow">{{ i18n.t('dev_detail_eyebrow') }}</div>
+  <h2 class="panel-title">{{ panelDevice.model }}</h2>
+
+  <div class="panel-body">
+
+    <!-- Device identity -->
+    <div class="dev-identity-card">
+      <div class="dev-identity-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="dev-identity-info">
+        <p class="dev-identity-model">{{ panelDevice.model }}</p>
+        <p class="dev-identity-serial">{{ panelDevice.serialNumber }}</p>
+        <span class="status-pill" [class]="statusClass(panelDevice.status)">
+          <span class="status-dot"></span>{{ panelDevice.status }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Client & Reseller -->
+    <div class="detail-grid">
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('nav_clients') }}</p>
+        <p class="detail-val">{{ panelDevice.clientName }}</p>
+      </div>
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('nav_resellers') }}</p>
+        <p class="detail-val">{{ panelDevice.resellerName }}</p>
+      </div>
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('res_activation_date') }}</p>
+        <p class="detail-val">{{ panelDevice.activationDate }}</p>
+      </div>
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('res_expiration_date') }}</p>
+        <p class="detail-val" [class]="expiryUrgency(panelDevice.expirationDate)">
+          {{ panelDevice.expirationDate }}
+          @if (daysUntilExpiry(panelDevice.expirationDate) >= 0 && daysUntilExpiry(panelDevice.expirationDate) <= 30) {
+          <span>({{ daysUntilExpiry(panelDevice.expirationDate) }} {{ i18n.t('res_days_left') }})</span>
+          }
+        </p>
+      </div>
+      <div class="detail-item detail-item--full">
+        <p class="detail-label">{{ i18n.t('res_device_price') }}</p>
+        <p class="detail-val">{{ fmt(panelDevice.price) }} TND</p>
+      </div>
+    </div>
+
+    <!-- SIM Card -->
+    @if (panelDevice.hasSim) {
+    <div class="sim-detail-card">
+      <p class="detail-label">{{ i18n.t('res_sim_card') }}</p>
+      <div class="sim-detail-body">
+        <div class="sim-detail-row">
+          <span class="sim-detail-label">{{ i18n.t('res_sim_provider') }}</span>
+          <span class="sim-detail-val sim-provider-badge">{{ panelDevice.simProvider }}</span>
+        </div>
+        @if (panelDevice.simNumber) {
+        <div class="sim-detail-row">
+          <span class="sim-detail-label">{{ i18n.t('res_sim_number') }}</span>
+          <span class="sim-detail-val sim-mono">{{ panelDevice.simNumber }}</span>
+        </div>
+        }
+        <div class="sim-detail-row">
+          <span class="sim-detail-label">{{ i18n.t('res_sim_owned_by') }}</span>
+          <span class="sim-detail-val">
+            {{ panelDevice.simOwnedBy === 'reseller' ? i18n.t('res_sim_reseller') : i18n.t('res_sim_client') }}
+          </span>
+        </div>
+      </div>
+    </div>
+    }
+
+    @if (!panelDevice.hasSim) {
+    <div class="no-sim-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/>
+        <line x1="4" y1="4" x2="20" y2="20"/>
+      </svg>
+      {{ i18n.t('res_no_sim') }}
+    </div>
+    }
+
+  </div>
+</div>
+}

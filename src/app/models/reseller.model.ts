@@ -10,4 +10,5 @@ export interface Reseller {
   totalClients: number;
   clientIds: number[];
   joinDate: string;
+  avatarUrl?: string | null;
 }

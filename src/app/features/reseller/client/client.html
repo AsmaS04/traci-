@@ -1,6 +1,6 @@
 <div class="page">
 
-  <!-- ── Header ───────────────────────────────────────── -->
+  <!-- ── Header ─────────────────────────────────────────── -->
   <div class="page-header">
     <div>
       <p class="page-eyebrow">{{ i18n.t('res_eyebrow') }}</p>
@@ -14,7 +14,7 @@
     </button>
   </div>
 
-  <!-- ── Summary pills ─────────────────────────────────── -->
+  <!-- ── Summary pills ──────────────────────────────────── -->
   <div class="summary-row">
     <div class="summary-pill">
       <span class="pill-num">{{ totalCount }}</span>
@@ -119,15 +119,14 @@
           </tr>
           }
           @if (filtered.length === 0) {
-            <tr>
-              <td colspan="9" class="empty-row">{{ i18n.t('no_clients') }}</td>
-            </tr>
+          <tr>
+            <td colspan="9" class="empty-row">{{ i18n.t('no_clients') }}</td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
   </div>
-
 </div>
 
 <!-- ══ SLIDE-OVER PANEL ════════════════════════════════════ -->
@@ -136,7 +135,7 @@
 @if (panelClient) {
 <div class="slide-panel" [class.slide-panel--open]="panelOpen">
 
-  <!-- Panel header -->
+  <!-- Topbar -->
   <div class="panel-topbar">
     <button class="panel-back" (click)="closePanel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -145,128 +144,402 @@
       {{ i18n.t('btn_back') }}
     </button>
     <div class="panel-header-actions">
-      <button class="panel-btn-edit" (click)="openEdit(panelClient)">{{ i18n.t('btn_edit') }}</button>
+      <button class="panel-btn-edit"   (click)="openEdit(panelClient)">{{ i18n.t('btn_edit') }}</button>
       <button class="panel-btn-delete" (click)="openDelete(panelClient)">{{ i18n.t('btn_delete') }}</button>
     </div>
   </div>
 
+  <!-- Client name -->
   <div class="panel-eyebrow">{{ i18n.t('client_profile') }}</div>
   <h2 class="panel-title">{{ panelClient.firstName }} {{ panelClient.lastName }}</h2>
 
+  <!-- ── Tabs ─────────────────────────────────────────── -->
+  <div class="panel-tabs">
+    <button class="panel-tab" [class.panel-tab--active]="panelTab==='profile'" (click)="switchPanelTab('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      {{ i18n.t('adm_tab_profile') }}
+    </button>
+    <button class="panel-tab" [class.panel-tab--active]="panelTab==='devices'" (click)="switchPanelTab('devices')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+      </svg>
+      {{ i18n.t('res_stat_devices') }}
+      <span class="tab-count">{{ devicesForClient(panelClient.id).length }}</span>
+    </button>
+    <button class="panel-tab" [class.panel-tab--active]="panelTab==='operations'" (click)="switchPanelTab('operations')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      {{ i18n.t('res_operations') }}
+      <span class="tab-count">{{ transactionsForClient(panelClient.id).length }}</span>
+    </button>
+  </div>
+
   <div class="panel-body">
 
-    <!-- Profile card -->
-    <div class="profile-card">
-      <div class="profile-avatar">{{ initials(panelClient) }}</div>
-      <div class="profile-main">
-        <div class="profile-name-row">
-          <p class="profile-name">{{ panelClient.firstName }} {{ panelClient.lastName }}</p>
-          <span class="status-pill" [class.status--active]="panelClient.status==='active'" [class.status--inactive]="panelClient.status==='inactive'">
-            <span class="status-dot"></span>
-            {{ i18n.t('status_' + panelClient.status) }}
+    <!-- ══ PROFILE TAB ══════════════════════════════════ -->
+    @if (panelTab==='profile') {
+    <div>
+
+      <div class="profile-card">
+        <div class="profile-avatar">{{ initials(panelClient) }}</div>
+        <div class="profile-main">
+          <div class="profile-name-row">
+            <p class="profile-name">{{ panelClient.firstName }} {{ panelClient.lastName }}</p>
+            <span class="status-pill" [class.status--active]="panelClient.status==='active'" [class.status--inactive]="panelClient.status==='inactive'">
+              <span class="status-dot"></span>
+              {{ i18n.t('status_' + panelClient.status) }}
+            </span>
+          </div>
+          <p class="profile-under">{{ i18n.t('under_reseller') }} {{ reseller.companyName }}</p>
+          <div class="profile-contacts">
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              {{ panelClient.email }}
+            </span>
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16l.19.92z"/>
+              </svg>
+              {{ panelClient.phone }}
+            </span>
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {{ panelClient.region }}
+            </span>
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              {{ i18n.t('member_since') }} {{ panelClient.joinDate }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="mini-stat">
+          <p class="mini-val">{{ panelClient.devices }}</p>
+          <p class="mini-label">{{ i18n.t('total_devices') }}</p>
+        </div>
+        <div class="mini-stat mini-stat--active">
+          <p class="mini-val">{{ panelClient.active }}</p>
+          <p class="mini-label">{{ i18n.t('active_devices') }}</p>
+        </div>
+        <div class="mini-stat mini-stat--inactive">
+          <p class="mini-val">{{ panelInactive }}</p>
+          <p class="mini-label">{{ i18n.t('inactive_devices') }}</p>
+        </div>
+        <div class="mini-stat">
+          <p class="mini-val mini-val--sm">{{ reseller.companyName }}</p>
+          <p class="mini-label">{{ i18n.t('assigned_reseller') }}</p>
+        </div>
+      </div>
+
+      <div class="connectivity-card">
+        <p class="connectivity-title">{{ i18n.t('device_connectivity') }}</p>
+        <div class="conn-bar">
+          <div class="conn-bar__online"  [style.flex]="panelClient.active"></div>
+          <div class="conn-bar__offline" [style.flex]="panelInactive"></div>
+        </div>
+        <div class="conn-legend">
+          <span class="legend-dot legend-dot--online"></span>
+          {{ i18n.t('online') }} ({{ panelClient.active }})
+          <span class="legend-dot legend-dot--offline" style="margin-left:1.2rem"></span>
+          {{ i18n.t('offline') }} ({{ panelInactive }})
+        </div>
+      </div>
+
+      <div class="extra-grid">
+        <div class="extra-item">
+          <p class="extra-label">{{ i18n.t('res_device_source') }}</p>
+          <span class="source-badge" [class.badge--own]="panelClient.deviceSource==='own'" [class.badge--ext]="panelClient.deviceSource==='external'">
+            {{ i18n.t(panelClient.deviceSource === 'own' ? 'res_device_own' : 'res_device_external') }}
           </span>
         </div>
-        <p class="profile-under">{{ i18n.t('under_reseller') }} {{ reseller.companyName }}</p>
-        <div class="profile-contacts">
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            {{ panelClient.email }}
-          </span>
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16l.19.92z"/>
-            </svg>
-            {{ panelClient.phone }}
-          </span>
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-            {{ panelClient.region }}
-          </span>
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            {{ i18n.t('member_since') }} {{ panelClient.joinDate }}
+        <div class="extra-item">
+          <p class="extra-label">{{ i18n.t('res_sim_source') }}</p>
+          <span class="source-badge" [class.badge--own]="panelClient.simSource==='own'" [class.badge--res]="panelClient.simSource==='reseller'">
+            {{ i18n.t(panelClient.simSource === 'own' ? 'res_sim_own' : 'res_sim_reseller') }}
           </span>
         </div>
+        <div class="extra-item">
+          <p class="extra-label">{{ i18n.t('form_server_type') }}</p>
+          <span class="server-badge" [class.server--traci]="panelClient.serverType==='traci'" [class.server--own]="panelClient.serverType==='own'">
+            {{ panelClient.serverType === 'traci' ? '🖥 Traci' : '🔒 Own' }}
+          </span>
+        </div>
+        <div class="extra-item">
+          <p class="extra-label">{{ i18n.t('res_amount_paid') }}</p>
+          <p class="extra-value">{{ fmt(panelClient.amountPaid) }} TND</p>
+        </div>
       </div>
-    </div>
+    </div><!-- /profile tab -->
+    }
 
-    <!-- Stat cards -->
-    <div class="stat-row">
-      <div class="mini-stat">
-        <p class="mini-val">{{ panelClient.devices }}</p>
-        <p class="mini-label">{{ i18n.t('total_devices') }}</p>
+    <!-- ══ DEVICES TAB ══════════════════════════════════ -->
+    @if (panelTab==='devices') {
+    <div>
+      <div class="ops-section-header">
+        <p class="ops-section-title">{{ i18n.t('res_stat_devices') }}</p>
+        <button class="ops-add-btn" (click)="openAddDevice()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {{ i18n.t('res_add_device') }}
+        </button>
       </div>
-      <div class="mini-stat mini-stat--active">
-        <p class="mini-val">{{ panelClient.active }}</p>
-        <p class="mini-label">{{ i18n.t('active_devices') }}</p>
-      </div>
-      <div class="mini-stat mini-stat--inactive">
-        <p class="mini-val">{{ panelInactive }}</p>
-        <p class="mini-label">{{ i18n.t('inactive_devices') }}</p>
-      </div>
-      <div class="mini-stat">
-        <p class="mini-val mini-val--sm">{{ reseller.companyName }}</p>
-        <p class="mini-label">{{ i18n.t('assigned_reseller') }}</p>
-      </div>
-    </div>
 
-    <!-- Device connectivity bar -->
-    <div class="connectivity-card">
-      <p class="connectivity-title">{{ i18n.t('device_connectivity') }}</p>
-      <div class="conn-bar">
-        <div class="conn-bar__online"  [style.flex]="panelClient.active"></div>
-        <div class="conn-bar__offline" [style.flex]="panelInactive"></div>
-      </div>
-      <div class="conn-legend">
-        <span class="legend-dot legend-dot--online"></span>
-        {{ i18n.t('online') }} ({{ panelClient.active }})
-        <span class="legend-dot legend-dot--offline" style="margin-left:1.2rem"></span>
-        {{ i18n.t('offline') }} ({{ panelInactive }})
-      </div>
-    </div>
+      <!-- Device cards -->
+      @if (devicesForClient(panelClient.id).length > 0) {
+      <div class="device-list">
+        @for (d of devicesForClient(panelClient.id); track d.id) {
+        <div class="device-card">
+          <div class="device-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="device-card__body">
+            <div class="device-top-row">
+              <p class="device-model">{{ d.model }}</p>
+              <span class="dev-badge" [class]="deviceStatusClass(d.status)">{{ d.status }}</span>
+            </div>
+            <p class="device-serial">{{ d.serialNumber }}</p>
 
-    <!-- Extra info -->
-    <div class="extra-grid">
-      <div class="extra-item">
-        <p class="extra-label">{{ i18n.t('res_device_source') }}</p>
-        <span class="source-badge" [class.badge--own]="panelClient.deviceSource==='own'" [class.badge--ext]="panelClient.deviceSource==='external'">
-          {{ i18n.t(panelClient.deviceSource === 'own' ? 'res_device_own' : 'res_device_external') }}
-        </span>
+            <!-- SIM info -->
+            @if (d.hasSim) {
+            <div class="device-sim">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+                <path d="M15 2v5H9V2"/>
+              </svg>
+              <span class="sim-provider">{{ d.simProvider }}</span>
+              @if (d.simNumber) { <span class="sim-num">· {{ d.simNumber }}</span> }
+              <span class="sim-owner">{{ d.simOwnedBy === 'reseller' ? '(Reseller SIM)' : '(Client SIM)' }}</span>
+            </div>
+            }
+            @if (!d.hasSim) {
+            <div class="device-sim device-sim--none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="1" y1="1" x2="23" y2="23"/>
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+              </svg>
+              {{ i18n.t('res_no_sim') }}
+            </div>
+            }
+
+            <!-- Dates -->
+            <div class="device-dates">
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{ i18n.t('res_activated') }}: {{ d.activationDate }}
+              </span>
+              <span [class]="expiryUrgency(d.expirationDate)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                {{ i18n.t('res_expires') }}: {{ d.expirationDate }}
+                @if (daysUntilExpiry(d.expirationDate) >= 0 && daysUntilExpiry(d.expirationDate) <= 30) {
+                <strong>({{ daysUntilExpiry(d.expirationDate) }}d)</strong>
+                }
+              </span>
+            </div>
+          </div>
+          <p class="device-price">{{ fmt(d.price) }} TND</p>
+        </div>
+        }
       </div>
-      <div class="extra-item">
-        <p class="extra-label">{{ i18n.t('res_sim_source') }}</p>
-        <span class="source-badge" [class.badge--own]="panelClient.simSource==='own'" [class.badge--res]="panelClient.simSource==='reseller'">
-          {{ i18n.t(panelClient.simSource === 'own' ? 'res_sim_own' : 'res_sim_reseller') }}
-        </span>
+      }
+
+      <!-- Empty -->
+      @if (devicesForClient(panelClient.id).length === 0) {
+      <div class="ops-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2"/>
+        </svg>
+        <p>{{ i18n.t('res_no_devices') }}</p>
+        <button class="ops-add-btn" style="margin-top:0.75rem" (click)="openAddDevice()">{{ i18n.t('res_add_device') }}</button>
       </div>
-      <div class="extra-item">
-        <p class="extra-label">{{ i18n.t('form_server_type') }}</p>
-        <span class="server-badge" [class.server--traci]="panelClient.serverType==='traci'" [class.server--own]="panelClient.serverType==='own'">
-          {{ panelClient.serverType === 'traci' ? '🖥 Traci' : '🔒 Own' }}
-        </span>
+      }
+    </div><!-- /devices tab -->
+    }
+
+    <!-- ══ OPERATIONS TAB ════════════════════════════════ -->
+    @if (panelTab==='operations') {
+    <div>
+
+      <!-- Summary cards -->
+      <div class="ops-summary">
+        <div class="ops-summary__item">
+          <p class="ops-summary__val">{{ fmt(totalPaidByClient(panelClient.id)) }}</p>
+          <p class="ops-summary__unit">TND</p>
+          <p class="ops-summary__label">{{ i18n.t('res_total_paid') }}</p>
+        </div>
+        <div class="ops-summary__item">
+          <p class="ops-summary__val">{{ transactionsForClient(panelClient.id).length }}</p>
+          <p class="ops-summary__label">{{ i18n.t('res_total_transactions') }}</p>
+        </div>
+        <div class="ops-summary__item">
+          <p class="ops-summary__val">{{ devicesForClient(panelClient.id).length }}</p>
+          <p class="ops-summary__label">{{ i18n.t('res_stat_devices') }}</p>
+        </div>
       </div>
-      <div class="extra-item">
-        <p class="extra-label">{{ i18n.t('res_amount_paid') }}</p>
-        <p class="extra-value">{{ fmt(panelClient.amountPaid) }} TND</p>
+
+      <!-- Transaction list -->
+      <div class="ops-section-header" style="margin-top:1.2rem">
+        <p class="ops-section-title">{{ i18n.t('res_device_transactions') }}</p>
+        <button class="ops-add-btn" (click)="switchPanelTab('devices'); openAddDevice()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {{ i18n.t('res_add_device') }}
+        </button>
       </div>
-    </div>
+
+      @if (transactionsForClient(panelClient.id).length > 0) {
+      <div class="tx-list">
+        @for (t of transactionsForClient(panelClient.id); track t.id) {
+        <div class="tx-item">
+          <div class="tx-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="tx-body">
+            <p class="tx-model">{{ t.model }}</p>
+            <p class="tx-serial">{{ t.serial }}</p>
+            @if (t.notes) { <p class="tx-notes">{{ t.notes }}</p> }
+          </div>
+          <div class="tx-right">
+            <p class="tx-amount">{{ fmt(t.amount) }} TND</p>
+            <p class="tx-date">{{ t.date }}</p>
+          </div>
+        </div>
+        }
+      </div>
+      }
+
+      @if (transactionsForClient(panelClient.id).length === 0) {
+      <div class="ops-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        <p>{{ i18n.t('res_no_transactions') }}</p>
+      </div>
+      }
+    </div><!-- /operations tab -->
+    }
 
   </div>
 </div>
 }
 
-<!-- ══ ADD / EDIT MODAL ════════════════════════════════════ -->
+<!-- ══ ADD DEVICE MODAL ════════════════════════════════════ -->
+@if (showDeviceModal) {
+<div class="modal-backdrop" (click)="closeDeviceModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('res_add_device') }}</h2>
+      <button class="modal-close" (click)="closeDeviceModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>{{ i18n.t('res_serial_number') }}</label>
+          <input type="text" [(ngModel)]="deviceForm.serialNumber" placeholder="ACC-BOX-XXX-2024"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_device_model') }}</label>
+          <select [(ngModel)]="deviceForm.model">
+            @for (m of deviceModels; track m) {
+            <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_activation_date') }}</label>
+          <input type="date" [(ngModel)]="deviceForm.activationDate"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_expiration_date') }}</label>
+          <input type="date" [(ngModel)]="deviceForm.expirationDate"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_device_price') }} (TND)</label>
+          <input type="number" [(ngModel)]="deviceForm.price" placeholder="450"/>
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('res_notes') }}</label>
+          <input type="text" [(ngModel)]="deviceForm.notes" [placeholder]="i18n.t('res_notes_placeholder')"/>
+        </div>
+
+        <!-- SIM toggle -->
+        <div class="form-group form-group--full">
+          <label>{{ i18n.t('res_sim_card') }}</label>
+          <div class="radio-group">
+            <label class="radio-opt" [class.selected]="!deviceForm.hasSim">
+              <input type="radio" [value]="false" [(ngModel)]="deviceForm.hasSim"/>
+              {{ i18n.t('res_no_sim') }}
+            </label>
+            <label class="radio-opt" [class.selected]="deviceForm.hasSim">
+              <input type="radio" [value]="true" [(ngModel)]="deviceForm.hasSim"/>
+              {{ i18n.t('res_has_sim') }}
+            </label>
+          </div>
+        </div>
+
+        @if (deviceForm.hasSim) {
+          <div class="form-group">
+            <label>{{ i18n.t('res_sim_provider') }}</label>
+            <select [(ngModel)]="deviceForm.simProvider">
+              @for (p of simProviders; track p) {
+              <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('res_sim_number') }}</label>
+            <input type="text" [(ngModel)]="deviceForm.simNumber" placeholder="89216 XXXX XXXX XXX"/>
+          </div>
+          <div class="form-group form-group--full">
+            <label>{{ i18n.t('res_sim_owned_by') }}</label>
+            <div class="radio-group">
+              <label class="radio-opt" [class.selected]="deviceForm.simOwnedBy==='reseller'">
+                <input type="radio" value="reseller" [(ngModel)]="deviceForm.simOwnedBy"/>
+                {{ i18n.t('res_sim_reseller') }}
+              </label>
+              <label class="radio-opt" [class.selected]="deviceForm.simOwnedBy==='client'">
+                <input type="radio" value="client" [(ngModel)]="deviceForm.simOwnedBy"/>
+                {{ i18n.t('res_sim_client') }}
+              </label>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeDeviceModal()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save"   (click)="saveDevice()">{{ i18n.t('res_add_device') }}</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ══ ADD / EDIT CLIENT MODAL ═════════════════════════════ -->
 @if (showModal) {
 <div class="modal-backdrop" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
