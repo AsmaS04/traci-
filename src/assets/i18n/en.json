@@ -1,5 +1,6 @@
 {
   "nav_main": "Main",
+  "topbar_panel1": "Client Panel",
   "nav_dashboard": "Dashboard",
   "nav_resellers": "Resellers",
   "nav_clients": "Clients",
@@ -528,4 +529,5 @@
   "res_renewal_info": "Will extend expiration",
   "res_confirm_renewal": "Confirm renewal",
   "res_year": "year"
+
 }

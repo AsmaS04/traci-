@@ -39,7 +39,7 @@
       <div class="welcome-content">
         <p class="page-eyebrow">{{ i18n.t('dash_client_space') }}</p>
         <h1 class="page-title">
-          {{ i18n.t('dash_welcome') }}, {{ user.prenom }}! 👋
+          {{ i18n.t('dash_welcome') }}, {{ user.prenom }}!
         </h1>
         <p class="page-subtitle">{{ contextualSubtitle }}</p>
       </div>
@@ -186,6 +186,33 @@
           </div>
         </div>
 
+        <!-- MES APPAREILS IoT (Liste compacte) -->
+        <div class="recent-invoices-card card animate-fade-in" style="margin-top: 1.5rem;">
+          <div class="invoices-header">
+            <p class="section-label">Mes Appareils IoT</p>
+            <button class="view-all-btn" (click)="navigateTo('/client-dashboard/devices')">
+              {{ i18n.t('dash_view_all') || 'Voir tout' }} →
+            </button>
+          </div>
+
+          <div class="invoice-list">
+            @for (device of clientDevices; track device.id) {
+              <div class="invoice-row">
+                <div class="invoice-file-icon" style="font-size: 1.25rem; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;">
+                  {{ getDeviceIcon(device.model) }}
+                </div>
+                <div class="invoice-info">
+                  <p class="invoice-id" style="font-size: 0.875rem;">{{ device.model }}</p>
+                  <p class="invoice-date" style="font-size: 0.75rem;">{{ device.serialNumber }}</p>
+                </div>
+                <span class="invoice-badge" [ngClass]="device.status === 'active' ? 'inv--paid' : 'inv--overdue'" style="font-size: 0.75rem;">
+                  {{ device.status === 'active' ? 'Actif' : 'Expiré' }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
       </div><!-- /left-column -->
 
       <!-- ── RIGHT COLUMN ─────────────────────────────────── -->
@@ -239,7 +266,7 @@
             </div>
           </div>
 
-          <!-- Quick Actions — real buttons, not a number -->
+          <!-- Quick Actions -->
           <div class="quick-actions-card card animate-fade-in" style="animation-delay:0.3s">
             <div class="stat-icon-wrapper purple">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,9 +302,12 @@
 
     </div><!-- /dashboard-grid -->
 
+
+
+
   }
 
-  <!-- ══ WARNING MODAL (original, unchanged) ══════════════ -->
+  <!-- ══ WARNING MODAL ══════════════════════════════════════ -->
   @if (showWarningModal()) {
     <div class="modal-backdrop" (click)="closeWarningModal()">
       <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
@@ -319,7 +349,7 @@
     </div>
   }
 
-  <!-- ══ FORFAITS MODAL (original, unchanged) ══════════════ -->
+  <!-- ══ FORFAITS MODAL ═════════════════════════════════════ -->
   @if (showForfaitsModal()) {
     <div class="modal-backdrop" (click)="closeForfaitsModal()">
       <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
@@ -361,7 +391,7 @@
     </div>
   }
 
-  <!-- ══ PAYMENT MODAL (original, unchanged) ═══════════════ -->
+  <!-- ══ PAYMENT MODAL ══════════════════════════════════════ -->
   @if (showPaymentModal() && selectedForfaitForPayment(); as forfait) {
     <app-payment
       [amount]="forfait.prix"
