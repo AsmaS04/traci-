@@ -1,3 +1,5 @@
+// src/app/app.routes.ts
+
 import { Routes } from '@angular/router';
 import { LoginAdmin }    from './pages/login-admin/login-admin';
 import { LoginClient }   from './pages/login-client/login-client';
@@ -75,6 +77,11 @@ export const routes: Routes = [
         path: 'abonnements',
         loadComponent: () =>
           import('./features/client/abonnements/abonnements').then(m => m.default),
+      },
+      {
+        path: 'devices',
+        loadComponent: () =>
+          import('./features/client/devices/devices').then(m => m.default),
       },
       {
         path: 'factures',

@@ -4,6 +4,8 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { MOCK_DEVICES } from '../../../data/mock-devicesClient.data';
+import { ClientDevice } from '../../../models/deviceClient.model';
 import {
   Abonnement,
   StatutAbonnement,
@@ -21,7 +23,10 @@ import {
 } from '../../../data/mock-data';
 
 export interface RecentInvoice {
-  id: string; date: string; amount: number; status: 'paid' | 'pending' | 'overdue';
+  id: string;
+  date: string;
+  amount: number;
+  status: 'paid' | 'pending' | 'overdue';
 }
 
 @Component({
@@ -60,6 +65,24 @@ export default class DashboardComponent implements OnInit {
 
   // Expose enums
   StatutAbonnement = StatutAbonnement;
+
+  // ══════════════════════════════════════════════════════════
+  // DEVICES - NOUVEAU CODE
+  // ══════════════════════════════════════════════════════════
+
+  // Current client ID (hardcoded for now - replace with auth later)
+  currentClientId = 1; // Ahmed's ID
+
+  // Get devices for current client
+  clientDevices: ClientDevice[] = MOCK_DEVICES.filter(
+    device => device.clientId === this.currentClientId
+  );
+
+  // Count active vs expired
+  activeDevicesCount = this.clientDevices.filter(d => d.status === 'active').length;
+  expiredDevicesCount = this.clientDevices.filter(d => d.status === 'expired').length;
+
+  // ══════════════════════════════════════════════════════════
 
   // ── NEW: Urgency helpers ──────────────────────────────────
   get daysLeft(): number {
@@ -185,4 +208,26 @@ export default class DashboardComponent implements OnInit {
   }
 
   isExpiringSoon = isAbonnementExpiringSoon;
+
+  // ══════════════════════════════════════════════════════════
+  // DEVICES - MÉTHODES
+  // ══════════════════════════════════════════════════════════
+
+  // Get device icon based on model
+  getDeviceIcon(model: string): string {
+    if (model.includes('BOX')) return '';
+    if (model.includes('MINI')) return '';
+    if (model.includes('PRO')) return '';
+    if (model.includes('LITE')) return '';
+    return '📡';
+  }
+
+  // Get status badge color
+  getStatusColor(status: string): string {
+    return status === 'active'
+      ? 'bg-green-500/20 text-green-400 border-green-500/30'
+      : 'bg-red-500/20 text-red-400 border-red-500/30';
+  }
+
+  // ══════════════════════════════════════════════════════════
 }

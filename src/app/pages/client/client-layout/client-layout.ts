@@ -85,4 +85,10 @@ toggleLanguage() {
     // Clear session, redirect to login, etc.
     this.router.navigate(['/login']);
   }
+  // في client-layout.ts
+async setLanguage(lang: 'en' | 'fr') {
+  if (this.i18n.lang() !== lang) {
+    await this.i18n.toggle();
+  }
+}
 }

@@ -25,6 +25,10 @@ export const CLIENT_ROUTES: Routes = [
         loadComponent: () => import('../features/client/factures/factures')
       },
       {
+        path: 'devices',
+        loadComponent: () => import('../features/client/devices/devices')
+      },
+      {
         path: 'profil',
         loadComponent: () => import('../features/client/profil/profil')
       }
