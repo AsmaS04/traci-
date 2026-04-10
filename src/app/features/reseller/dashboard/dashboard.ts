@@ -1,21 +1,29 @@
-import { Component } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { ResellerService } from '../../../service/reseller.service';
 import {
-  MOCK_RESELLER,
-  MOCK_RESELLER_DEVICE_STATS,
-  MOCK_RESELLER_CLIENTS,
-  MOCK_RESELLER_DASHBOARD_ACTIVITY,
-  MOCK_EXPIRING_DEVICES,
   ResellerDashboardActivity,
   ExpiringDevice,
   ResellerClient,
 } from '../../../data/reseller-mock-data';
+import { Reseller } from '../../../models/reseller.model';
 
 // Sparkline point
 interface SparkPoint { day: number; value: number; }
+
+// Device stats interface (computed from real data)
+interface DeviceStats {
+  total: number;
+  active: number;
+  offline: number;
+  unassigned: number;
+  neverActivated: number;
+  newClientsMonth: number;
+  prevMonthClients: number;
+}
 
 @Component({
   selector: 'app-reseller-dashboard',
@@ -24,39 +32,112 @@ interface SparkPoint { day: number; value: number; }
   standalone: true,
   imports: [CommonModule, FormsModule],
 })
-export default class ResellerDashboardComponent {
+export default class ResellerDashboardComponent implements OnInit {
 
-  readonly reseller       = MOCK_RESELLER;
-  readonly stats          = MOCK_RESELLER_DEVICE_STATS;
-  readonly clients        = MOCK_RESELLER_CLIENTS;
-  recentActivity: ResellerDashboardActivity[] = MOCK_RESELLER_DASHBOARD_ACTIVITY;
-  expiringDevices: ExpiringDevice[]           = MOCK_EXPIRING_DEVICES;
+  private resellerService = inject(ResellerService);
+  private router = inject(Router);
+  public i18n = inject(TranslationService);
+
+  // ── Backend Data (signals) ────────────────────────────
+  reseller = signal<Reseller | null>(null);
+  clients = signal<ResellerClient[]>([]);
+  loading = signal(true);
+
+  // ── Mock data still used (until backend implements these) ──
+  recentActivity: ResellerDashboardActivity[] = [];
+  expiringDevices: ExpiringDevice[] = [];
 
   readonly circumference = 2 * Math.PI * 42;
 
-  constructor(private router: Router, public i18n: TranslationService) {}
+  ngOnInit() {
+    this.loadDashboard();
+  }
+
+  // ── Load Real Data from Backend ───────────────────────
+  loadDashboard() {
+    const resellerId = 27; // Using first reseller from database (bayremw)
+
+    this.loading.set(true);
+
+    // Load reseller info
+    this.resellerService.getResellerById(resellerId).subscribe({
+      next: (data) => {
+        this.reseller.set(data);
+        console.log('✅ Reseller loaded:', data);
+      },
+      error: (err) => console.error('❌ Failed to load reseller:', err)
+    });
+
+    // Load clients
+    this.resellerService.getResellerClients(resellerId).subscribe({
+      next: (data) => {
+        this.clients.set(data);
+        this.loading.set(false);
+        console.log('✅ Clients loaded:', data);
+      },
+      error: (err) => {
+        console.error('❌ Failed to load clients:', err);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  // ── Computed Stats (from real data) ───────────────────
+  get stats(): DeviceStats {
+    const clientList = this.clients();
+    const totalDevices = clientList.reduce((sum, c) => sum + (c.devices || 0), 0);
+    const activeDevices = clientList.reduce((sum, c) => sum + (c.active || 0), 0);
+    
+    return {
+      total: totalDevices,
+      active: activeDevices,
+      offline: totalDevices - activeDevices,
+      unassigned: 0, // TODO: Implement when device assignment tracking is ready
+      neverActivated: 0, // TODO: Implement
+      newClientsMonth: clientList.filter(c => {
+        const joinDate = new Date(c.joinDate);
+        const now = new Date();
+        return joinDate.getMonth() === now.getMonth() && 
+               joinDate.getFullYear() === now.getFullYear();
+      }).length,
+      prevMonthClients: clientList.length
+    };
+  }
 
   // ── Top stats ─────────────────────────────────────────
-  get totalClients()    { return this.reseller.totalClients; }
+  get totalClients()    { return this.reseller()?.totalClients || 0; }
   get newClientsMonth() { return this.stats.newClientsMonth; }
   get totalDevices()    { return this.stats.total; }
   get activeDevices()   { return this.stats.active; }
   get offlineDevices()  { return this.stats.offline; }
   get alertsCount()     { return this.expiringDevices.filter(d => d.daysLeft <= 7).length; }
 
-  get activePercent()  { return Math.round((this.activeDevices / this.totalDevices) * 100); }
-  get growthPercent()  { return Math.round((this.stats.newClientsMonth / this.stats.prevMonthClients) * 100); }
-  get activeOffset()   { return this.circumference * (1 - this.activeDevices / this.totalDevices); }
+  get activePercent()  { 
+    return this.totalDevices > 0 
+      ? Math.round((this.activeDevices / this.totalDevices) * 100) 
+      : 0;
+  }
+  get growthPercent()  { 
+    return this.stats.prevMonthClients > 0
+      ? Math.round((this.stats.newClientsMonth / this.stats.prevMonthClients) * 100) 
+      : 0;
+  }
+  get activeOffset()   { 
+    return this.totalDevices > 0
+      ? this.circumference * (1 - this.activeDevices / this.totalDevices)
+      : this.circumference;
+  }
 
   // ── Client health ─────────────────────────────────────
   get stableClients(): number {
-    return this.clients.filter(c => c.status === 'active' && c.active === c.devices).length;
+    return this.clients().filter(c => c.status === 'active' && c.active === c.devices).length;
   }
   get issueClients(): number {
-    return this.clients.filter(c => c.status === 'inactive' || c.active < c.devices).length;
+    return this.clients().filter(c => c.status === 'inactive' || c.active < c.devices).length;
   }
   get clientHealthPct(): number {
-    return Math.round((this.stableClients / this.clients.length) * 100);
+    const total = this.clients().length;
+    return total > 0 ? Math.round((this.stableClients / total) * 100) : 0;
   }
   get clientHealthOffset(): number {
     const r = 28; const circ = 2 * Math.PI * r;
@@ -99,7 +180,9 @@ export default class ResellerDashboardComponent {
   get avgUptime(): number { return 97; }
   get syncIssues(): number { return 2; }
   get mostActiveClient(): string {
-    const top = [...this.clients].sort((a, b) => b.active - a.active)[0];
+    const clientList = this.clients();
+    if (clientList.length === 0) return '—';
+    const top = [...clientList].sort((a, b) => b.active - a.active)[0];
     return top ? `${top.firstName} ${top.lastName}` : '—';
   }
 
@@ -117,6 +200,7 @@ export default class ResellerDashboardComponent {
     return '';
   }
   navigateTo(path: string) { this.router.navigate([path]); }
+
   // ── Add Client modal ──────────────────────────────────
   showAddModal = false;
   addForm: any = {};
@@ -148,17 +232,24 @@ export default class ResellerDashboardComponent {
 
   saveNewClient() {
     if (!this.isValidEmail(this.addForm.email) || !this.isValidPhone(this.addForm.phone)) return;
-    const newId = Math.max(...this.clients.map((c: any) => c.id), 0) + 1;
-    (this.clients as any[]).push({
+    
+    // TODO: Call backend API to create client
+    // For now, just add to local array
+    const newId = Math.max(...this.clients().map(c => c.id), 0) + 1;
+    const newClient = {
       ...this.addForm,
       id: newId,
       devices: 0, active: 0,
       lastActivity: 'just now',
       joinDate: new Date().toISOString().slice(0, 10),
-    });
+    };
+    
+    this.clients.set([...this.clients(), newClient]);
     this.showAddModal = false;
+    
+    console.log('✅ New client added (locally):', newClient);
+    console.log('⚠️ TODO: Implement backend API call to save client');
   }
 
   closeAddModal() { this.showAddModal = false; }
-
 }

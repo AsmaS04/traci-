@@ -11,8 +11,8 @@
           </svg>
         </div>
         <div>
-          <h1 style="font-size: 1.5rem; font-weight: 700; color: white; margin: 0;">Mes Appareils IoT</h1>
-          <p style="font-size: 0.875rem; color: #94a3b8; margin: 0.25rem 0 0 0;">Gérez vos appareils connectés</p>
+          <h1 style="font-size: 1.5rem; font-weight: 700; color: white; margin: 0;">{{ i18n.t('dev_title') || 'Mes Appareils IoT' }}</h1>
+          <p style="font-size: 0.875rem; color: #94a3b8; margin: 0.25rem 0 0 0;">{{ i18n.t('dev_subtitle') || 'Gérez vos appareils connectés' }}</p>
         </div>
       </div>
 
@@ -20,7 +20,7 @@
         <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
         </svg>
-        <span>Ajouter Appareil</span>
+        <span>{{ i18n.t('dev_add_device') || 'Ajouter Appareil' }}</span>
       </button>
     </div>
 
@@ -33,7 +33,7 @@
           </svg>
         </div>
         <div>
-          <p style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.25rem 0;">Total Appareils</p>
+          <p style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.25rem 0;">{{ i18n.t('dev_stat_total') || 'Total Appareils' }}</p>
           <p style="color: white; font-size: 1.5rem; font-weight: 700; margin: 0;">{{ totalDevices }}</p>
         </div>
       </div>
@@ -45,7 +45,7 @@
           </svg>
         </div>
         <div>
-          <p style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.25rem 0;">Actifs</p>
+          <p style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.25rem 0;">{{ i18n.t('dev_stat_active') || 'Actifs' }}</p>
           <p style="color: white; font-size: 1.5rem; font-weight: 700; margin: 0;">{{ activeDevices }}</p>
         </div>
       </div>
@@ -57,7 +57,7 @@
           </svg>
         </div>
         <div>
-          <p style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.25rem 0;">Expirés</p>
+          <p style="color: #94a3b8; font-size: 0.875rem; margin: 0 0 0.25rem 0;">{{ i18n.t('dev_stat_expired') || 'Expirés' }}</p>
           <p style="color: white; font-size: 1.5rem; font-weight: 700; margin: 0;">{{ expiredDevices }}</p>
         </div>
       </div>
@@ -71,21 +71,21 @@
       [style.background]="selectedStatus() === 'all' ? 'linear-gradient(to right, #14b8a6, #3b82f6)' : 'transparent'"
       [style.color]="selectedStatus() === 'all' ? 'white' : '#94a3b8'"
       style="padding: 0.5rem 1.5rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;">
-      Tous
+      {{ i18n.t('dev_filter_all') || 'Tous' }}
     </button>
     <button
       (click)="filterByStatus('active')"
       [style.background]="selectedStatus() === 'active' ? 'linear-gradient(to right, #14b8a6, #3b82f6)' : 'transparent'"
       [style.color]="selectedStatus() === 'active' ? 'white' : '#94a3b8'"
       style="padding: 0.5rem 1.5rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;">
-      Actifs
+      {{ i18n.t('dev_filter_active') || 'Actifs' }}
     </button>
     <button
       (click)="filterByStatus('expired')"
       [style.background]="selectedStatus() === 'expired' ? 'linear-gradient(to right, #14b8a6, #3b82f6)' : 'transparent'"
       [style.color]="selectedStatus() === 'expired' ? 'white' : '#94a3b8'"
       style="padding: 0.5rem 1.5rem; border-radius: 0.5rem; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;">
-      Expirés
+      {{ i18n.t('dev_filter_expired') || 'Expirés' }}
     </button>
   </div>
 
@@ -97,8 +97,8 @@
         <svg style="width: 4rem; height: 4rem; margin: 0 auto 1rem; color: #64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
         </svg>
-        <p style="font-size: 1.125rem; font-weight: 600; color: white; margin-bottom: 0.5rem;">Aucun appareil trouvé</p>
-        <p style="color: #94a3b8; font-size: 0.875rem;">Essayez de modifier vos filtres</p>
+        <p style="font-size: 1.125rem; font-weight: 600; color: white; margin-bottom: 0.5rem;">{{ i18n.t('dev_no_devices') || 'Aucun appareil trouvé' }}</p>
+        <p style="color: #94a3b8; font-size: 0.875rem;">{{ i18n.t('dev_try_filters') || 'Essayez de modifier vos filtres' }}</p>
       </div>
     }
 
@@ -125,21 +125,21 @@
         <!-- Body -->
         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
           <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
-            <span style="color: #94a3b8;">Activation:</span>
+            <span style="color: #94a3b8;">{{ i18n.t('dev_activation') || 'Activation' }}:</span>
             <span style="color: white; font-weight: 500;">{{ device.activationDate }}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
-            <span style="color: #94a3b8;">Expiration:</span>
+            <span style="color: #94a3b8;">{{ i18n.t('dev_expiration') || 'Expiration' }}:</span>
             <span [style.color]="device.status === 'expired' ? '#f87171' : 'white'" style="font-weight: 500;">{{ device.expirationDate }}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
-            <span style="color: #94a3b8;">Prix:</span>
+            <span style="color: #94a3b8;">{{ i18n.t('dev_price') || 'Prix' }}:</span>
             <span style="color: #14b8a6; font-weight: 600;">{{ device.price }} TND</span>
           </div>
 
           @if (device.hasSim) {
             <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
-              <span style="color: #94a3b8;">SIM:</span>
+              <span style="color: #94a3b8;">{{ i18n.t('dev_sim') || 'SIM' }}:</span>
               <span style="color: #14b8a6; font-weight: 500;">{{ device.simProvider }}</span>
             </div>
           }
@@ -148,11 +148,11 @@
         <!-- Footer -->
         <div style="display: flex; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid rgba(71, 85, 105, 0.3);">
           <button (click)="navigateToDeviceDetails(device.id)" style="flex: 1; padding: 0.75rem; background: rgba(71, 85, 105, 0.5); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;">
-            Détails
+            {{ i18n.t('dev_details') || 'Détails' }}
           </button>
           @if (device.status === 'expired') {
             <button style="flex: 1; padding: 0.75rem; background: linear-gradient(to right, #14b8a6, #3b82f6); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;">
-              Renouveler
+              {{ i18n.t('dev_renew') || 'Renouveler' }}
             </button>
           }
         </div>
@@ -167,10 +167,9 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
     </svg>
     <div>
-      <p style="font-size: 0.875rem; font-weight: 600; color: #93c5fd; margin: 0 0 0.25rem 0;">Abonnement Groupé</p>
+      <p style="font-size: 0.875rem; font-weight: 600; color: #93c5fd; margin: 0 0 0.25rem 0;">{{ i18n.t('dev_banner_title') || 'Abonnement Groupé' }}</p>
       <p style="font-size: 0.75rem; color: rgba(147, 197, 253, 0.7); line-height: 1.5; margin: 0;">
-        Tous vos appareils sont couverts par un seul abonnement.
-        Le renouvellement s'applique à l'ensemble de vos équipements.
+        {{ i18n.t('dev_banner_text') || 'Tous vos appareils sont couverts par un seul abonnement. Le renouvellement s\'applique à l\'ensemble de vos équipements.' }}
       </p>
     </div>
   </div>

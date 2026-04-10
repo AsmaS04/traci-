@@ -528,6 +528,30 @@
   "res_add_operation": "Add operation",
   "res_renewal_info": "Will extend expiration",
   "res_confirm_renewal": "Confirm renewal",
-  "res_year": "year"
+  "res_year": "year",
+
+  "dev_title": "My IoT Devices",
+  "dev_subtitle": "Manage your connected devices",
+  "dev_add_device": "Add Device",
+  "dev_stat_total": "Total Devices",
+  "dev_stat_active": "Active",
+  "dev_stat_expired": "Expired",
+  "dev_filter_all": "All",
+  "dev_filter_active": "Active",
+  "dev_filter_expired": "Expired",
+  "dev_no_devices": "No devices found",
+  "dev_try_filters": "Try changing your filters",
+  "dev_status_active": "Active",
+  "dev_status_expired": "Expired",
+  "dev_activation": "Activation",
+  "dev_expiration": "Expiration",
+  "dev_price": "Price",
+  "dev_sim": "SIM",
+  "dev_details": "Details",
+  "dev_renew": "Renew",
+  "dev_banner_title": "Grouped Subscription",
+  "dev_banner_text": "All your devices are covered by a single subscription. Renewal applies to all your equipment.",
+  "dev_serial_number": "Serial Number",
+  "dev_model": "Model"
 
 }

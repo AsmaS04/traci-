@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ClientDevice } from '../../../models/deviceClient.model';
 import { MOCK_DEVICES } from '../../../data/mock-devicesClient.data';
+import { TranslationService } from '../../../service/translation.service';
 
 @Component({
   selector: 'app-devices',
@@ -16,6 +17,7 @@ import { MOCK_DEVICES } from '../../../data/mock-devicesClient.data';
 export default class DevicesComponent implements OnInit {
 
   router = inject(Router);
+  i18n = inject(TranslationService);  // ← ADDED
 
   // Signals
   devices = signal<ClientDevice[]>([]);
@@ -87,7 +89,9 @@ export default class DevicesComponent implements OnInit {
   }
 
   getStatusLabel(status: 'active' | 'expired'): string {
-    return status === 'active' ? 'Actif' : 'Expiré';
+    return status === 'active' 
+      ? this.i18n.t('dev_status_active') || 'Actif'
+      : this.i18n.t('dev_status_expired') || 'Expiré';
   }
 
   getStatusColor(status: 'active' | 'expired'): string {

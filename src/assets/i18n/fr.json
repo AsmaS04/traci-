@@ -528,5 +528,30 @@
   "res_add_operation": "Ajouter opération",
   "res_renewal_info": "Prolongera l'expiration",
   "res_confirm_renewal": "Confirmer le renouvellement",
-  "res_year": "an"
+  "res_year": "an",
+  
+  "dev_title": "Mes Appareils IoT",
+  "dev_subtitle": "Gérez vos appareils connectés",
+  "dev_add_device": "Ajouter Appareil",
+  "dev_stat_total": "Total Appareils",
+  "dev_stat_active": "Actifs",
+  "dev_stat_expired": "Expirés",
+  "dev_filter_all": "Tous",
+  "dev_filter_active": "Actifs",
+  "dev_filter_expired": "Expirés",
+  "dev_no_devices": "Aucun appareil trouvé",
+  "dev_try_filters": "Essayez de modifier vos filtres",
+  "dev_status_active": "Actif",
+  "dev_status_expired": "Expiré",
+  "dev_activation": "Activation",
+  "dev_expiration": "Expiration",
+  "dev_price": "Prix",
+  "dev_sim": "SIM",
+  "dev_details": "Détails",
+  "dev_renew": "Renouveler",
+  "dev_banner_title": "Abonnement Groupé",
+  "dev_banner_text": "Tous vos appareils sont couverts par un seul abonnement. Le renouvellement s'applique à l'ensemble de vos équipements.",
+  "dev_serial_number": "Numéro de série",
+  "dev_model": "Modèle"
+
 }
