@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
-import { MOCK_RESELLER } from '../../../data/reseller-mock-data';
+import { Reseller } from '../../../models/reseller.model';
 
 @Component({
   selector: 'app-reseller-layout',
@@ -19,10 +19,21 @@ export default class ResellerLayout {
   notifCount = 3;
   avatarOpen = false;
 
-  reseller = MOCK_RESELLER;
+  // Placeholder until backend profile loading is wired up
+  reseller: Reseller = {
+    idRev: 0,
+    username: 'Reseller',
+    email: '',
+    nomEntreprise: 'TRACI',
+    deviceCostByDay: 0,
+    daysCount: 0,
+    phone: '',
+    clientCount: 0,
+    createdAt: '',
+  };
 
   get initials(): string {
-    return this.reseller.name
+    return (this.reseller.username ?? 'R')
       .split(' ')
       .map((w: string) => w[0])
       .join('')
@@ -48,7 +59,6 @@ export default class ResellerLayout {
 
   openSupport(): void {
     this.avatarOpen = false;
-    // TODO: open support dialog or navigate to support page
     alert('Support: contact@traci.tn');
   }
 

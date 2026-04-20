@@ -1,10 +1,7 @@
-// src/app/features/client/abonnements/abonnements.ts
-
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslationService } from '../../../service/translation.service';
-import { Abonnement, StatutAbonnement } from '../../../models/abonnement.model';
-import { MOCK_ABONNEMENTS } from '../../../data/mock-data';
+import { ClientService, AbonnementDTO } from '../../../service/Client.service';
 
 type FilterStatut = 'ALL' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
 
@@ -17,62 +14,54 @@ type FilterStatut = 'ALL' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
 })
 export default class AbonnementsComponent implements OnInit {
 
-  // Services
   i18n = inject(TranslationService);
+  private clientService = inject(ClientService);
 
-  // Signals
-  abonnements = signal<Abonnement[]>([]);
-  selectedAbonnement = signal<Abonnement | null>(null);
+  abonnements = signal<AbonnementDTO[]>([]);
+  selectedAbonnement = signal<AbonnementDTO | null>(null);
   showDetailsModal = signal(false);
   filterStatut = signal<FilterStatut>('ALL');
 
-  // Computed
+  // Map DB status to filter categories
+  private statusMap(status: string): 'ACTIVE' | 'EXPIRED' | 'CANCELLED' {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'actif') return 'ACTIVE';
+    if (s === 'annulé' || s === 'suspendu') return 'CANCELLED';
+    return 'EXPIRED'; // expiré or anything else
+  }
+
   filteredAbonnements = computed(() => {
     const filter = this.filterStatut();
-    const allAbonnements = this.abonnements();
-
-    switch (filter) {
-      case 'ACTIVE':
-        return allAbonnements.filter(a => a.statut === StatutAbonnement.ACTIF);
-      case 'EXPIRED':
-        return allAbonnements.filter(a => a.statut === StatutAbonnement.EXPIRE);
-      case 'CANCELLED':
-        return allAbonnements.filter(a => a.statut === StatutAbonnement.ANNULE);
-      default:
-        return allAbonnements;
-    }
+    const all = this.abonnements();
+    if (filter === 'ALL') return all;
+    return all.filter(a => this.statusMap(a.status) === filter);
   });
 
   abonnementsStats = computed(() => {
-    const allAbonnements = this.abonnements();
+    const all = this.abonnements();
     return {
-      total: allAbonnements.length,
-      actifs: allAbonnements.filter(a => a.statut === StatutAbonnement.ACTIF).length,
-      expires: allAbonnements.filter(a => a.statut === StatutAbonnement.EXPIRE).length,
-      annules: allAbonnements.filter(a => a.statut === StatutAbonnement.ANNULE).length
+      total: all.length,
+      actifs: all.filter(a => this.statusMap(a.status) === 'ACTIVE').length,
+      expires: all.filter(a => this.statusMap(a.status) === 'EXPIRED').length,
+      annules: all.filter(a => this.statusMap(a.status) === 'CANCELLED').length
     };
   });
 
-  // Expose enum
-  StatutAbonnement = StatutAbonnement;
+  // Expose for template compatibility
+  StatutAbonnement = { ACTIF: 'actif', EXPIRE: 'expiré', ANNULE: 'annulé' };
 
   ngOnInit() {
-    // Load abonnements from mock data
-    this.abonnements.set(MOCK_ABONNEMENTS);
+    this.clientService.getMyAbonnements().subscribe({
+      next: (data: AbonnementDTO[]) => this.abonnements.set(data),
+      error: (err: any) => console.error('Failed to load abonnements', err)
+    });
   }
 
-  // Filters
-  setFilter(statut: FilterStatut) {
-    this.filterStatut.set(statut);
-  }
+  setFilter(statut: FilterStatut) { this.filterStatut.set(statut); }
+  isFilterActive(statut: FilterStatut): boolean { return this.filterStatut() === statut; }
 
-  isFilterActive(statut: FilterStatut): boolean {
-    return this.filterStatut() === statut;
-  }
-
-  // Modal
-  openDetails(abonnement: Abonnement) {
-    this.selectedAbonnement.set(abonnement);
+  openDetails(abo: AbonnementDTO) {
+    this.selectedAbonnement.set(abo);
     this.showDetailsModal.set(true);
   }
 
@@ -81,53 +70,35 @@ export default class AbonnementsComponent implements OnInit {
     this.selectedAbonnement.set(null);
   }
 
-  // Actions
-  renouvelerAbonnement(abonnement: Abonnement) {
-    console.log('Renouveler abonnement:', abonnement.id);
-    // TODO: Ouvrir modal de sélection forfait + paiement
-    alert(`🔄 Renouvellement de l'abonnement ${abonnement.serviceNom}\n\nVous serez redirigé vers la page de paiement.`);
+  renouvelerAbonnement(abo: AbonnementDTO) {
+    alert(`🔄 Renouvellement de l'abonnement #${abo.idAbo}\nRedirection vers la page de paiement...`);
+    // TODO: open forfait selection → payment flow
   }
 
-  // Helpers
-  getStatutBadgeClass(statut: StatutAbonnement): string {
-    switch (statut) {
-      case StatutAbonnement.ACTIF:
-        return 'badge-success';
-      case StatutAbonnement.EXPIRE:
-        return 'badge-warning';
-      case StatutAbonnement.ANNULE:
-        return 'badge-danger';
-      default:
-        return 'badge-default';
-    }
+  getStatutBadgeClass(statut: string): string {
+    const s = (statut ?? '').toLowerCase();
+    if (s === 'actif') return 'badge-success';
+    if (s === 'expiré') return 'badge-warning';
+    if (s === 'annulé' || s === 'suspendu') return 'badge-danger';
+    return 'badge-default';
   }
 
-  getStatutLabel(statut: StatutAbonnement): string {
-    switch (statut) {
-      case StatutAbonnement.ACTIF:
-        return this.i18n.t('status_active') || 'Actif';
-      case StatutAbonnement.EXPIRE:
-        return this.i18n.t('status_expired') || 'Expiré';
-      case StatutAbonnement.ANNULE:
-        return this.i18n.t('status_cancelled') || 'Annulé';
-      default:
-        return 'Inconnu';
-    }
+  getStatutLabel(statut: string): string {
+    const s = (statut ?? '').toLowerCase();
+    if (s === 'actif') return this.i18n.t('status_active') || 'Actif';
+    if (s === 'expiré') return this.i18n.t('status_expired') || 'Expiré';
+    if (s === 'annulé') return this.i18n.t('status_cancelled') || 'Annulé';
+    if (s === 'suspendu') return 'Suspendu';
+    return statut;
   }
 
-  getProgressPercentage(abonnement: Abonnement): number {
-    if (abonnement.statut !== StatutAbonnement.ACTIF) {
-      return abonnement.statut === StatutAbonnement.EXPIRE ? 100 : 0;
+  getProgressPercentage(abo: AbonnementDTO): number {
+    if ((abo.status ?? '').toLowerCase() !== 'actif') {
+      return (abo.status ?? '').toLowerCase() === 'expiré' ? 100 : 0;
     }
-
-    const debut = new Date(abonnement.dateDebut).getTime();
-    const fin = new Date(abonnement.dateFin).getTime();
-    const maintenant = new Date().getTime();
-
-    const totalDuration = fin - debut;
-    const elapsed = maintenant - debut;
-
-    const percentage = (elapsed / totalDuration) * 100;
-    return Math.min(100, Math.max(0, percentage));
+    const debut = new Date(abo.startDate).getTime();
+    const fin = new Date(abo.endDate).getTime();
+    const now = Date.now();
+    return Math.min(100, Math.max(0, ((now - debut) / (fin - debut)) * 100));
   }
 }

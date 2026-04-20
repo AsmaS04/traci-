@@ -1,18 +1,17 @@
-// src/app/app.routes.ts
-
 import { Routes } from '@angular/router';
 import { LoginAdmin }    from './pages/login-admin/login-admin';
 import { LoginClient }   from './pages/login-client/login-client';
 import { LoginReseller } from './pages/login-reseller/login-reseller';
 import { AdminLayout }   from './pages/admin/admin-layout/admin-layout';
 import ClientLayout from './pages/client/client-layout/client-layout';
+import { authGuard } from './guards/Auth.guard';
 
 export const routes: Routes = [
 
-  // DEFAULT → client dashboard
+  // DEFAULT → client login
   {
     path: '',
-    redirectTo: 'client-dashboard/dashboard',
+    redirectTo: 'client',
     pathMatch: 'full'
   },
 
@@ -22,6 +21,7 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminLayout,
+    canActivate: [authGuard(['ROLE_ADMIN'])],
     children: [
       {
         path: 'dashboard',
@@ -48,11 +48,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/devices/devices').then(m => m.AdminDevices),
       },
-      {
-        path: 'transactions',
-        loadComponent: () =>
-          import('./features/admin/transactions/transaction').then(m => m.Transactions),
-      },
+      // TRANSACTIONS — commented out until backend is ready
+      // {
+      //   path: 'transactions',
+      //   loadComponent: () =>
+      //     import('./features/admin/transactions/transaction').then(m => m.Transactions),
+      // },
       {
         path: '',
         redirectTo: 'dashboard',
@@ -62,11 +63,12 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // CLIENT SHELL
+  // CLIENT SHELL — commented out until pages are updated
   // ══════════════════════════════════════════════════════════
   {
     path: 'client-dashboard',
     component: ClientLayout,
+    canActivate: [authGuard(['ROLE_CLIENT'])],
     children: [
       {
         path: 'dashboard',
@@ -102,12 +104,13 @@ export const routes: Routes = [
   },
 
   // ══════════════════════════════════════════════════════════
-  // RESELLER SHELL
-  // ══════════════════════════════════════════════════════════
+  // // RESELLER SHELL — commented out until pages are updated
+  // // ══════════════════════════════════════════════════════════
   {
     path: 'reseller-dashboard',
     loadComponent: () =>
       import('./pages/reseller/reseller-layout/reseller-layout').then(m => m.default),
+    canActivate: [authGuard(['ROLE_RESELLER'])],
     children: [
       {
         path: 'dashboard',
@@ -136,12 +139,18 @@ export const routes: Routes = [
       }
     ]
   },
+    // },
 
-  // ══════════════════════════════════════════════════════════
+  //  ══════════════════════════════════════════════════════════
   // LOGIN PAGES
   // ══════════════════════════════════════════════════════════
   { path: 'client',             component: LoginClient },
   { path: 'bo-admin-access',    component: LoginAdmin },
   { path: 'bo-reseller-access', component: LoginReseller },
+  {
+    path: 'request-access',
+    loadComponent: () =>
+      import('./pages/request_access/request_access').then(m => m.default)
+  },
 
 ];

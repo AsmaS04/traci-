@@ -26,13 +26,11 @@
 
     <div class="sidebar-bottom">
       <div class="user-card">
-        <!-- Show avatar image if uploaded, else initials -->
-        @if (!reseller.avatarUrl) { <div class="user-avatar">{{ initials }}</div> }
-        @if (reseller.avatarUrl) { <img class="user-avatar user-avatar--img" [src]="reseller.avatarUrl" alt="avatar"/> }
+        <div class="user-avatar">{{ initials }}</div>
         @if (!collapsed) {
           <div class="user-info">
-            <p class="user-name">{{ reseller.name }}</p>
-            <p class="user-role">{{ reseller.companyName }}</p>
+            <p class="user-name">{{ reseller.username }}</p>
+            <p class="user-role">{{ reseller.nomEntreprise }}</p>
           </div>
         }
       </div>
@@ -110,9 +108,8 @@
         <!-- ── Avatar Dropdown ─────────────────────────── -->
         <div class="avatar-wrap" (click)="toggleAvatar()">
           <div class="topbar-avatar">
-            @if (!reseller.avatarUrl) { <div class="topbar-avatar__img">{{ initials }}</div> }
-            @if (reseller.avatarUrl) { <img class="topbar-avatar__img topbar-avatar__img--photo" [src]="reseller.avatarUrl" alt="avatar"/> }
-            <span class="topbar-avatar__name">{{ reseller.name.split(' ')[0] }}</span>
+            <div class="topbar-avatar__img">{{ initials }}</div>
+            <span class="topbar-avatar__name">{{ reseller.username }}</span>
             <svg class="topbar-avatar__chevron" [class.rotated]="avatarOpen"
               viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
@@ -122,26 +119,20 @@
 
           @if (avatarOpen) {
           <div class="avatar-dropdown" (click)="$event.stopPropagation()">
-            <!-- Header -->
             <div class="avatar-dropdown__header">
-              @if (!reseller.avatarUrl) { <div class="avatar-dropdown__avatar">{{ initials }}</div> }
-              @if (reseller.avatarUrl) { <img class="avatar-dropdown__avatar avatar-dropdown__avatar--photo" [src]="reseller.avatarUrl" alt="avatar"/> }
+              <div class="avatar-dropdown__avatar">{{ initials }}</div>
               <div>
-                <p class="avatar-dropdown__name">{{ reseller.name }}</p>
+                <p class="avatar-dropdown__name">{{ reseller.username }}</p>
                 <p class="avatar-dropdown__email">{{ reseller.email }}</p>
               </div>
             </div>
             <div class="avatar-dropdown__divider"></div>
-
-            <!-- Edit profile -->
             <button class="avatar-menu-item" (click)="goToProfile()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
               {{ i18n.t('adm_menu_edit_profile') }}
             </button>
-
-            <!-- Support -->
             <button class="avatar-menu-item" (click)="openSupport()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"/>
@@ -150,10 +141,7 @@
               </svg>
               {{ i18n.t('adm_menu_support') }}
             </button>
-
             <div class="avatar-dropdown__divider"></div>
-
-            <!-- Sign out -->
             <button class="avatar-menu-item avatar-menu-item--danger" (click)="logout()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

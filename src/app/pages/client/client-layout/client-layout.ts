@@ -1,11 +1,9 @@
-// src/app/pages/client/client-layout/client-layout.ts
-
 import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ThemeService } from '../../../service/theme.service';
-import { MOCK_USER } from '../../../data/mock-data';
+import { AuthService } from '../../../service/Auth.service';
 
 @Component({
   selector: 'app-client-layout',
@@ -16,79 +14,61 @@ import { MOCK_USER } from '../../../data/mock-data';
 })
 export default class ClientLayoutComponent implements OnInit {
 
-  // Services
   i18n = inject(TranslationService);
   theme = inject(ThemeService);
   router = inject(Router);
+  private authService = inject(AuthService);
 
-  // Signals
   isSidebarOpen = signal(true);
   showProfileDropdown = signal(false);
 
-  // User data
-  user = MOCK_USER;
+  user = {
+    prenom: '',
+    nom: '',
+    email: '',
+    avatar: '?',
+    role: 'Client'
+  };
 
   ngOnInit() {
-    // Initialize component
+    const username = this.authService.getUsername() ?? 'Client';
+    const email = this.authService.getEmail() ?? '';
+    this.user = {
+      prenom: username,
+      nom: '',
+      email: email,
+      avatar: (username[0] ?? 'C').toUpperCase(),
+      role: 'Client'
+    };
     this.checkMobileView();
-
-    // Close sidebar on mobile by default
     if (window.innerWidth < 768) {
       this.isSidebarOpen.set(false);
     }
   }
 
-  // Sidebar toggle
-  toggleSidebar() {
-    this.isSidebarOpen.set(!this.isSidebarOpen());
-  }
+  toggleSidebar() { this.isSidebarOpen.set(!this.isSidebarOpen()); }
 
-  // Check if mobile view
   checkMobileView() {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        this.isSidebarOpen.set(false);
-      } else {
-        this.isSidebarOpen.set(true);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', () => {
+      if (window.innerWidth < 768) this.isSidebarOpen.set(false);
+      else this.isSidebarOpen.set(true);
+    });
   }
 
-  // Language toggle
-  // Language toggle
-toggleLanguage() {
-  const currentLang = this.i18n.lang();
-  const newLang = currentLang === 'fr' ? 'en' : 'fr';
- this.i18n.loadTranslations(newLang);
-}
-
-  // Theme toggle
-  toggleTheme() {
-    this.theme.toggleTheme();
+  toggleLanguage() {
+    const newLang = this.i18n.lang() === 'fr' ? 'en' : 'fr';
+    this.i18n.loadTranslations(newLang);
   }
 
-  // Profile dropdown
-  toggleProfileDropdown() {
-    this.showProfileDropdown.set(!this.showProfileDropdown());
-  }
+  toggleTheme() { this.theme.toggleTheme(); }
+  toggleProfileDropdown() { this.showProfileDropdown.set(!this.showProfileDropdown()); }
+  closeProfileDropdown() { this.showProfileDropdown.set(false); }
 
-  closeProfileDropdown() {
-    this.showProfileDropdown.set(false);
-  }
-
-  // Logout
   logout() {
-    console.log('Déconnexion...');
-    // TODO: Implémenter la déconnexion
-    // Clear session, redirect to login, etc.
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
-  // في client-layout.ts
-async setLanguage(lang: 'en' | 'fr') {
-  if (this.i18n.lang() !== lang) {
-    await this.i18n.toggle();
+
+  async setLanguage(lang: 'en' | 'fr') {
+    if (this.i18n.lang() !== lang) await this.i18n.toggle();
   }
-}
 }

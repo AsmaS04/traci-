@@ -1,10 +1,7 @@
-// src/app/features/client/factures/factures.ts
-
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslationService } from '../../../service/translation.service';
-import { Facture, StatutFacture } from '../../../models/facture.model';
-import { MOCK_FACTURES, getMontantTotal } from '../../../data/mock-data';
+import { ClientService, PaiementDTO } from '../../../service/Client.service';
 
 type FilterStatut = 'ALL' | 'PAID' | 'PENDING' | 'OVERDUE';
 
@@ -17,63 +14,54 @@ type FilterStatut = 'ALL' | 'PAID' | 'PENDING' | 'OVERDUE';
 })
 export default class FacturesComponent implements OnInit {
 
-  // Services
   i18n = inject(TranslationService);
+  private clientService = inject(ClientService);
 
-  // Signals
-  factures = signal<Facture[]>([]);
-  selectedFacture = signal<Facture | null>(null);
+  // We display payments as "factures" until Odoo is integrated
+  payments = signal<PaiementDTO[]>([]);
+  selectedFacture = signal<PaiementDTO | null>(null);
   showDetailsModal = signal(false);
   filterStatut = signal<FilterStatut>('ALL');
 
-  // Computed
+  // Map payment status to filter
+  private statusMap(s: string): 'PAID' | 'PENDING' | 'OVERDUE' {
+    if (s === 'completed') return 'PAID';
+    if (s === 'pending') return 'PENDING';
+    return 'OVERDUE'; // failed, refunded
+  }
+
   filteredFactures = computed(() => {
     const filter = this.filterStatut();
-    const allFactures = this.factures();
-
-    switch (filter) {
-      case 'PAID':
-        return allFactures.filter(f => f.statut === StatutFacture.PAYEE);
-      case 'PENDING':
-        return allFactures.filter(f => f.statut === StatutFacture.EN_ATTENTE);
-      case 'OVERDUE':
-        return allFactures.filter(f => f.statut === StatutFacture.ECHUE);
-      default:
-        return allFactures;
-    }
+    const all = this.payments();
+    if (filter === 'ALL') return all;
+    return all.filter(p => this.statusMap(p.paymentStatus) === filter);
   });
 
   facturesStats = computed(() => {
-    const allFactures = this.factures();
+    const all = this.payments();
     return {
-      total: allFactures.length,
-      montantTotal: allFactures.reduce((sum, f) => sum + f.montantTTC, 0),
-      payees: allFactures.filter(f => f.statut === StatutFacture.PAYEE).length,
-      enAttente: allFactures.filter(f => f.statut === StatutFacture.EN_ATTENTE).length,
-      echues: allFactures.filter(f => f.statut === StatutFacture.ECHUE).length
+      total: all.length,
+      montantTotal: all.reduce((s, p) => s + (p.amount ?? 0), 0),
+      payees: all.filter(p => p.paymentStatus === 'completed').length,
+      enAttente: all.filter(p => p.paymentStatus === 'pending').length
     };
   });
 
-  // Expose enum
-  StatutFacture = StatutFacture;
+  // For template compatibility
+  StatutFacture = { PAYEE: 'completed', EN_ATTENTE: 'pending', ECHUE: 'failed' };
 
   ngOnInit() {
-    // Load factures from mock data
-    this.factures.set(MOCK_FACTURES);
+    this.clientService.getMyPayments().subscribe({
+      next: (data: PaiementDTO[]) => this.payments.set(data),
+      error: (err: any) => console.error('Failed to load payments', err)
+    });
   }
 
-  // Filters
-  setFilter(statut: FilterStatut) {
-    this.filterStatut.set(statut);
-  }
+  setFilter(statut: FilterStatut) { this.filterStatut.set(statut); }
+  isFilterActive(statut: FilterStatut): boolean { return this.filterStatut() === statut; }
 
-  isFilterActive(statut: FilterStatut): boolean {
-    return this.filterStatut() === statut;
-  }
-
-  // Modal
-  openDetails(facture: Facture) {
-    this.selectedFacture.set(facture);
+  openDetails(p: PaiementDTO) {
+    this.selectedFacture.set(p);
     this.showDetailsModal.set(true);
   }
 
@@ -82,68 +70,31 @@ export default class FacturesComponent implements OnInit {
     this.selectedFacture.set(null);
   }
 
-  // Actions
-  telechargerFacture(facture: Facture) {
-    console.log('Télécharger facture:', facture.numero);
-    // TODO: API call pour générer et télécharger le PDF
-    alert(`📥 Téléchargement de la facture ${facture.numero} en cours...`);
+  telechargerFacture(p: PaiementDTO) {
+    alert(`📥 Téléchargement facture ${p.payRef}...`);
+    // TODO: Odoo integration — generate PDF
   }
 
-  payerFacture(facture: Facture) {
-    console.log('Payer facture:', facture.numero);
-    const montantTotal = getMontantTotal(facture);
-    // TODO: Ouvrir modal de paiement
-    alert(`💳 Paiement de la facture ${facture.numero} - Montant: ${montantTotal} TND`);
+  payerFacture(p: PaiementDTO) {
+    alert(`💳 Paiement ${p.payRef} — Montant: ${p.amount} TND`);
+    // TODO: Konnect redirect
   }
 
-  // Helpers
-  getStatutBadgeClass(statut: StatutFacture): string {
-    switch (statut) {
-      case StatutFacture.PAYEE:
-        return 'badge-success';
-      case StatutFacture.EN_ATTENTE:
-        return 'badge-warning';
-      case StatutFacture.ECHUE:
-        return 'badge-danger';
-      default:
-        return 'badge-default';
-    }
+  getStatutBadgeClass(statut: string): string {
+    if (statut === 'completed') return 'badge-success';
+    if (statut === 'pending') return 'badge-warning';
+    return 'badge-danger';
   }
 
-  getStatutLabel(statut: StatutFacture): string {
-    switch (statut) {
-      case StatutFacture.PAYEE:
-        return this.i18n.t('inv_status_paid') || 'Payée';
-      case StatutFacture.EN_ATTENTE:
-        return this.i18n.t('inv_status_pending') || 'En attente';
-      case StatutFacture.ECHUE:
-        return this.i18n.t('inv_status_overdue') || 'Échue';
-      default:
-        return 'Inconnu';
-    }
+  getStatutLabel(statut: string): string {
+    if (statut === 'completed') return this.i18n.t('inv_status_paid') || 'Payée';
+    if (statut === 'pending') return this.i18n.t('inv_status_pending') || 'En attente';
+    if (statut === 'failed') return this.i18n.t('inv_status_overdue') || 'Échouée';
+    if (statut === 'refunded') return 'Remboursée';
+    return statut;
   }
 
-  // Get jours restants for a facture
-  getJoursRestants(facture: Facture): number {
-    if (!facture.dateEcheance) return 0;
-
-    const echeance = new Date(facture.dateEcheance).getTime();
-    const maintenant = new Date().getTime();
-    const diffMs = echeance - maintenant;
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-    return Math.max(0, diffDays);
-  }
-
-  // Check if facture is due soon
-  isEchueSoon(facture: Facture): boolean {
-    if (facture.statut !== StatutFacture.EN_ATTENTE) return false;
-    const jours = this.getJoursRestants(facture);
-    return jours > 0 && jours <= 3;
-  }
-
-  // Get montant total (wrapper for template)
-  getMontantTotal(facture: Facture): number {
-    return getMontantTotal(facture);
-  }
+  getJoursRestants(_p: PaiementDTO): number { return 0; }
+  isEchueSoon(_p: PaiementDTO): boolean { return false; }
+  getMontantTotal(p: PaiementDTO): number { return p.amount ?? 0; }
 }

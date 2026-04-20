@@ -1,14 +1,11 @@
 export interface Reseller {
-  id: number;
-  name: string;
-  companyName: string;
+  idRev: number;
+  username: string;
   email: string;
+  nomEntreprise: string;
+  deviceCostByDay: number | null;
+  daysCount: number | null;
   phone: string;
-  address: string;
-  region: string;
-  serverType: 'shared' | 'dedicated';
-  totalClients: number;
-  clientIds: number[];
-  joinDate: string;
-  avatarUrl?: string | null;
+  clientCount: number | null;
+  createdAt: string;
 }

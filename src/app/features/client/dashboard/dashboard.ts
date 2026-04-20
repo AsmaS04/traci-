@@ -1,26 +1,11 @@
-// src/app/features/client/dashboard/dashboard.ts
-
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
-import { MOCK_DEVICES } from '../../../data/mock-devicesClient.data';
-import { ClientDevice } from '../../../models/deviceClient.model';
-import {
-  Abonnement,
-  StatutAbonnement,
-  isAbonnementExpiringSoon
-} from '../../../models/abonnement.model';
-import {
-  Forfait,
-  FORFAITS_DISPONIBLES
-} from '../../../models/forfait.model';
+import { ClientService, AbonnementDTO, PaiementDTO } from '../../../service/Client.service';
+import { Device } from '../../../models/device.model';
+import { Client } from '../../../models/client.model';
 import { PaymentComponent } from '../payment/payment';
-import {
-  MOCK_ABONNEMENT_ACTUEL,
-  MOCK_USER,
-  MOCK_STATS
-} from '../../../data/mock-data';
 
 export interface RecentInvoice {
   id: string;
@@ -38,59 +23,37 @@ export interface RecentInvoice {
 })
 export default class DashboardComponent implements OnInit {
 
-  // Services
   i18n   = inject(TranslationService);
   router = inject(Router);
+  private clientService = inject(ClientService);
 
-  // Signals — all original, unchanged
-  abonnement                = signal<Abonnement | null>(null);
+  abonnement   = signal<AbonnementDTO | null>(null);
+  isLoading    = signal(true);
+
   showWarningModal          = signal(false);
   showProfileDropdown       = signal(false);
   showForfaitsModal         = signal(false);
   showPaymentModal          = signal(false);
-  selectedForfait           = signal<Forfait | null>(null);
-  selectedForfaitForPayment = signal<Forfait | null>(null);
-  isLoading                 = signal(false);
+  selectedForfaitForPayment = signal<any>(null);
 
-  // Data
-  forfaits = FORFAITS_DISPONIBLES;
-  user     = MOCK_USER;
-  stats    = MOCK_STATS;
+  user = { prenom: 'Client', nom: '', email: '' };
+  clientDevices: Device[] = [];
+  activeDevicesCount = 0;
+  expiredDevicesCount = 0;
+  recentInvoices: RecentInvoice[] = [];
+  stats = { totalPaye: 0, nombreFactures: 0, support: '24/7' };
 
-  recentInvoices: RecentInvoice[] = [
-    { id: 'INV-2026-006', date: '01 Jan 2026', amount: 220, status: 'paid'    },
-    { id: 'INV-2025-005', date: '01 Oct 2025', amount: 220, status: 'paid'    },
-    { id: 'INV-2025-004', date: '01 Jul 2025', amount: 200, status: 'pending' },
+  forfaits = [
+    { dureeMois: 3,  dureeLabel: '3 Mois', prix: 60,  prixUnitaire: 20, populaire: false, economie: 0 },
+    { dureeMois: 6,  dureeLabel: '6 Mois', prix: 102, prixUnitaire: 17, populaire: true,  economie: 15 },
+    { dureeMois: 12, dureeLabel: '1 An',    prix: 180, prixUnitaire: 15, populaire: false, economie: 25 },
   ];
 
-  // Expose enums
-  StatutAbonnement = StatutAbonnement;
-
-  // ══════════════════════════════════════════════════════════
-  // DEVICES - NOUVEAU CODE
-  // ══════════════════════════════════════════════════════════
-
-  // Current client ID (hardcoded for now - replace with auth later)
-  currentClientId = 1; // Ahmed's ID
-
-  // Get devices for current client
-  clientDevices: ClientDevice[] = MOCK_DEVICES.filter(
-    device => device.clientId === this.currentClientId
-  );
-
-  // Count active vs expired
-  activeDevicesCount = this.clientDevices.filter(d => d.status === 'active').length;
-  expiredDevicesCount = this.clientDevices.filter(d => d.status === 'expired').length;
-
-  // ══════════════════════════════════════════════════════════
-
-  // ── NEW: Urgency helpers ──────────────────────────────────
   get daysLeft(): number {
     const abo = this.abonnement();
     return abo ? Math.max(0, abo.joursRestants) : 0;
   }
 
-  /** Returns 'safe' | 'warning' | 'danger' — matches existing CSS class names */
   getCountdownColor(): string {
     if (this.daysLeft <= 0)  return 'danger';
     if (this.daysLeft < 7)   return 'danger';
@@ -103,17 +66,15 @@ export default class DashboardComponent implements OnInit {
     return map[this.getCountdownColor()] ?? '#0D9488';
   }
 
-  get showExpiryBanner(): boolean {
-    return this.daysLeft > 0 && this.daysLeft <= 15;
-  }
+  get showExpiryBanner(): boolean { return this.daysLeft > 0 && this.daysLeft <= 15; }
 
   get contextualSubtitle(): string {
     const abo = this.abonnement();
     if (!abo) return this.i18n.t('dash_overview');
-    const dateStr = new Date(abo.dateFin).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     if (this.daysLeft <= 0)  return this.i18n.t('dash_msg_expired');
     if (this.daysLeft < 7)   return this.i18n.t('dash_msg_critical').replace('{n}', String(this.daysLeft));
     if (this.daysLeft <= 15) return this.i18n.t('dash_msg_expiring').replace('{n}', String(this.daysLeft));
+    const dateStr = new Date(abo.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     return this.i18n.t('dash_msg_active').replace('{date}', dateStr);
   }
 
@@ -125,109 +86,136 @@ export default class DashboardComponent implements OnInit {
 
   get gracePeriodDays(): number { return 10; }
 
+  getProgressPercentage(): number {
+    const abo = this.abonnement();
+    if (!abo) return 0;
+    const debut = new Date(abo.startDate).getTime();
+    const fin   = new Date(abo.endDate).getTime();
+    return Math.min(100, Math.max(0, Math.round(((Date.now() - debut) / (fin - debut)) * 100)));
+  }
+
+  getProgressColor(): string { return this.getCountdownColor(); }
+
   invoiceStatusClass(s: string): string {
     if (s === 'paid')    return 'inv--paid';
     if (s === 'pending') return 'inv--pending';
     return 'inv--overdue';
   }
 
-  // ── Progress bar (original logic preserved) ───────────────
-  getProgressPercentage(): number {
-    const abo = this.abonnement();
-    if (!abo) return 0;
-    const debut = new Date(abo.dateDebut).getTime();
-    const fin   = new Date(abo.dateFin).getTime();
-    const now   = Date.now();
-    return Math.min(100, Math.max(0, Math.round(((now - debut) / (fin - debut)) * 100)));
+  ngOnInit() {
+    this.isLoading.set(true);
+    this.loadProfile();
+    this.loadDevices();
+    this.loadAbonnement();
+    this.loadPayments();
   }
 
-  getProgressColor(): string { return this.getCountdownColor(); }
+  private loadProfile() {
+    this.clientService.getMyProfile().subscribe({
+      next: (client: Client) => {
+        this.user = { prenom: client.firstName ?? 'Client', nom: client.lastName ?? '', email: client.email ?? '' };
+      },
+      error: (err: any) => console.error('Failed to load profile', err)
+    });
+  }
 
-  // ── Lifecycle ─────────────────────────────────────────────
-  ngOnInit() { this.loadAbonnement(); }
+  private loadDevices() {
+    this.clientService.getMyDevices().subscribe({
+      next: (devices: Device[]) => {
+        this.clientDevices = devices;
+        this.activeDevicesCount = devices.filter(d => ['active', 'attribué', 'actif'].includes((d.status ?? '').toLowerCase())).length;
+        this.expiredDevicesCount = devices.filter(d => ['expired', 'inactif'].includes((d.status ?? '').toLowerCase())).length;
+      },
+      error: (err: any) => console.error('Failed to load devices', err)
+    });
+  }
 
   loadAbonnement() {
-    this.isLoading.set(true);
-    // TODO: Replace with real API call
-    setTimeout(() => {
-      this.abonnement.set(MOCK_ABONNEMENT_ACTUEL);
-      this.isLoading.set(false);
-      if (isAbonnementExpiringSoon(MOCK_ABONNEMENT_ACTUEL.joursRestants)) {
-        this.showWarningModal.set(true);
+    this.clientService.getActiveAbonnement().subscribe({
+      next: (abo: AbonnementDTO) => {
+        this.abonnement.set(abo);
+        this.isLoading.set(false);
+        if (abo.joursRestants > 0 && abo.joursRestants <= 15) this.showWarningModal.set(true);
+      },
+      error: (err: any) => {
+        console.error('No active abonnement or error', err);
+        this.abonnement.set(null);
+        this.isLoading.set(false);
       }
-    }, 700);
+    });
   }
 
-  // ── Profile dropdown ──────────────────────────────────────
+  private loadPayments() {
+    this.clientService.getMyPayments().subscribe({
+      next: (payments: PaiementDTO[]) => {
+        this.recentInvoices = payments.slice(0, 3).map(p => ({
+          id: p.payRef,
+          date: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+          amount: p.amount ?? 0,
+          status: (p.paymentStatus === 'completed' ? 'paid' : p.paymentStatus === 'pending' ? 'pending' : 'overdue') as 'paid' | 'pending' | 'overdue'
+        }));
+        const completed = payments.filter(p => p.paymentStatus === 'completed');
+        this.stats = {
+          totalPaye: completed.reduce((sum, p) => sum + (p.amount ?? 0), 0),
+          nombreFactures: completed.length,
+          support: '24/7'
+        };
+      },
+      error: (err: any) => console.error('Failed to load payments', err)
+    });
+  }
+
   toggleProfileDropdown() { this.showProfileDropdown.set(!this.showProfileDropdown()); }
   closeProfileDropdown()  { this.showProfileDropdown.set(false); }
+  closeWarningModal()     { this.showWarningModal.set(false); }
+  openForfaitsModal()     { this.showForfaitsModal.set(true); this.showWarningModal.set(false); }
+  closeForfaitsModal()    { this.showForfaitsModal.set(false); }
 
-  // ── Warning modal ─────────────────────────────────────────
-  closeWarningModal() { this.showWarningModal.set(false); }
-
-  // ── Forfaits modal ────────────────────────────────────────
-  openForfaitsModal()  { this.showForfaitsModal.set(true); this.showWarningModal.set(false); }
-  closeForfaitsModal() { this.showForfaitsModal.set(false); this.selectedForfait.set(null); }
-
-  selectForfait(forfait: Forfait) {
-    this.selectedForfaitForPayment.set(forfait);
-    this.closeForfaitsModal();
-    this.showPaymentModal.set(true);
+  selectForfait(forfait: any) {
+    const nbDevices = this.clientDevices.length || 1;
+    this.clientService.renewAbonnement(forfait.dureeMois, forfait.prixUnitaire, nbDevices).subscribe({
+      next: (newAbo: AbonnementDTO) => {
+        this.clientService.initPayment(newAbo.idAbo, newAbo.totalTtc).subscribe({
+          next: (payment: PaiementDTO) => {
+            this.closeForfaitsModal();
+            this.selectedForfaitForPayment.set({ ...forfait, payRef: payment.payRef, aboId: newAbo.idAbo });
+            this.showPaymentModal.set(true);
+          },
+          error: (err: any) => console.error('Failed to init payment', err)
+        });
+      },
+      error: (err: any) => console.error('Failed to renew', err)
+    });
   }
 
-  // ── Payment success ───────────────────────────────────────
   onPaymentSuccess(data: any) {
-    console.log('Payment success:', data);
-    this.showPaymentModal.set(false);
-    // TODO: API call to create subscription with data.orderId
-    alert(`✅ Paiement réussi!\n\nOrder ID: ${data.orderId}\nMontant: ${data.amount} TND\nMéthode: ${data.method}\n\nVotre abonnement sera activé dans quelques instants.`);
-    this.loadAbonnement();
+    const forfait = this.selectedForfaitForPayment();
+    if (forfait?.payRef) {
+      this.clientService.confirmPayment(forfait.payRef, data.orderId ?? 'MANUAL').subscribe({
+        next: () => {
+          this.showPaymentModal.set(false);
+          this.loadAbonnement();
+          this.loadPayments();
+          alert(`✅ Paiement réussi! Montant: ${data.amount} TND`);
+        },
+        error: (err: any) => console.error('Failed to confirm payment', err)
+      });
+    } else {
+      this.showPaymentModal.set(false);
+      this.loadAbonnement();
+    }
   }
 
-  // ── Navigation ────────────────────────────────────────────
   navigateTo(path: string) { this.router.navigate([path]); }
+  demanderProlongation() { this.closeWarningModal(); alert('✅ Demande de prolongation envoyée!'); }
+  telechargerFacture() { alert('📥 Téléchargement de la facture en cours...'); }
+  isExpiringSoon(days: number): boolean { return days > 0 && days <= 15; }
 
-  // ── Actions ───────────────────────────────────────────────
-  demanderProlongation() {
-    console.log('Demander prolongation de 10 jours');
-    // TODO: API call
-    this.closeWarningModal();
-    alert('✅ Demande de prolongation envoyée!\n\nVous recevrez une confirmation par email sous 24h.');
-  }
-
-  telechargerFacture() {
-    console.log('Télécharger facture');
-    // TODO: API call to generate and download PDF
-    alert('📥 Téléchargement de la facture en cours...');
-  }
-
-  logout() {
-    console.log('Déconnexion');
-    // TODO: Implement logout
-    alert('👋 Déconnexion...');
-  }
-
-  isExpiringSoon = isAbonnementExpiringSoon;
-
-  // ══════════════════════════════════════════════════════════
-  // DEVICES - MÉTHODES
-  // ══════════════════════════════════════════════════════════
-
-  // Get device icon based on model
   getDeviceIcon(model: string): string {
-    if (model.includes('BOX')) return '';
-    if (model.includes('MINI')) return '';
-    if (model.includes('PRO')) return '';
-    if (model.includes('LITE')) return '';
+    if ((model ?? '').includes('BOX')) return '📦';
+    if ((model ?? '').includes('MINI')) return '📱';
+    if ((model ?? '').includes('PRO')) return '💼';
+    if ((model ?? '').includes('LITE')) return '⚡';
     return '📡';
   }
-
-  // Get status badge color
-  getStatusColor(status: string): string {
-    return status === 'active'
-      ? 'bg-green-500/20 text-green-400 border-green-500/30'
-      : 'bg-red-500/20 text-red-400 border-red-500/30';
-  }
-
-  // ══════════════════════════════════════════════════════════
 }

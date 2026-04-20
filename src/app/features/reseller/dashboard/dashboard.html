@@ -23,22 +23,17 @@
       <span>{{ i18n.t('res_insight_a') }} <strong>{{ newClientsMonth }}</strong> {{ i18n.t('res_insight_b') }}</span>
       <span class="pill-sep">·</span>
       <span><strong>{{ activePercent }}%</strong> {{ i18n.t('res_insight_c') }}</span>
-      <span class="pill-sep" If="alertsCount > 0">·</span>
-      <span class="pill-alert" If="alertsCount > 0">⚠ {{ alertsCount }} {{ i18n.t('res_insight_d') }}</span>
     </div>
   </div>
 
   <!-- ══ TOP ROW — 4 STAT CARDS ════════════════════════════ -->
   <div class="top-row">
 
-    <!-- Total Clients -->
     <div class="stat-card" (click)="navigateTo('/reseller-dashboard/clients')">
       <div class="stat-card__icon stat-icon--teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
       </div>
       <div class="stat-card__body">
@@ -51,12 +46,10 @@
       </div>
     </div>
 
-    <!-- Devices Under Management -->
     <div class="stat-card" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="stat-card__icon stat-icon--blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="2" width="14" height="20" rx="2"/>
-          <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
+          <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
         </svg>
       </div>
       <div class="stat-card__body">
@@ -74,7 +67,6 @@
       </div>
     </div>
 
-    <!-- Active % -->
     <div class="stat-card stat-card--plain">
       <div class="stat-card__icon stat-icon--green">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -90,20 +82,17 @@
       </div>
     </div>
 
-    <!-- Alerts -->
     <div class="stat-card stat-card--alert" [class.stat-card--has-alerts]="alertsCount > 0" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="stat-card__icon stat-icon--amber">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       </div>
       <div class="stat-card__body">
         <p class="stat-label">{{ i18n.t('res_alerts') }}</p>
         <div class="stat-val-row">
           <p class="stat-value">{{ alertsCount }}</p>
-          @if (alertsCount > 0) { <span class="alert-badge">{{ i18n.t('res_urgent') }}</span> }
         </div>
         <p class="stat-hint">{{ expiringDevices.length }} {{ i18n.t('res_expiring_title') }}</p>
       </div>
@@ -114,10 +103,7 @@
   <!-- ══ MIDDLE ROW — CHART + ACTIVITY ══════════════════════ -->
   <div class="mid-row">
 
-    <!-- Device Status Donut + Sparkline -->
     <div class="chart-col">
-
-      <!-- Donut -->
       <div class="card donut-card">
         <p class="card-title">{{ i18n.t('device_status') }}</p>
         <div class="donut-wrap">
@@ -140,7 +126,6 @@
         </div>
       </div>
 
-      <!-- Sparkline -->
       <div class="card spark-card">
         <div class="spark-header">
           <div>
@@ -161,41 +146,20 @@
         </svg>
         <div class="spark-footer">
           <span class="spark-range">30 days</span>
-          <span class="spark-peak">Peak: {{ totalDevices - 4 }} active</span>
+          <span class="spark-peak">Peak: {{ totalDevices }} active</span>
         </div>
       </div>
-
     </div>
 
-    <!-- Activity Feed -->
     <div class="card activity-card">
       <p class="card-title">{{ i18n.t('recent_activity') }}</p>
       <div class="activity-list">
         @for (a of recentActivity; track $index) {
           <div class="activity-item">
             <div class="act-icon" [class]="activityClass(a.icon)">
-              @if (a.icon === 'client') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <line x1="19" y1="8" x2="19" y2="14"/>
-                  <line x1="16" y1="11" x2="22" y2="11"/>
-                </svg>
-              }
-              @if (a.icon === 'device_assigned') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="5" y="2" width="14" height="20" rx="2"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="10" y1="10" x2="14" y2="10"/>
-                </svg>
-              }
-              @if (a.icon === 'device_deactivated') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="5" y="2" width="14" height="20" rx="2"/>
-                  <line x1="9" y1="10" x2="15" y2="16"/>
-                  <line x1="15" y1="10" x2="9" y2="16"/>
-                </svg>
-              }
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+              </svg>
             </div>
             <div class="act-body">
               <p class="act-label">{{ i18n.t(a.labelKey) }}</p>
@@ -204,15 +168,17 @@
             <span class="act-time">{{ a.time }}{{ i18n.t(a.unit) }}</span>
           </div>
         }
+        @if (recentActivity.length === 0) {
+          <p style="color:var(--text-secondary);text-align:center;padding:1rem">No recent activity</p>
+        }
       </div>
     </div>
 
   </div>
 
-  <!-- ══ BOTTOM ROW — CLIENT HEALTH + PERFORMANCE + EXPIRING + QUICK ACTIONS ══ -->
+  <!-- ══ BOTTOM ROW ═════════════════════════════════════════ -->
   <div class="bottom-row">
 
-    <!-- Client Health -->
     <div class="card health-card">
       <p class="card-title">{{ i18n.t('res_health_title') }}</p>
       <div class="health-main">
@@ -243,15 +209,12 @@
       </div>
     </div>
 
-    <!-- Device Performance -->
     <div class="card perf-card">
       <p class="card-title">{{ i18n.t('res_perf_title') }}</p>
       <div class="perf-list">
         <div class="perf-item">
           <div class="perf-item__icon perf-icon--green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
           <div class="perf-item__body">
             <p class="perf-label">{{ i18n.t('res_avg_uptime') }}</p>
@@ -260,10 +223,7 @@
         </div>
         <div class="perf-item">
           <div class="perf-item__icon perf-icon--amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div class="perf-item__body">
             <p class="perf-label">{{ i18n.t('res_sync_issues') }}</p>
@@ -272,11 +232,7 @@
         </div>
         <div class="perf-item">
           <div class="perf-item__icon perf-icon--teal">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <polyline points="23 11 17 17 14 14"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="23 11 17 17 14 14"/></svg>
           </div>
           <div class="perf-item__body">
             <p class="perf-label">{{ i18n.t('res_most_active') }}</p>
@@ -286,87 +242,39 @@
       </div>
     </div>
 
-    <!-- Expiring Devices -->
-    <div class="card expiring-card">
-      <div class="expiring-header">
-        <p class="card-title">{{ i18n.t('res_expiring_title') }}</p>
-        @if (expiringDevices.length > 0) { <span class="expiring-badge">{{ expiringDevices.length }}</span> }
-      </div>
-      <div class="expiring-list">
-        @for (d of expiringDevices; track d.id) {
-        <div class="expiring-item" [class]="urgencyClass(d.daysLeft)" (click)="navigateTo('/reseller-dashboard/devices')">
-          <div class="expiring-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2"/>
-              <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
-            </svg>
-          </div>
-          <div class="expiring-info">
-            <p class="expiring-id">{{ d.id }}</p>
-            <p class="expiring-client">{{ d.client }}</p>
-          </div>
-          <span class="expiring-days">{{ d.daysLeft }}d</span>
-        </div>
-        }
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
     <div class="card quick-card">
       <p class="card-title">{{ i18n.t('res_quick_actions') }}</p>
       <div class="quick-list">
         <button class="quick-btn quick-btn--primary" (click)="openAddClient()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <line x1="19" y1="8" x2="19" y2="14"/>
-            <line x1="16" y1="11" x2="22" y2="11"/>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/>
           </svg>
           {{ i18n.t('res_add_client') }}
         </button>
         <button class="quick-btn" (click)="navigateTo('/reseller-dashboard/devices')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="10" y1="10" x2="14" y2="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/><line x1="10" y1="10" x2="14" y2="10"/>
           </svg>
           {{ i18n.t('res_assign_device') }}
-        </button>
-        <button class="quick-btn quick-btn--danger" (click)="navigateTo('/reseller-dashboard/devices')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-            <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <line x1="9" y1="10" x2="15" y2="16"/>
-            <line x1="15" y1="10" x2="9" y2="16"/>
-          </svg>
-          {{ i18n.t('res_deactivate_device') }}
-        </button>
-        <button class="quick-btn quick-btn--amber" (click)="navigateTo('/reseller-dashboard/devices')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          {{ i18n.t('res_view_alerts') }}
         </button>
       </div>
     </div>
 
   </div>
 
-  <!-- ══ DEBUG PANEL (REMOVE AFTER TESTING) ════════════════ -->
+  <!-- ══ DEBUG PANEL ══════════════════════════════════════ -->
   <div style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.9); color: #0f0; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; z-index: 9999; max-width: 300px;">
-    <div style="color: #fff; font-weight: bold; margin-bottom: 8px;">🔌 Backend Connection</div>
-    <div>Reseller ID: <span style="color: #4ade80;">{{ reseller()?.id || 'Loading...' }}</span></div>
-    <div>Name: <span style="color: #4ade80;">{{ reseller()?.name || 'Loading...' }}</span></div>
+    <div style="color: #fff; font-weight: bold; margin-bottom: 8px;">Backend Connection</div>
+    <div>Reseller ID: <span style="color: #4ade80;">{{ reseller()?.idRev || 'Loading...' }}</span></div>
+    <div>Username: <span style="color: #4ade80;">{{ reseller()?.username || 'Loading...' }}</span></div>
     <div>Email: <span style="color: #4ade80;">{{ reseller()?.email || 'Loading...' }}</span></div>
     <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #333;">
       <div>Clients Loaded: <span style="color: #f59e0b;">{{ clients().length }}</span></div>
-      <div>Total Devices: <span style="color: #f59e0b;">{{ totalDevices }}</span></div>
-      <div>Active Devices: <span style="color: #10b981;">{{ activeDevices }}</span></div>
-      <div>Offline: <span style="color: #ef4444;">{{ offlineDevices }}</span></div>
     </div>
-    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #333; font-size: 10px; color: #888;">
-      {{ loading() ? '⏳ Loading...' : '✅ Data Loaded' }}
+    <div style="margin-top: 8px; font-size: 10px; color: #888;">
+      {{ loading() ? 'Loading...' : 'Data Loaded' }}
     </div>
   </div>
 
@@ -400,63 +308,11 @@
           <input type="tel" [(ngModel)]="addForm.phone" placeholder="+216 XX XXX XXX" [class.input--error]="addPhoneError"/>
           @if (addPhoneError) { <span class="field-error">{{ i18n.t(addPhoneError) }}</span> }
         </div>
-        <div class="form-group">
-          <label>{{ i18n.t('form_region') }}</label>
-          <input type="text" [(ngModel)]="addForm.region" [placeholder]="i18n.t('form_region')"/>
-        </div>
-        <div class="form-group">
-          <label>{{ i18n.t('res_amount_paid') }} (TND)</label>
-          <input type="number" [(ngModel)]="addForm.amountPaid" placeholder="0"/>
-        </div>
-        <div class="form-group">
-          <label>{{ i18n.t('res_device_source') }}</label>
-          <div class="radio-group">
-            <label class="radio-opt" [class.selected]="addForm.deviceSource==='own'">
-              <input type="radio" [(ngModel)]="addForm.deviceSource" value="own"/>{{ i18n.t('res_device_own') }}
-            </label>
-            <label class="radio-opt" [class.selected]="addForm.deviceSource==='external'">
-              <input type="radio" [(ngModel)]="addForm.deviceSource" value="external"/>{{ i18n.t('res_device_external') }}
-            </label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>{{ i18n.t('res_sim_source') }}</label>
-          <div class="radio-group">
-            <label class="radio-opt" [class.selected]="addForm.simSource==='own'">
-              <input type="radio" [(ngModel)]="addForm.simSource" value="own"/>{{ i18n.t('res_sim_own') }}
-            </label>
-            <label class="radio-opt" [class.selected]="addForm.simSource==='reseller'">
-              <input type="radio" [(ngModel)]="addForm.simSource" value="reseller"/>{{ i18n.t('res_sim_reseller') }}
-            </label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>{{ i18n.t('form_server_type') }}</label>
-          <div class="radio-group">
-            <label class="radio-opt" [class.selected]="addForm.serverType==='traci'">
-              <input type="radio" [(ngModel)]="addForm.serverType" value="traci"/>🖥 Traci
-            </label>
-            <label class="radio-opt" [class.selected]="addForm.serverType==='own'">
-              <input type="radio" [(ngModel)]="addForm.serverType" value="own"/>🔒 Own
-            </label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>{{ i18n.t('form_status') }}</label>
-          <div class="radio-group">
-            <label class="radio-opt" [class.selected]="addForm.status==='active'">
-              <input type="radio" [(ngModel)]="addForm.status" value="active"/>{{ i18n.t('status_active') }}
-            </label>
-            <label class="radio-opt" [class.selected]="addForm.status==='inactive'">
-              <input type="radio" [(ngModel)]="addForm.status" value="inactive"/>{{ i18n.t('status_inactive') }}
-            </label>
-          </div>
-        </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeAddModal()">{{ i18n.t('btn_cancel') }}</button>
-      <button class="btn-save"   (click)="saveNewClient()">{{ i18n.t('btn_save') }}</button>
+      <button class="btn-save" (click)="saveNewClient()">{{ i18n.t('btn_save') }}</button>
     </div>
   </div>
 </div>

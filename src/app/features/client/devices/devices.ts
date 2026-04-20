@@ -1,11 +1,9 @@
-// src/app/features/client/devices/devices.ts
-
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ClientDevice } from '../../../models/deviceClient.model';
-import { MOCK_DEVICES } from '../../../data/mock-devicesClient.data';
+import { Device } from '../../../models/device.model';
 import { TranslationService } from '../../../service/translation.service';
+import { ClientService } from '../../../service/Client.service';
 
 @Component({
   selector: 'app-devices',
@@ -17,37 +15,28 @@ import { TranslationService } from '../../../service/translation.service';
 export default class DevicesComponent implements OnInit {
 
   router = inject(Router);
-  i18n = inject(TranslationService);  // ← ADDED
+  i18n = inject(TranslationService);
+  private clientService = inject(ClientService);
 
-  // Signals
-  devices = signal<ClientDevice[]>([]);
-  filteredDevices = signal<ClientDevice[]>([]);
+  devices = signal<Device[]>([]);
+  filteredDevices = signal<Device[]>([]);
   selectedStatus = signal<'all' | 'active' | 'expired'>('all');
   searchTerm = signal('');
 
-  // Stats
-  get totalDevices() {
-    return this.devices().length;
-  }
+  get totalDevices()  { return this.devices().length; }
+  get activeDevices() { return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'active').length; }
+  get expiredDevices(){ return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'expired').length; }
 
-  get activeDevices() {
-    return this.devices().filter(d => d.status === 'active').length;
-  }
-
-  get expiredDevices() {
-    return this.devices().filter(d => d.status === 'expired').length;
-  }
-
-  ngOnInit() {
-    this.loadDevices();
-  }
+  ngOnInit() { this.loadDevices(); }
 
   loadDevices() {
-    // TODO: Replace with real API call
-    const currentClientId = 1; // Ahmed's ID
-    const clientDevices = MOCK_DEVICES.filter(d => d.clientId === currentClientId);
-    this.devices.set(clientDevices);
-    this.filteredDevices.set(clientDevices);
+    this.clientService.getMyDevices().subscribe({
+      next: (data: Device[]) => {
+        this.devices.set(data);
+        this.filteredDevices.set(data);
+      },
+      error: (err: any) => console.error('Failed to load devices', err)
+    });
   }
 
   filterByStatus(status: 'all' | 'active' | 'expired') {
@@ -63,48 +52,37 @@ export default class DevicesComponent implements OnInit {
 
   applyFilters() {
     let filtered = this.devices();
-
-    // Filter by status
     if (this.selectedStatus() !== 'all') {
-      filtered = filtered.filter(d => d.status === this.selectedStatus());
+      filtered = filtered.filter(d => (d.status ?? '').toLowerCase() === this.selectedStatus());
     }
-
-    // Filter by search term
     if (this.searchTerm()) {
       filtered = filtered.filter(d =>
-        d.model.toLowerCase().includes(this.searchTerm()) ||
-        d.serialNumber.toLowerCase().includes(this.searchTerm())
+        (d.model ?? '').toLowerCase().includes(this.searchTerm()) ||
+        (d.numDevice ?? '').toLowerCase().includes(this.searchTerm()) ||
+        (d.imei ?? '').toLowerCase().includes(this.searchTerm())
       );
     }
-
     this.filteredDevices.set(filtered);
   }
 
   getDeviceIcon(model: string): string {
-    if (model.includes('BOX')) return '📦';
-    if (model.includes('MINI')) return '📱';
-    if (model.includes('PRO')) return '💼';
-    if (model.includes('LITE')) return '⚡';
+    if ((model ?? '').includes('BOX')) return '📦';
+    if ((model ?? '').includes('MINI')) return '📱';
+    if ((model ?? '').includes('PRO')) return '💼';
+    if ((model ?? '').includes('LITE')) return '⚡';
     return '📡';
   }
 
-  getStatusLabel(status: 'active' | 'expired'): string {
-    return status === 'active' 
+  getStatusLabel(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    return s === 'active'
       ? this.i18n.t('dev_status_active') || 'Actif'
       : this.i18n.t('dev_status_expired') || 'Expiré';
-  }
-
-  getStatusColor(status: 'active' | 'expired'): string {
-    return status === 'active'
-      ? 'bg-green-500/20 text-green-400 border-green-500/30'
-      : 'bg-red-500/20 text-red-400 border-red-500/30';
   }
 
   navigateToDeviceDetails(deviceId: number) {
     this.router.navigate(['/client-dashboard/devices', deviceId]);
   }
 
-  navigateTo(path: string) {
-    this.router.navigate([path]);
-  }
+  navigateTo(path: string) { this.router.navigate([path]); }
 }

@@ -64,7 +64,7 @@
                 </svg>
               </div>
               <div>
-                <h3 class="service-name">{{ abo.serviceNom }}</h3>
+                <h3 class="service-name">{{ abo.dureeLabel + ' - Abonnement'}}</h3>
                 <p class="service-package">{{ i18n.t('dash_plan_duration') }}: {{ abo.dureeLabel }}</p>
               </div>
             </div>
@@ -90,8 +90,8 @@
 
               <div class="countdown-details">
                 <p class="detail-label">{{ i18n.t('dash_expires_on') }}</p>
-                <p class="detail-value">{{ abo.dateFin | date: 'dd MMM yyyy' }}</p>
-                <p class="detail-hint">{{ abo.dateDebut | date: 'dd MMM yyyy' }} – {{ abo.dateFin | date: 'dd MMM yyyy' }}</p>
+                <p class="detail-value">{{ abo.endDate | date: 'dd MMM yyyy' }}</p>
+                <p class="detail-hint">{{ abo.startDate | date: 'dd MMM yyyy' }} – {{ abo.endDate | date: 'dd MMM yyyy' }}</p>
                 <!-- Inline urgency note -->
                 <p class="detail-urgency" [style.color]="urgencyColor">
                   @if (daysLeft > 0) {
@@ -196,14 +196,14 @@
           </div>
 
           <div class="invoice-list">
-            @for (device of clientDevices; track device.id) {
+            @for (device of clientDevices; track device.idDevice) {
               <div class="invoice-row">
                 <div class="invoice-file-icon" style="font-size: 1.25rem; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;">
                   {{ getDeviceIcon(device.model) }}
                 </div>
                 <div class="invoice-info">
                   <p class="invoice-id" style="font-size: 0.875rem;">{{ device.model }}</p>
-                  <p class="invoice-date" style="font-size: 0.75rem;">{{ device.serialNumber }}</p>
+                  <p class="invoice-date" style="font-size: 0.75rem;">{{ device.numDevice }}</p>
                 </div>
                 <span class="invoice-badge" [ngClass]="device.status === 'active' ? 'inv--paid' : 'inv--overdue'" style="font-size: 0.75rem;">
                   {{ device.status === 'active' ? 'Actif' : 'Expiré' }}
@@ -364,7 +364,7 @@
         </div>
         <div class="modal-body">
           <div class="forfaits-grid">
-            @for (forfait of forfaits; track forfait.duree) {
+            @for (forfait of forfaits; track forfait.dureeMois) {
               <div class="forfait-card" [ngClass]="{'popular': forfait.populaire}" (click)="selectForfait(forfait)">
                 @if (forfait.populaire) {
                   <div class="popular-badge">
@@ -395,7 +395,7 @@
   @if (showPaymentModal() && selectedForfaitForPayment(); as forfait) {
     <app-payment
       [amount]="forfait.prix"
-      [serviceNom]="abonnement()?.serviceNom || 'Service IoT'"
+      [serviceNom]="abonnement()?.dureeLabel + ' - Abonnement' || 'Service IoT'"
       [dureeLabel]="forfait.dureeLabel"
       (close)="showPaymentModal.set(false)"
       (paymentSuccess)="onPaymentSuccess($event)">

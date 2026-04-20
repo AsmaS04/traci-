@@ -1,1 +1,90 @@
-<p>login-client works!</p>
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-icon client-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h1 class="logo-text">{{ ts.t('login_traci') }}</h1>
+      <h2>{{ ts.t('login_client_title') }}</h2>
+      <p class="subtitle">{{ ts.t('login_client_subtitle') }}</p>
+    </div>
+
+    <div class="login-form">
+      @if (error) {
+        <div class="error-message">{{ error }}</div>
+      }
+
+      <label>{{ ts.t('login_email_or_phone') }}</label>
+      <div class="input-group">
+        <span class="input-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </span>
+        <input
+          type="text"
+          [(ngModel)]="username"
+          [placeholder]="ts.t('login_client_placeholder')"
+        />
+      </div>
+
+      <label>{{ ts.t('login_password') }}</label>
+      <div class="input-group">
+        <span class="input-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        <input
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="password"
+          [placeholder]="ts.t('login_password_placeholder')"
+        />
+        <span class="toggle-password" (click)="showPassword = !showPassword">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            @if (showPassword) {
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+              <circle cx="12" cy="12" r="3"/>
+            } @else {
+              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+              <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+              <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+              <line x1="2" x2="22" y1="2" y2="22"/>
+            }
+          </svg>
+        </span>
+      </div>
+
+      <div class="form-options">
+        <label class="remember-me">
+          <input type="checkbox" />
+          <span>{{ ts.t('login_remember_me') }}</span>
+        </label>
+        <a class="forgot-link" routerLink="/request-access" [queryParams]="{role: 'CLIENT'}">{{ ts.t('login_forgot_password') }}</a>
+      </div>
+
+      <button
+        class="login-btn"
+        (click)="onSubmit()"
+        [disabled]="loading || !username || !password"
+      >
+        {{ loading ? ts.t('login_loading') : ts.t('login_submit') }}
+        @if (!loading) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        }
+      </button>
+
+      <p class="switch-link">
+        {{ ts.t('login_switch_admin') }}
+        <a routerLink="/bo-admin-access">{{ ts.t('login_switch_admin_link') }}</a>
+      </p>
+    </div>
+  </div>
+</div>

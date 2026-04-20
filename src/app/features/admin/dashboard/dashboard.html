@@ -409,12 +409,12 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group">
-          <label>FULL NAME</label>
-          <input type="text" [(ngModel)]="resellerForm.name" placeholder="e.g. Khalil Mansour"/>
+          <label>USERNAME</label>
+          <input type="text" [(ngModel)]="resellerForm.username" placeholder="e.g. khalil.mansour"/>
         </div>
         <div class="form-group">
           <label>COMPANY NAME</label>
-          <input type="text" [(ngModel)]="resellerForm.company" placeholder="e.g. TechVision SARL"/>
+          <input type="text" [(ngModel)]="resellerForm.nomEntreprise" placeholder="e.g. TechVision SARL"/>
         </div>
         <div class="form-group">
           <label>EMAIL</label>
@@ -425,36 +425,6 @@
           <label>PHONE</label>
           <input type="tel" [(ngModel)]="resellerForm.phone" placeholder="+216 XX XXX XXX" [class.input--error]="resellerPhoneError"/>
           @if (resellerPhoneError) { <span class="field-error">{{ i18n.t(resellerPhoneError) }}</span> }
-        </div>
-        <div class="form-group form-group--full">
-          <label>ADDRESS</label>
-          <input type="text" [(ngModel)]="resellerForm.address" placeholder="e.g. 12 Rue de Marseille, Tunis 1000"/>
-        </div>
-        <div class="form-group">
-          <label>REGION</label>
-          <select [(ngModel)]="resellerForm.region">
-            <option value="Tunis">Tunis</option>
-            <option value="Sfax">Sfax</option>
-            <option value="Sousse">Sousse</option>
-            <option value="Bizerte">Bizerte</option>
-            <option value="Nabeul">Nabeul</option>
-            <option value="Kairouan">Kairouan</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>SERVER TYPE</label>
-          <div class="radio-group">
-            <label class="radio-opt" [class.selected]="resellerForm.serverType==='traci'">
-              <input type="radio" [(ngModel)]="resellerForm.serverType" value="traci"/>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
-              Traci Server
-            </label>
-            <label class="radio-opt" [class.selected]="resellerForm.serverType==='own'">
-              <input type="radio" [(ngModel)]="resellerForm.serverType" value="own"/>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              Own Server
-            </label>
-          </div>
         </div>
       </div>
     </div>

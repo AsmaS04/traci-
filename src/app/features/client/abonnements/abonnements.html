@@ -99,14 +99,14 @@
   <!-- Subscriptions List -->
   @if (filteredAbonnements().length > 0) {
     <div class="subscriptions-list">
-      @for (abo of filteredAbonnements(); track abo.id) {
+      @for (abo of filteredAbonnements(); track abo.idAbo) {
         <div class="subscription-item">
           <!-- Header -->
           <div class="subscription-header">
-            <h3 class="subscription-title">{{ abo.serviceNom }}</h3>
+            <h3 class="subscription-title">{{abo.dureeLabel + ' - Abonnement' }}</h3>
 
-            <span [ngClass]="getStatutBadgeClass(abo.statut)" class="subscription-badge">
-              {{ getStatutLabel(abo.statut) }}
+            <span [ngClass]="getStatutBadgeClass(abo.status)" class="subscription-badge">
+              {{ getStatutLabel(abo.status) }}
             </span>
           </div>
 
@@ -120,18 +120,18 @@
             <div class="detail-item">
               <label>{{ i18n.t('sub_period') }}</label>
               <p class="value">
-                {{ abo.dateDebut | date: 'dd/MM/yyyy' }} - {{ abo.dateFin | date: 'dd/MM/yyyy' }}
+                {{ abo.startDate  | date: 'dd/MM/yyyy' }} - {{abo.endDate  | date: 'dd/MM/yyyy' }}
               </p>
             </div>
 
             <div class="detail-item">
               <label>{{ i18n.t('sub_price') }}</label>
-              <p class="value">{{ abo.prix }} TND</p>
+              <p class="value">{{ abo.totalTtc }} TND</p>
             </div>
           </div>
 
           <!-- Progress Bar (if active) -->
-          @if (abo.statut === StatutAbonnement.ACTIF) {
+          @if (abo.status === StatutAbonnement.ACTIF) {
             <div class="subscription-progress">
               <div class="progress-info">
                 <p class="progress-label">
@@ -162,7 +162,7 @@
               {{ i18n.t('sub_details') }}
             </button>
 
-            @if (abo.statut === StatutAbonnement.ACTIF || abo.statut === StatutAbonnement.EXPIRE) {
+            @if (abo.status === 'actif' || abo.status === 'expiré') {
               <button
                 (click)="renouvelerAbonnement(abo)"
                 class="btn-renew">
@@ -202,8 +202,8 @@
             </svg>
           </button>
 
-          <h3 class="modal-title">{{ i18n.t('sub_subscription_number') }} #{{ abo.id }}</h3>
-          <p class="modal-subtitle">{{ abo.serviceNom }}</p>
+          <h3 class="modal-title">{{ i18n.t('sub_subscription_number') }} #{{ abo.idAbo }}</h3>
+          <p class="modal-subtitle">{{abo.dureeLabel + ' - Abonnement'}}</p>
         </div>
 
         <div class="modal-body">
@@ -216,37 +216,37 @@
 
             <div class="detail-box">
               <label>{{ i18n.t('sub_price') }}</label>
-              <p class="value">{{ abo.prix }} TND</p>
+              <p class="value">{{ abo.totalTtc }} TND</p>
             </div>
 
             <div class="detail-box">
               <label>{{ i18n.t('sub_start_date') }}</label>
-              <p class="value">{{ abo.dateDebut | date: 'dd/MM/yyyy' }}</p>
+              <p class="value">{{ abo.startDate | date: 'dd/MM/yyyy' }}</p>
             </div>
 
             <div class="detail-box">
               <label>{{ i18n.t('sub_end_date') }}</label>
-              <p class="value">{{ abo.dateFin | date: 'dd/MM/yyyy' }}</p>
+              <p class="value">{{ abo.endDate | date: 'dd/MM/yyyy' }}</p>
             </div>
 
-            @if (abo.statut === StatutAbonnement.ACTIF) {
+            @if (abo.status === 'actif') {
               <div class="detail-box">
                 <label>{{ i18n.t('sub_days_remaining') }}</label>
                 <p class="value">{{ abo.joursRestants }} {{ i18n.t('dash_days') }}</p>
               </div>
             }
 
-            <div class="detail-box">
+            <!-- <div class="detail-box">
               <label>{{ i18n.t('sub_auto_renewal') }}</label>
               <p class="value">
                 {{ abo.autoRenouvellement ? i18n.t('sub_enabled') : i18n.t('sub_disabled') }}
               </p>
-            </div>
+            </div> -->
 
             <div class="detail-box full-width">
               <label>Statut</label>
-              <span [ngClass]="getStatutBadgeClass(abo.statut)" class="subscription-badge">
-                {{ getStatutLabel(abo.statut) }}
+              <span [ngClass]="getStatutBadgeClass(abo.status)" class="subscription-badge">
+                {{ getStatutLabel(abo.status) }}
               </span>
             </div>
           </div>
@@ -262,7 +262,7 @@
               {{ i18n.t('btn_download') }}
             </button>
 
-            @if (abo.statut === StatutAbonnement.ACTIF || abo.statut === StatutAbonnement.EXPIRE) {
+            @if (abo.status === 'actif' || abo.status === 'expire') {
               <button
                 (click)="renouvelerAbonnement(abo)"
                 class="btn-renew">

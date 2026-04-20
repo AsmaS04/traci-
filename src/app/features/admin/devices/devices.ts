@@ -1,120 +1,111 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Device } from '../../../models/device.model';
 import { TranslationService } from '../../../service/translation.service';
-import { MOCK_DEVICES } from '../../../data/device-mock-data';
-import { ClientDevice } from '../../../models/device.model';
-
-interface DeviceRow extends ClientDevice {
-  clientName:   string;
-  resellerName: string;
-}
+import { DeviceService } from '../../../service/Device.service';
 
 @Component({
   selector: 'app-admin-devices',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './devices.html',
-  styleUrls: ['./devices.css'],
+  styleUrl: './devices.css',
 })
-export class AdminDevices {
+export class AdminDevices implements OnInit {
 
-  constructor(public i18n: TranslationService) {}
+  constructor(
+    public i18n: TranslationService,
+    private deviceService: DeviceService
+  ) {}
 
-  private readonly clientNames: Record<number, string> = {
-    1: 'Elyes Mansouri',
-    2: 'Sarra Ben Ali',
-    3: 'Mohamed Chaabane',
-    4: 'Amira Trabelsi',
-    5: 'Youssef Ferchichi',
-    6: 'Mariem Belhaj',
-  };
+  devices: Device[] = [];
+  loading = true;
 
-  private readonly resellerNames: Record<number, string> = {
-    1: 'TechVision SARL',
-    2: 'NetPlus Solutions',
-    3: 'ConnectPro Tunis',
-  };
-
-  readonly allRows: DeviceRow[] = MOCK_DEVICES.map(d => ({
-    ...d,
-    clientName:   this.clientNames[d.clientId]    ?? '—',
-    resellerName: this.resellerNames[d.resellerId] ?? '—',
-  }));
-
-  // ── Filters ───────────────────────────────────────────
-  search         = '';
+  search = '';
   filterStatus: 'all' | 'active' | 'expired' | 'inactive' = 'all';
-  filterModel    = 'all';
-  filterReseller = 'all';
+  filterModel = 'all';
 
-  readonly modelOptions = ['all', 'ACCENT BOX', 'ACCENT MINI', 'ACCENT PRO', 'ACCENT LITE'];
-  readonly resellerOptions = [
-    { id: 'all', name: 'All Resellers' },
-    { id: '1',   name: 'TechVision SARL' },
-    { id: '2',   name: 'NetPlus Solutions' },
-    { id: '3',   name: 'ConnectPro Tunis' },
-  ];
+  panelOpen = false;
+  panelDevice: Device | null = null;
 
-  get filtered(): DeviceRow[] {
-    const q = this.search.toLowerCase().trim();
-    return this.allRows.filter(d => {
-      const matchQ = !q ||
-        d.serialNumber.toLowerCase().includes(q) ||
-        d.model.toLowerCase().includes(q) ||
-        d.clientName.toLowerCase().includes(q) ||
-        d.resellerName.toLowerCase().includes(q) ||
-        (d.simNumber ?? '').toLowerCase().includes(q);
-      const matchStatus   = this.filterStatus   === 'all' || d.status === this.filterStatus;
-      const matchModel    = this.filterModel    === 'all' || d.model  === this.filterModel;
-      const matchReseller = this.filterReseller === 'all' || String(d.resellerId) === this.filterReseller;
-      return matchQ && matchStatus && matchModel && matchReseller;
+  ngOnInit() {
+    this.loadDevices();
+  }
+
+  private loadDevices() {
+    this.loading = true;
+    this.deviceService.getAll().subscribe({
+      next: (data) => {
+        this.devices = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load devices', err);
+        this.loading = false;
+      }
     });
   }
 
-  // ── KPI counts ────────────────────────────────────────
-  get totalCount()   { return this.allRows.length; }
-  get activeCount()  { return this.allRows.filter(d => d.status === 'active').length; }
-  get expiredCount() { return this.allRows.filter(d => d.status === 'expired').length; }
-  get inactiveCount(){ return this.allRows.filter(d => d.status === 'inactive').length; }
-  get expiringSoon() {
-    return this.allRows.filter(d => {
-      const days = this.daysUntilExpiry(d.expirationDate);
-      return d.status === 'active' && days >= 0 && days <= 30;
-    }).length;
+  fmt(n: number | null | undefined) {
+    if (n == null) return '—';
+    return new Intl.NumberFormat().format(n);
   }
 
-  // ── Helpers ───────────────────────────────────────────
-  daysUntilExpiry(date: string): number {
-    return Math.ceil((new Date(date).getTime() - Date.now()) / 86400000);
+  get modelOptions(): string[] {
+    const models = new Set<string>();
+    this.devices.forEach(d => { if (d.model) models.add(d.model); });
+    return ['all', ...Array.from(models)];
   }
 
-  statusClass(s: string): string {
-    if (s === 'active')  return 'status--active';
-    if (s === 'expired') return 'status--expired';
-    return 'status--inactive';
+  get filtered(): Device[] {
+    const q = this.search.toLowerCase().trim();
+    return this.devices.filter(d => {
+      const matchQ = !q ||
+        (d.numDevice ?? '').toLowerCase().includes(q) ||
+        (d.imei ?? '').toLowerCase().includes(q) ||
+        (d.model ?? '').toLowerCase().includes(q) ||
+        (d.clientName ?? '').toLowerCase().includes(q) ||
+        String(d.idDevice).includes(q);
+      const matchStatus = this.filterStatus === 'all' || (d.status ?? '').toLowerCase() === this.filterStatus;
+      const matchModel = this.filterModel === 'all' || d.model === this.filterModel;
+      return matchQ && matchStatus && matchModel;
+    });
   }
 
-  expiryUrgency(date: string): string {
-    const d = this.daysUntilExpiry(date);
-    if (d < 0)   return 'expiry--expired';
-    if (d <= 30) return 'expiry--soon';
+  get totalCount()    { return this.devices.length; }
+  get activeCount()   { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'active').length; }
+  get expiredCount()  { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'expired').length; }
+  get inactiveCount() { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'inactive').length; }
+
+  statusClass(status: string | null | undefined): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'active')   return 'status-pill--active';
+    if (s === 'expired')  return 'status-pill--expired';
+    return 'status-pill--inactive';
+  }
+
+  modelColor(model: string | null | undefined): string {
+    const m = (model ?? '').toLowerCase();
+    if (m.includes('pro'))  return 'model-badge--purple';
+    if (m.includes('box'))  return 'model-badge--blue';
+    if (m.includes('mini')) return 'model-badge--teal';
+    if (m.includes('lite')) return 'model-badge--amber';
     return '';
   }
 
-  modelColor(m: string): string {
-    if (m === 'ACCENT BOX')  return 'model--box';
-    if (m === 'ACCENT MINI') return 'model--mini';
-    if (m === 'ACCENT PRO')  return 'model--pro';
-    return 'model--lite';
+  openPanel(d: Device) {
+    this.panelDevice = d;
+    this.panelOpen = true;
   }
 
-  fmt(n: number) { return new Intl.NumberFormat().format(n); }
+  closePanel() {
+    this.panelOpen = false;
+    setTimeout(() => { this.panelDevice = null; }, 300);
+  }
 
-  // ── Detail panel ──────────────────────────────────────
-  panelOpen   = false;
-  panelDevice: DeviceRow | null = null;
-
-  openPanel(d: DeviceRow) { this.panelDevice = d; this.panelOpen = true; }
-  closePanel()            { this.panelOpen = false; }
+  formatDate(d: string | null): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('fr-TN', { day:'2-digit', month:'short', year:'numeric' });
+  }
 }

@@ -1,10 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
-import { MOCK_RESELLER } from '../../../data/reseller-mock-data';
-import { MOCK_DEVICES, MOCK_DEVICE_TRANSACTIONS } from '../../../data/device-mock-data';
+import { ResellerService } from '../../../service/Reseller.service';
+import { Reseller } from '../../../models/reseller.model';
 
 type TabName = 'profile' | 'security' | 'notifications' | 'activity' | 'preferences';
 
@@ -15,11 +15,33 @@ type TabName = 'profile' | 'security' | 'notifications' | 'activity' | 'preferen
   templateUrl: './profile.html',
   styleUrls: ['./profile.css'],
 })
-export default class ResellerProfileComponent {
+export default class ResellerProfileComponent implements OnInit {
 
-  constructor(public i18n: TranslationService, private router: Router) {}
+  constructor(
+    public i18n: TranslationService,
+    private router: Router,
+    private resellerService: ResellerService
+  ) {}
 
-  readonly reseller = MOCK_RESELLER;
+  reseller: Reseller = {
+    idRev: 0, username: '', email: '', nomEntreprise: '',
+    deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0, createdAt: '',
+  };
+
+  ngOnInit() {
+    this.resellerService.getMyProfile().subscribe({
+      next: (r: Reseller) => {
+        this.reseller = r;
+        this.profile = {
+          username: r.username,
+          nomEntreprise: r.nomEntreprise,
+          email: r.email,
+          phone: r.phone ?? '',
+        };
+      },
+      error: (err: any) => console.error('Failed to load profile', err)
+    });
+  }
 
   // ── Tabs ──────────────────────────────────────────────
   activeTab: TabName = 'profile';
@@ -27,16 +49,14 @@ export default class ResellerProfileComponent {
 
   // ── Profile form ──────────────────────────────────────
   profile = {
-    name:        this.reseller.name,
-    companyName: this.reseller.companyName,
-    email:       this.reseller.email,
-    phone:       this.reseller.phone,
-    address:     this.reseller.address,
-    region:      this.reseller.region,
+    username:       '',
+    nomEntreprise:  '',
+    email:          '',
+    phone:          '',
   };
 
   // ── Avatar / photo upload ─────────────────────────────
-  avatarPreview: string | null = (this.reseller as any).avatarUrl ?? null;
+  avatarPreview: string | null = null;
   avatarFile:    File | null   = null;
   uploadError    = '';
 
@@ -49,17 +69,13 @@ export default class ResellerProfileComponent {
     this.uploadError = '';
     this.avatarFile  = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      this.avatarPreview = e.target?.result as string;
-      (this.reseller as any).avatarUrl = this.avatarPreview;
-    };
+    reader.onload = (e) => { this.avatarPreview = e.target?.result as string; };
     reader.readAsDataURL(file);
   }
 
   removeAvatar(): void {
     this.avatarPreview = null;
     this.avatarFile    = null;
-    (this.reseller as any).avatarUrl = null;
   }
 
   isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
@@ -69,7 +85,8 @@ export default class ResellerProfileComponent {
 
   saveProfile() {
     if (!this.isValidEmail(this.profile.email) || !this.isValidPhone(this.profile.phone)) return;
-    console.log('Profile saved', this.profile, 'Avatar:', this.avatarFile?.name);
+    // TODO: call backend updateMyProfile
+    console.log('Profile saved', this.profile);
   }
 
   // ── Security ──────────────────────────────────────────
@@ -116,18 +133,15 @@ export default class ResellerProfileComponent {
   }
 
   // ── Activity ──────────────────────────────────────────
-  readonly totalDevices      = MOCK_DEVICES.length;
-  readonly activeDevices     = MOCK_DEVICES.filter(d => d.status === 'active').length;
-  readonly totalTransactions = MOCK_DEVICE_TRANSACTIONS.length;
-  readonly totalRevenue      = MOCK_DEVICE_TRANSACTIONS.reduce((s, t) => s + t.amount, 0);
-  readonly totalClients      = MOCK_RESELLER.totalClients;
+  readonly totalDevices      = 0;
+  readonly activeDevices     = 0;
+  readonly totalTransactions = 0;
+  readonly totalRevenue      = 0;
+  readonly totalClients      = 0;
 
   activityLog = [
-    { icon: 'client', labelKey: 'act_client_added', entity: 'Elyes Mansouri',   date: '12 Mar 2026 · 09:41' },
-    { icon: 'device', labelKey: 'res_add_device',   entity: 'ACC-BOX-001-2024', date: '11 Mar 2026 · 14:22' },
-    { icon: 'client', labelKey: 'act_client_added', entity: 'Sarra Ben Ali',    date: '10 Mar 2026 · 11:05' },
-    { icon: 'device', labelKey: 'res_add_device',   entity: 'ACC-PRO-006-2024', date: '09 Mar 2026 · 09:18' },
-    { icon: 'client', labelKey: 'act_reseller_upd', entity: 'TechVision SARL',  date: '08 Mar 2026 · 16:44' },
+    { icon: 'client', labelKey: 'act_client_added', entity: 'Client A',    date: '12 Mar 2026 · 09:41' },
+    { icon: 'device', labelKey: 'res_add_device',   entity: 'Device #001', date: '11 Mar 2026 · 14:22' },
   ];
 
   dotClass(icon: string): string {
@@ -136,10 +150,14 @@ export default class ResellerProfileComponent {
     return 'tl-dot--amber';
   }
 
-  // ── Helpers ───────────────────────────────────────────
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
   get initials(): string {
-    return this.reseller.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    return (this.reseller.username ?? 'R')
+      .split(' ')
+      .map((w: string) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
   logout(): void { this.router.navigate(['/bo-reseller-access']); }
 }
