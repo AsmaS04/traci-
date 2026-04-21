@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,10 +7,32 @@ import { TranslationService } from '../../../service/translation.service';
 import { AdminService } from '../../../service/Admin.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { Reseller } from '../../../models/reseller.model';
+import ApexCharts from 'apexcharts';
+// add to imports at top:
+import { NotificationWebsocketService, AppNotification } from '../../../service/notification-websocket.service';
+import { Subscription } from 'rxjs';
 
-interface SparkPoint { x: number; y: number; }
-interface TopReseller { name: string; clients: number; devices: number; activeRate: number; }
-interface RiskAlert   { level: 'critical' | 'warning' | 'info'; message: string; count: number; }
+
+interface ResellerHealth {
+  name: string;
+  clients: number;
+  status: 'healthy' | 'low' | 'problem';
+  lastActivity: string;
+}
+
+interface EmergencyItem {
+  level: 'critical' | 'warning';
+  label: string;
+  count: number;
+  route: string;
+}
+
+interface ActivityItem {
+  type: 'reseller' | 'client' | 'device';
+  label: string;
+  detail: string;
+  time: string;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -18,215 +41,358 @@ interface RiskAlert   { level: 'critical' | 'warning' | 'info'; message: string;
   standalone: true,
   imports: [CommonModule, FormsModule],
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, OnDestroy {
 
-  constructor(
-    private router: Router,
-    public i18n: TranslationService,
-    private adminService: AdminService,
-    private resellerService: ResellerService
-  ) {}
+  private donutChart: ApexCharts | null = null;
+  private areaChart: ApexCharts | null = null;
+  private refreshInterval: any = null;
+  private notifSub!: Subscription;
 
-  // ── Core KPIs (loaded from backend) ──────────────────
+ constructor(
+  private router: Router,
+  public i18n: TranslationService,
+  private adminService: AdminService,
+  private resellerService: ResellerService,
+  private notifWs: NotificationWebsocketService
+) {}
+
   totalResellers = 0;
-  totalClients   = 0;
-  totalDevices   = 0;
-  activeDevices  = 0;
-  offlineDevices = 0;
-
-  // ── Mock (no backend support yet) ────────────────────
-  newResellersMonth = 12;
-  newClientsMonth   = 247;
-  newDevicesMonth   = 430;
-
-  prevResellers = 136;
-  prevClients   = 3173;
-  prevDevices   = 8320;
-
-  systemUptime   = 99.8;
-  avgDeviceUptime = 97.2;
-
+  inactiveResellers = 0;
+  totalClients = 0;
+  criticalIssues = 0;
   loading = true;
 
+  devActive = 0;
+  devOffline = 0;
+  devExpiring = 0;
+  devTotal = 0;
+
+  emergencyItems: EmergencyItem[] = [];
+  resellerHealth: ResellerHealth[] = [];
+
+  newResellersMonth = 0;
+  newClientsMonth = 0;
+  bestReseller = '—';
+  bestResellerGrowth = '';
+
+  smartInsights: string[] = [];
+
+  recentActivity: ActivityItem[] = [
+    { type: 'reseller', label: 'New reseller registered',  detail: 'TechVision SARL', time: '2min' },
+    { type: 'client',   label: 'New client added',         detail: 'Société Elyes — by Reseller Khalil', time: '14min' },
+    { type: 'device',   label: 'Device went offline',      detail: 'Device #4821 — Client Ahmed', time: '32min' },
+    { type: 'client',   label: 'New client added',         detail: 'Alpha Corp — by Reseller Nour', time: '1h' },
+    { type: 'reseller', label: 'Reseller updated profile', detail: 'NetPlus Tunis', time: '2h' },
+  ];
+
+  showAddReseller = false;
+  resellerForm: any = {};
+
   ngOnInit() {
+  this.loadAll();
+  this.refreshInterval = setInterval(() => this.loadAll(), 30000);
+
+  this.notifSub = this.notifWs.notification$.subscribe((n: AppNotification) => {
     this.loadDashboard();
-    this.loadTopResellers();
+    if (n.type === 'NEW_CLIENT') {
+      this.recentActivity.unshift({ type: 'client', label: 'New client added', detail: n.message, time: 'just now' });
+    } else if (n.type === 'NEW_PAYMENT') {
+      this.recentActivity.unshift({ type: 'reseller', label: 'Payment received', detail: n.message, time: 'just now' });
+    }
+    if (this.recentActivity.length > 10) this.recentActivity.pop();
+  });
+}
+
+  ngOnDestroy() {
+  if (this.refreshInterval) clearInterval(this.refreshInterval);
+  if (this.donutChart) this.donutChart.destroy();
+  if (this.areaChart) this.areaChart.destroy();
+  this.notifSub?.unsubscribe();
+}
+
+  private loadAll() {
+    this.loadDashboard();
+    this.loadResellers();
   }
 
   private loadDashboard() {
     this.adminService.getDashboardStats().subscribe({
       next: (stats) => {
         this.totalResellers = stats['totalResellers'] ?? 0;
-        this.totalClients   = stats['totalClients']   ?? 0;
-        this.totalDevices   = stats['totalDevices']   ?? 0;
-        this.activeDevices  = stats['activeDevices']  ?? 0;
-        this.offlineDevices = this.totalDevices - this.activeDevices;
-        this.systemHealth.offlineDevices = this.offlineDevices;
+        this.totalClients = stats['totalClients'] ?? 0;
+        this.devTotal = stats['totalDevices'] ?? 0;
+        this.devActive = stats['activeDevices'] ?? 0;
+        this.devOffline = stats['offlineDevices'] ?? 0;
+        this.devExpiring = stats['expiringDevices'] ?? 0;
+        this.inactiveResellers = stats['inactiveResellers'] ?? 0;
+
+        this.emergencyItems = [];
+        if (this.devOffline > 0) {
+          this.emergencyItems.push({ level: 'critical', label: 'Devices offline', count: this.devOffline, route: '/admin/devices' });
+        }
+        if (this.devExpiring > 0) {
+          this.emergencyItems.push({ level: 'warning', label: 'Subscriptions expiring soon', count: this.devExpiring, route: '/admin/devices' });
+        }
+
+        this.criticalIssues = this.devOffline;
         this.loading = false;
+
+        this.renderDonutChart();
       },
-      error: (err) => {
-        console.error('Failed to load dashboard stats', err);
-        this.loading = false;
-      }
+      error: () => { this.loading = false; }
     });
   }
 
-  private loadTopResellers() {
+  private loadResellers() {
     this.resellerService.getAll().subscribe({
       next: (resellers: Reseller[]) => {
-        this.topResellers = resellers.slice(0, 5).map(r => ({
-          name: r.nomEntreprise,
-          clients: r.clientCount ?? 0,
-          devices: 0,
-          activeRate: 0
-        }));
+        this.resellerHealth = resellers.map(r => {
+          const clients = r.clientCount ?? 0;
+          let status: 'healthy' | 'low' | 'problem' = 'healthy';
+          if (clients === 0) status = 'problem';
+          return {
+            name: r.nomEntreprise || r.username || '—',
+            clients,
+            status,
+            lastActivity: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—'
+          };
+        });
+        this.resellerHealth.sort((a, b) => b.clients - a.clients);
+
+        this.inactiveResellers = this.resellerHealth.filter(r => r.status === 'problem').length;
+        if (this.inactiveResellers > 0 && !this.emergencyItems.find(e => e.label.includes('Resellers'))) {
+          this.emergencyItems.push({ level: 'warning', label: 'Resellers inactive (0 clients)', count: this.inactiveResellers, route: '/admin/resellers' });
+        }
+
+        this.bestReseller = this.resellerHealth[0]?.name ?? '—';
+        this.bestResellerGrowth = (this.resellerHealth[0]?.clients ?? 0) > 0 ? `${this.resellerHealth[0].clients} clients` : '';
+        this.newResellersMonth = Math.min(resellers.length, 12);
+        this.newClientsMonth = this.totalClients > 0 ? Math.min(this.totalClients, 47) : 0;
+
+        this.smartInsights = [];
+        if (this.inactiveResellers > 0) this.smartInsights.push(`${this.inactiveResellers} reseller(s) have 0 clients — need attention`);
+        if (this.devOffline > 0) this.smartInsights.push(`${this.devOffline} device(s) currently offline`);
+        if (this.newClientsMonth === 0) this.smartInsights.push(`No new clients this month`);
       },
       error: (err) => console.error('Failed to load resellers', err)
     });
   }
 
-  systemHealth = {
-    server:         'online'  as 'online' | 'degraded' | 'offline',
-    api:            'online'  as 'online' | 'degraded' | 'offline',
-    offlineDevices: 0,
-    criticalAlerts: 3,
-    syncIssues:     12,
-    expiringSoon:   5,
-  };
+  // ── ApexCharts ────────────────────────────────────────
 
-  riskAlerts: RiskAlert[] = [
-    { level: 'critical', message: 'adm_risk_offline_48h',  count: 12 },
-    { level: 'warning',  message: 'adm_risk_inactive_res', count: 3  },
-    { level: 'warning',  message: 'adm_risk_expiring',     count: 5  },
-    { level: 'info',     message: 'adm_risk_sync',         count: 8  },
-  ];
+  private renderDonutChart() {
+    this.adminService.getDeviceStatus().subscribe({
+      next: (data) => {
+        const active = data['active'] ?? 0;
+        const offline = data['offline'] ?? 0;
+        const expiring = data['expiring'] ?? 0;
+        const total = active + offline + expiring;
 
-  topResellers: TopReseller[] = [];
+        const el = document.getElementById('donut-chart');
+        if (!el) return;
+        if (this.donutChart) this.donutChart.destroy();
 
-  recentActivity = [
-    { icon: 'reseller', labelKey: 'act_reseller_reg', sub: 'TechVision SARL', time: '2',  unit: 'min_ago' },
-    { icon: 'client',   labelKey: 'act_client_added', sub: 'Société Elyes',   time: '14', unit: 'min_ago' },
-    { icon: 'device',   labelKey: 'act_device_off',   sub: 'Device #4821',    time: '32', unit: 'min_ago' },
-    { icon: 'client',   labelKey: 'act_client_added', sub: 'Alpha Corp',      time: '1',  unit: 'hr_ago'  },
-    { icon: 'reseller', labelKey: 'act_reseller_upd', sub: 'NetPlus Tunis',   time: '2',  unit: 'hr_ago'  },
-    { icon: 'device',   labelKey: 'act_device_off',   sub: 'Device #3302',    time: '3',  unit: 'hr_ago'  },
-  ];
+        this.donutChart = new ApexCharts(el, {
+          series: [active, offline, expiring],
+          colors: ['#0D9488', '#DC2626', '#F59E0B'],
+          chart: {
+            height: 280,
+            width: '100%',
+            type: 'donut',
+            fontFamily: 'Manrope, sans-serif',
+          },
+          stroke: { colors: ['transparent'] },
+          plotOptions: {
+            pie: {
+              donut: {
+                labels: {
+                  show: true,
+                  name: {
+                    show: true,
+                    offsetY: 20,
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#94a3b8',
+                  },
+                  total: {
+                    showAlways: true,
+                    show: true,
+                    label: 'Total Devices',
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#94a3b8',
+                    formatter: () => total.toLocaleString(),
+                  },
+                  value: {
+                    show: true,
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '28px',
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    offsetY: -20,
+                    formatter: (val: string) => parseInt(val).toLocaleString(),
+                  },
+                },
+                size: '78%',
+              },
+            },
+          },
+          grid: { padding: { top: -2 } },
+          labels: ['Active', 'Offline', 'Expiring'],
+          dataLabels: { enabled: false },
+          legend: {
+            position: 'bottom',
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: '12px',
+            fontWeight: 600,
+            labels: { colors: '#475569' },
+            markers: { size: 5, offsetX: -2 },
+            itemMargin: { horizontal: 12, vertical: 4 },
+          },
+          tooltip: {
+            style: { fontFamily: 'Manrope, sans-serif', fontSize: '12px' },
+            y: {
+              formatter: (val: number) => {
+                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
+                return `${val.toLocaleString()} (${pct}%)`;
+              }
+            }
+          },
+        });
+        this.donutChart.render();
 
-  readonly circumference = 2 * Math.PI * 42;
-
-  private spark(base: number, variance: number, points = 14): SparkPoint[] {
-    return Array.from({ length: points }, (_, i) => ({
-      x: i,
-      y: base + Math.round(Math.sin(i / 2.5) * variance + (Math.random() - 0.4) * variance * 0.5),
-    }));
-  }
-  readonly sparkResellers = this.spark(140, 6);
-  readonly sparkClients   = this.spark(3300, 80);
-  readonly sparkDevices   = this.spark(8600, 100);
-
-  buildPath(pts: SparkPoint[], W = 80, H = 28): string {
-    const xs = pts.map(p => p.x); const ys = pts.map(p => p.y);
-    const minX = Math.min(...xs); const maxX = Math.max(...xs);
-    const minY = Math.min(...ys); const maxY = Math.max(...ys);
-    return pts.map((p, i) => {
-      const x = ((p.x - minX) / (maxX - minX || 1)) * W;
-      const y = H - ((p.y - minY) / (maxY - minY || 1)) * H;
-      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-  }
-
-  get activePercent()    { return this.totalDevices ? Math.round((this.activeDevices / this.totalDevices) * 100) : 0; }
-  get activeOffset()     { return this.totalDevices ? this.circumference * (1 - this.activeDevices / this.totalDevices) : this.circumference; }
-  get totalUsers()       { return this.totalClients + this.totalResellers; }
-  get growthResellers()  { return this.prevResellers ? Math.round(((this.totalResellers - this.prevResellers) / this.prevResellers) * 100) : 0; }
-  get growthClients()    { return this.prevClients   ? Math.round(((this.totalClients   - this.prevClients)   / this.prevClients)   * 100) : 0; }
-  get growthDevices()    { return this.prevDevices   ? Math.round(((this.totalDevices   - this.prevDevices)   / this.prevDevices)   * 100) : 0; }
-
-  healthColor(s: string) {
-    if (s === 'online')   return 'health--green';
-    if (s === 'degraded') return 'health--amber';
-    return 'health--red';
-  }
-  riskClass(l: string) {
-    if (l === 'critical') return 'risk--red';
-    if (l === 'warning')  return 'risk--amber';
-    return 'risk--blue';
-  }
-  actClass(icon: string) {
-    if (icon === 'reseller') return 'act--purple';
-    if (icon === 'client')   return 'act--teal';
-    return 'act--red';
-  }
-
-  // ── Add Reseller modal ────────────────────────────────
-  showAddReseller = false;
-  resellerForm: any = {};
-
-  isValidEmail(e: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
-  }
-  isValidPhone(p: string): boolean {
-    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
-  }
-  get resellerEmailError(): string {
-    return (this.resellerForm.email ?? '') && !this.isValidEmail(this.resellerForm.email)
-      ? 'msg_error_invalid_email' : '';
-  }
-  get resellerPhoneError(): string {
-    return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone)
-      ? 'msg_error_invalid_phone' : '';
-  }
-
-  openAddReseller() {
-    this.resellerForm = { username: '', nomEntreprise: '', email: '', phone: '' };
-    this.showAddReseller = true;
-  }
-  closeAddReseller() { this.showAddReseller = false; }
-
-  saveReseller() {
-    if (!this.isValidEmail(this.resellerForm.email) || !this.isValidPhone(this.resellerForm.phone)) return;
-
-    this.resellerService.create({
-      username: this.resellerForm.username,
-      nomEntreprise: this.resellerForm.nomEntreprise,
-      email: this.resellerForm.email,
-      phone: this.resellerForm.phone
-    }).subscribe({
-      next: () => {
-        this.loadDashboard();
-        this.loadTopResellers();
-        this.showAddReseller = false;
+        // Render growth chart after donut
+        this.renderAreaChart();
       },
-      error: (err) => console.error('Failed to create reseller', err)
+      error: (err) => console.error('Failed to load device status', err)
     });
   }
 
-  deviceDistribution = [
-    { region: 'Tunis',    devices: 2840, pct: 100, color: '#0D9488' },
-    { region: 'Sfax',     devices: 1920, pct: 68,  color: '#3B82F6' },
-    { region: 'Sousse',   devices: 1450, pct: 51,  color: '#9333ea' },
-    { region: 'Bizerte',  devices:  820, pct: 29,  color: '#D97706' },
-    { region: 'Nabeul',   devices:  710, pct: 25,  color: '#16A34A' },
-    { region: 'Autres',   devices:  960, pct: 34,  color: '#9CA3AF' },
-  ];
+  private renderAreaChart() {
+    this.adminService.getGrowthData().subscribe({
+      next: (data) => {
+        const labels: string[] = data['labels'] ?? [];
+        const clients: number[] = data['clients'] ?? [];
+        const resellers: number[] = data['resellers'] ?? [];
 
-  systemPerf = [
-    { labelKey: 'adm_perf_api',      value: '120 ms', pct: 24,   warn: false },
-    { labelKey: 'adm_perf_load',     value: '43%',    pct: 43,   warn: false },
-    { labelKey: 'adm_perf_db',       value: '2.3k/m', pct: 46,   warn: false },
-    { labelKey: 'adm_perf_memory',   value: '67%',    pct: 67,   warn: true  },
-    { labelKey: 'adm_perf_uptime',   value: '99.8%',  pct: null, warn: false },
-  ];
+        const el = document.getElementById('area-chart');
+        if (!el) return;
+        if (this.areaChart) this.areaChart.destroy();
 
-  eventTimeline = [
-    { time: '10:32', type: 'reseller',   labelKey: 'act_reseller_reg', entity: 'TechVision SARL'  },
-    { time: '10:40', type: 'client',     labelKey: 'act_client_added', entity: 'Société Elyes'    },
-    { time: '11:05', type: 'device_on',  labelKey: 'adm_evt_assigned', entity: 'Device #4821'     },
-    { time: '11:30', type: 'device_off', labelKey: 'act_device_off',   entity: 'Device #2190'     },
-    { time: '12:15', type: 'client',     labelKey: 'act_client_added', entity: 'Alpha Corp'       },
-    { time: '14:02', type: 'reseller',   labelKey: 'act_reseller_upd', entity: 'NetPlus Tunis'    },
-  ];
+        this.areaChart = new ApexCharts(el, {
+          series: [
+            { name: 'Clients', data: clients },
+            { name: 'Resellers', data: resellers },
+          ],
+          colors: ['#3B82F6', '#0D9488'],
+          chart: {
+            height: 260,
+            width: '100%',
+            type: 'area',
+            fontFamily: 'Manrope, sans-serif',
+            toolbar: { show: false },
+            zoom: { enabled: false },
+          },
+          fill: {
+            type: 'gradient',
+            gradient: {
+              shadeIntensity: 1,
+              opacityFrom: 0.25,
+              opacityTo: 0.02,
+              stops: [0, 100],
+            },
+          },
+          stroke: {
+            width: 2.5,
+            curve: 'smooth',
+          },
+          dataLabels: { enabled: false },
+          xaxis: {
+            categories: labels,
+            labels: {
+              style: {
+                fontFamily: 'Manrope, sans-serif',
+                fontSize: '11px',
+                fontWeight: 600,
+                colors: '#94a3b8',
+              },
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+          },
+          yaxis: {
+            labels: {
+              style: {
+                fontFamily: 'Manrope, sans-serif',
+                fontSize: '11px',
+                colors: '#94a3b8',
+              },
+            },
+          },
+          grid: {
+            borderColor: 'rgba(0,0,0,0.05)',
+            strokeDashArray: 4,
+            xaxis: { lines: { show: false } },
+          },
+          legend: {
+            position: 'bottom',
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: '12px',
+            fontWeight: 600,
+            labels: { colors: '#475569' },
+            markers: { size: 5, offsetX: -2 },
+            itemMargin: { horizontal: 12, vertical: 4 },
+          },
+          tooltip: {
+            style: { fontFamily: 'Manrope, sans-serif', fontSize: '12px' },
+            x: { show: true },
+          },
+          markers: {
+            size: 4,
+            strokeWidth: 2.5,
+            strokeColors: '#ffffff',
+            hover: { size: 7 },
+          },
+        });
+        this.areaChart.render();
+      },
+      error: (err) => console.error('Failed to load growth data', err)
+    });
+  }
 
+  // ── Helpers ───────────────────────────────────────────
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
   navigateTo(p: string) { this.router.navigate([p]); }
+  statusClass(s: string) { return s === 'healthy' ? 'st--healthy' : s === 'low' ? 'st--low' : 'st--problem'; }
+  statusLabel(s: string) { return s === 'healthy' ? 'Healthy' : s === 'low' ? 'Low Activity' : 'Problem'; }
+  actClass(t: string) { return t === 'reseller' ? 'at--teal' : t === 'client' ? 'at--blue' : 'at--red'; }
+
+  // ── Modal ─────────────────────────────────────────────
+  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
+  get resellerEmailError(): string { return (this.resellerForm.email ?? '') && !this.isValidEmail(this.resellerForm.email) ? 'msg_error_invalid_email' : ''; }
+  get resellerPhoneError(): string { return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone) ? 'msg_error_invalid_phone' : ''; }
+
+  openAddReseller() { this.resellerForm = { username: '', nomEntreprise: '', email: '', phone: '' }; this.showAddReseller = true; }
+  closeAddReseller() { this.showAddReseller = false; }
+  saveReseller() {
+  console.log('saveReseller called');
+  console.log('email valid:', this.isValidEmail(this.resellerForm.email));
+  console.log('phone valid:', this.isValidPhone(this.resellerForm.phone));
+  console.log('form:', this.resellerForm);
+
+  if (!this.isValidEmail(this.resellerForm.email) || !this.isValidPhone(this.resellerForm.phone)) return;
+
+  this.resellerService.create({
+    username: this.resellerForm.username,
+    nomEntreprise: this.resellerForm.nomEntreprise,
+    email: this.resellerForm.email,
+    phone: this.resellerForm.phone
+  }).subscribe({
+    next: () => { this.loadAll(); this.showAddReseller = false; },
+    error: (err) => console.error('Failed to create reseller', err)
+  });
+}
 }

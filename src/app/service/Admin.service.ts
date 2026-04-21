@@ -10,6 +10,14 @@ export class AdminService {
     return this.http.get<Record<string, any>>(`${this.apiUrl}/dashboard`);
   }
 
+  getDeviceStatus() {
+    return this.http.get<Record<string, any>>(`${this.apiUrl}/dashboard/device-status`);
+  }
+
+  getGrowthData() {
+    return this.http.get<Record<string, any>>(`${this.apiUrl}/dashboard/growth`);
+  }
+
   getResellerAnalytics() {
     return this.http.get<Record<string, any>>(`${this.apiUrl}/resellers/analytics`);
   }

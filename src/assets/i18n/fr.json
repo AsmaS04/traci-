@@ -459,5 +459,6 @@
   "ra_error_email": "Veuillez entrer un email valide",
   "inv_status_paid": "Payée",
   "inv_status_pending": "En attente",
-  "inv_status_overdue": "En retard"
+  "inv_status_overdue": "En retard",
+  "act_payment_received": "Paiement reçu"
 }

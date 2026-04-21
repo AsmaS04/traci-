@@ -459,5 +459,6 @@
   "dev_detail_eyebrow": "Device Detail",
   "inv_status_paid": "Paid",
   "inv_status_pending": "Pending",
-  "inv_status_overdue": "Overdue"
+  "inv_status_overdue": "Overdue",
+  "act_payment_received": "Payment received"
 }

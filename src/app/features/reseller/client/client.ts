@@ -38,7 +38,6 @@ export default class ResellerClientsComponent implements OnInit {
     });
   }
 
-  // ── Search & filter ───────────────────────────────────
   search = '';
   filterStatus: 'all' | 'active' | 'inactive' = 'all';
 
@@ -58,25 +57,18 @@ export default class ResellerClientsComponent implements OnInit {
     });
   }
 
-  // ── Slide-over panel ──────────────────────────────────
-  panelOpen   = false;
+  panelOpen = false;
   panelClient: Client | null = null;
   panelTab: 'profile' | 'devices' | 'operations' = 'profile';
 
-  openPanel(c: Client) {
-    this.panelClient = c;
-    this.panelTab    = 'profile';
-    this.panelOpen   = true;
-  }
+  openPanel(c: Client) { this.panelClient = c; this.panelTab = 'profile'; this.panelOpen = true; }
   closePanel() { this.panelOpen = false; }
   switchPanelTab(t: 'profile' | 'devices' | 'operations') { this.panelTab = t; }
+  get panelInactive(): number { return 0; }
 
-  get panelInactive(): number { return 0; } // TODO: need device data
-
-  // ── Add / Edit client modal ───────────────────────────
-  showModal  = false;
+  showModal = false;
   showDelete = false;
-  isEdit     = false;
+  isEdit = false;
   selected: Client | null = null;
   form: Partial<Client> = {};
 
@@ -92,9 +84,7 @@ export default class ResellerClientsComponent implements OnInit {
     this.showModal = true; this.closePanel();
   }
 
-  openDelete(c: Client) {
-    this.selected = c; this.showDelete = true; this.closePanel();
-  }
+  openDelete(c: Client) { this.selected = c; this.showDelete = true; this.closePanel(); }
 
   isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string) { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
@@ -102,27 +92,54 @@ export default class ResellerClientsComponent implements OnInit {
   get formPhoneError() { return (this.form.phone ?? '') && !this.isValidPhone(this.form.phone ?? '') ? 'msg_error_invalid_phone' : ''; }
 
   saveClient() {
-    if (!this.isValidEmail(this.form.email ?? '') || !this.isValidPhone(this.form.phone ?? '')) return;
-    // TODO: call backend
-    this.showModal = false;
+  
+  console.log('called');
+  console.log('email:', this.form.email, 'valid:', this.isValidEmail(this.form.email ?? ''));
+  console.log('phone:', this.form.phone, 'valid:', this.isValidPhone(this.form.phone ?? ''));
+  if (!this.isValidEmail(this.form.email ?? '') || !this.isValidPhone(this.form.phone ?? '')) return;
+
+    if (this.isEdit && this.selected) {
+      this.clientService.updateMyClient(this.selected.idClient, this.form).subscribe({
+        next: (updated) => {
+          this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
+          this.showModal = false;
+        },
+        error: (err: any) => console.error('Failed to update client', err)
+      });
+    } else {
+      this.clientService.createMyClient({
+        ...this.form,
+        idRev: this.reseller.idRev
+      }).subscribe({
+        next: (created) => {
+          this.clients.push(created);
+          this.showModal = false;
+        },
+        error: (err: any) => console.error('Failed to create client', err)
+      });
+    }
   }
 
   confirmDelete() {
-    if (this.selected) {
-      this.clients = this.clients.filter(c => c.idClient !== this.selected!.idClient);
-    }
-    this.showDelete = false; this.selected = null;
+    if (!this.selected) return;
+    this.clientService.delete(this.selected.idClient).subscribe({
+      next: () => {
+        this.clients = this.clients.filter(c => c.idClient !== this.selected!.idClient);
+        this.showDelete = false;
+        this.selected = null;
+      },
+      error: (err: any) => console.error('Failed to delete client', err)
+    });
   }
 
-  closeModal()  { this.showModal  = false; }
+  closeModal() { this.showModal = false; }
   closeDelete() { this.showDelete = false; }
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
-  get totalCount()    { return this.clients.length; }
-  get activeCount()   { return this.clients.filter(c => this.isActive(c)).length; }
+  get totalCount() { return this.clients.length; }
+  get activeCount() { return this.clients.filter(c => this.isActive(c)).length; }
   get inactiveCount() { return this.clients.filter(c => !this.isActive(c)).length; }
   initials(c: Client) { return ((c.firstName ?? '?')[0] + (c.lastName ?? '?')[0]).toUpperCase(); }
 
-  // Stubs for HTML compatibility (device/transaction features not wired yet)
   devicesForClient(_id: number): any[] { return []; }
   transactionsForClient(_id: number): any[] { return []; }
   totalPaidByClient(_id: number): number { return 0; }
@@ -132,7 +149,6 @@ export default class ResellerClientsComponent implements OnInit {
 
   showDeviceModal = false;
   deviceForm: any = {};
-  readonly deviceModels = ['ACCENT BOX', 'ACCENT MINI', 'ACCENT PRO', 'ACCENT LITE'];
   readonly simProviders = ['none', 'Ooredoo', 'Tunisie Telecom', 'Orange'];
   openAddDevice() { this.showDeviceModal = true; }
   saveDevice() { this.showDeviceModal = false; }

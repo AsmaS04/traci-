@@ -231,7 +231,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
-      <button class="btn-save" (click)="saveClient()">{{ i18n.t('btn_save') }}</button>
+      <button class="btn-save" (click)="saveClient(); $event.stopPropagation()">{{ i18n.t('btn_save') }}</button>
     </div>
   </div>
 </div>
