@@ -9,7 +9,6 @@ export class ResellerService {
   private http = inject(HttpClient);
   private adminUrl = 'http://localhost:8080/api/admin/resellers';
   private portalUrl = 'http://localhost:8080/api/reseller';
-
   // ── Admin scope ─────────────────────────────────────
   getAll() {
     return this.http.get<Reseller[]>(this.adminUrl);
@@ -46,5 +45,15 @@ export class ResellerService {
 
   getMyDevices() {
     return this.http.get<Device[]>(`${this.portalUrl}/devices`);
+  }
+
+  uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<Reseller>(
+      `${this.portalUrl}/upload-avatar`,
+      formData
+    );
   }
 }

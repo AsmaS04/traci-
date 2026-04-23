@@ -1,163 +1,172 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
+import { ClientService } from '../../../service/Client.service';
+import { NotificationWebsocketService } from '../../../service/notification-websocket.service';
 import { Reseller } from '../../../models/reseller.model';
+import { Subscription } from 'rxjs';
 
-type TabName = 'profile' | 'security' | 'notifications' | 'activity' | 'preferences';
+type TabName = 'profile' | 'security' | 'notifications' | 'activity';
 
 @Component({
   selector: 'app-reseller-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TitleCasePipe],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css'],
 })
-export default class ResellerProfileComponent implements OnInit {
+export default class ResellerProfileComponent implements OnInit, OnDestroy {
 
-  constructor(
-    public i18n: TranslationService,
-    private router: Router,
-    private resellerService: ResellerService
-  ) {}
+  private resellerService = inject(ResellerService);
+  private clientService   = inject(ClientService);
+  private wsService       = inject(NotificationWebsocketService);
+  private router          = inject(Router);
+  public  i18n            = inject(TranslationService);
 
   reseller: Reseller = {
     idRev: 0, username: '', email: '', nomEntreprise: '',
-    deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0, createdAt: '',
+    deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0,
+    createdAt: '', avatarUrl: ''
   };
 
-  ngOnInit() {
-    this.resellerService.getMyProfile().subscribe({
-      next: (r: Reseller) => {
-        this.reseller = r;
-        this.profile = {
-          username: r.username,
-          nomEntreprise: r.nomEntreprise,
-          email: r.email,
-          phone: r.phone ?? '',
-        };
-      },
-      error: (err: any) => console.error('Failed to load profile', err)
-    });
+  profile = { username: '', nomEntreprise: '', email: '', phone: '' };
+
+  // ── Avatar ────────────────────────────────────────────
+  avatarPreview: string | null = null;
+  avatarFile: File | null = null;
+  uploadError = '';
+
+  onAvatarChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) { this.uploadError = 'adm_upload_type_error'; return; }
+    if (file.size > 2 * 1024 * 1024)    { this.uploadError = 'adm_upload_size_error'; return; }
+    this.uploadError = '';
+    this.avatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => { this.avatarPreview = e.target?.result as string; };
+    reader.readAsDataURL(file);
+  }
+
+  removeAvatar(): void { this.avatarPreview = null; this.avatarFile = null; }
+
+  get initials(): string {
+    return (this.reseller.username || 'R')
+      .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
   // ── Tabs ──────────────────────────────────────────────
   activeTab: TabName = 'profile';
   switchTab(t: TabName) { this.activeTab = t; }
 
-  // ── Profile form ──────────────────────────────────────
-  profile = {
-    username:       '',
-    nomEntreprise:  '',
-    email:          '',
-    phone:          '',
-  };
+  // ── Stats ─────────────────────────────────────────────
+  totalClients      = 0;
+  totalDevices      = 0;
+  activeDevices     = 0;
+  totalRevenue      = 0;
+  totalTransactions = 0;
+  fmt(n: number) { return new Intl.NumberFormat().format(n); }
 
-  // ── Avatar / photo upload ─────────────────────────────
-  avatarPreview: string | null = null;
-  avatarFile:    File | null   = null;
-  uploadError    = '';
+  // ── Validation ────────────────────────────────────────
+  isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidPhone(p: string) { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
+  get profileEmailError() { return (this.profile.email && !this.isValidEmail(this.profile.email)) ? 'msg_error_invalid_email' : ''; }
+  get profilePhoneError() { return (this.profile.phone && !this.isValidPhone(this.profile.phone)) ? 'msg_error_invalid_phone' : ''; }
 
-  onAvatarChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-    const file = input.files[0];
-    if (!file.type.startsWith('image/')) { this.uploadError = 'res_upload_type_error'; return; }
-    if (file.size > 2 * 1024 * 1024)    { this.uploadError = 'res_upload_size_error'; return; }
-    this.uploadError = '';
-    this.avatarFile  = file;
-    const reader = new FileReader();
-    reader.onload = (e) => { this.avatarPreview = e.target?.result as string; };
-    reader.readAsDataURL(file);
+  resetProfile() {
+    this.profile = {
+      username:      this.reseller.username,
+      nomEntreprise: this.reseller.nomEntreprise,
+      email:         this.reseller.email,
+      phone:         this.reseller.phone ?? '',
+    };
   }
-
-  removeAvatar(): void {
-    this.avatarPreview = null;
-    this.avatarFile    = null;
-  }
-
-  isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
-  isValidPhone(p: string) { return /^\d{8}$/.test(p.replace(/[\s\-\.]/g, '')); }
-  get profileEmailError() { return this.profile.email && !this.isValidEmail(this.profile.email) ? 'msg_error_invalid_email' : ''; }
-  get profilePhoneError() { return this.profile.phone && !this.isValidPhone(this.profile.phone) ? 'msg_error_invalid_phone' : ''; }
 
   saveProfile() {
-    if (!this.isValidEmail(this.profile.email) || !this.isValidPhone(this.profile.phone)) return;
-    // TODO: call backend updateMyProfile
-    console.log('Profile saved', this.profile);
+    if (this.profileEmailError || this.profilePhoneError) return;
+
+    if (this.avatarFile) {
+      this.resellerService.uploadAvatar(this.avatarFile).subscribe({
+        next: (res: Reseller) => {
+          this.reseller.avatarUrl = res.avatarUrl ?? '';
+          this.avatarPreview = null;
+          this.avatarFile = null;
+        },
+        error: () => { this.uploadError = 'adm_upload_size_error'; }
+      });
+    }
+
+    this.resellerService.updateMyProfile(this.profile).subscribe({
+      next: (updated: Reseller) => { this.reseller = { ...this.reseller, ...updated }; },
+      error: (err) => console.error('Failed to update profile', err)
+    });
   }
 
   // ── Security ──────────────────────────────────────────
   security = { currentPassword: '', newPassword: '', confirmPassword: '' };
   twoFaEnabled = false;
 
-  get passwordStrength(): 'weak' | 'medium' | 'strong' {
+  get passwordStrength(): string {
     const p = this.security.newPassword;
-    if (p.length === 0 || p.length < 8) return 'weak';
-    if (p.length < 12) return 'medium';
-    return 'strong';
-  }
-  get strengthWidth(): number {
-    if (this.passwordStrength === 'strong') return 100;
-    if (this.passwordStrength === 'medium') return 60;
-    return this.security.newPassword.length ? 25 : 0;
+    if (!p) return '';
+    if (p.length >= 12 && /[A-Z]/.test(p) && /\d/.test(p)) return 'strong';
+    if (p.length >= 8) return 'medium';
+    return 'weak';
   }
 
-  updatePassword() {
-    if (this.security.newPassword !== this.security.confirmPassword) return;
-    this.security = { currentPassword: '', newPassword: '', confirmPassword: '' };
-  }
+  updatePassword() { console.log('TODO: update password'); }
+  revokeSession(i: number) { this.sessions.splice(i, 1); }
 
   sessions = [
-    { device: 'Chrome — Windows 11', location: 'Tunis, Tunisia', lastActive: '5 minutes ago', current: true  },
-    { device: 'Safari — iPhone 15',  location: 'Sfax, Tunisia',  lastActive: '2 hours ago',   current: false },
+    { device: 'Chrome on Windows', location: 'Tunis, TN', lastActive: 'just now',  current: true  },
+    { device: 'Firefox on macOS',  location: 'Tunis, TN', lastActive: '2 days ago', current: false },
   ];
-  revokeSession(index: number) { this.sessions.splice(index, 1); }
 
   // ── Notifications ─────────────────────────────────────
-  notifications = [
-    { nameKey: 'adm_notif_system_errors',  descKey: 'adm_notif_system_errors_desc',  enabled: true  },
+  notifSettings = [
     { nameKey: 'adm_notif_new_client',     descKey: 'adm_notif_new_client_desc',     enabled: true  },
     { nameKey: 'adm_notif_device_offline', descKey: 'adm_notif_device_offline_desc', enabled: true  },
-    { nameKey: 'adm_notif_security',       descKey: 'adm_notif_security_desc',       enabled: true  },
     { nameKey: 'adm_notif_reports',        descKey: 'adm_notif_reports_desc',        enabled: false },
   ];
 
-  // ── Preferences ───────────────────────────────────────
-  preferences = { theme: 'light', language: 'en', timezone: 'GMT+1' };
-
-  savePreferences() {
-    this.i18n.loadTranslations(this.preferences.language as 'en' | 'fr');
-  }
-
   // ── Activity ──────────────────────────────────────────
-  readonly totalDevices      = 0;
-  readonly activeDevices     = 0;
-  readonly totalTransactions = 0;
-  readonly totalRevenue      = 0;
-  readonly totalClients      = 0;
+  activityLog: { icon: string; labelKey: string; entity: string; date: string }[] = [];
 
-  activityLog = [
-    { icon: 'client', labelKey: 'act_client_added', entity: 'Client A',    date: '12 Mar 2026 · 09:41' },
-    { icon: 'device', labelKey: 'res_add_device',   entity: 'Device #001', date: '11 Mar 2026 · 14:22' },
-  ];
+  // ── Lifecycle ─────────────────────────────────────────
+  private avatarSub?: Subscription;
 
-  dotClass(icon: string): string {
-    if (icon === 'client') return 'tl-dot--teal';
-    if (icon === 'device') return 'tl-dot--blue';
-    return 'tl-dot--amber';
+  ngOnInit() {
+    this.resellerService.getMyProfile().subscribe({
+      next: (r: Reseller) => {
+        this.reseller = r;
+        this.totalClients = r.clientCount ?? 0;
+        this.profile = {
+          username:      r.username,
+          nomEntreprise: r.nomEntreprise,
+          email:         r.email,
+          phone:         r.phone ?? '',
+        };
+      },
+      error: (err) => console.error('Failed to load profile', err)
+    });
+
+    this.clientService.getMyClients().subscribe({
+      next: (clients) => { this.totalClients = clients.length; },
+      error: () => {}
+    });
+
+    this.wsService.connect();
+    this.avatarSub = this.wsService.avatar$.subscribe(event => {
+      this.reseller.avatarUrl = event.avatarUrl;
+      this.avatarPreview = null;
+    });
   }
 
-  fmt(n: number) { return new Intl.NumberFormat().format(n); }
-  get initials(): string {
-    return (this.reseller.username ?? 'R')
-      .split(' ')
-      .map((w: string) => w[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  logout(): void { this.router.navigate(['/bo-reseller-access']); }
+  ngOnDestroy() { this.avatarSub?.unsubscribe(); }
+
+  logout(): void { localStorage.clear(); this.router.navigate(['/bo-reseller-access']); }
 }

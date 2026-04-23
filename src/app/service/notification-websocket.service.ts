@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Client } from '@stomp/stompjs';
+import { Client, IMessage } from '@stomp/stompjs';
 import { Subject } from 'rxjs';
 
 export interface AppNotification {
@@ -8,23 +8,44 @@ export interface AppNotification {
   timestamp: string;
 }
 
+export interface AvatarEvent {
+  resellerId: number;
+  avatarUrl: string;
+  message: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NotificationWebsocketService {
-  private stompClient: Client;
-  notification$ = new Subject<AppNotification>();
 
-  constructor() {
-    this.stompClient = new Client({
+  private client!: Client;
+
+  notification$ = new Subject<AppNotification>();
+  avatar$ = new Subject<AvatarEvent>();
+
+  connect() {
+    this.client = new Client({
       brokerURL: 'ws://localhost:8080/ws/websocket',
-      onConnect: () => {
-        this.stompClient.subscribe('/topic/notifications', (msg) => {
-          const notification: AppNotification = JSON.parse(msg.body);
-          this.notification$.next(notification);
+      reconnectDelay: 5000,
+      debug: () => {}
+    });
+
+    this.client.onConnect = () => {
+      this.client.subscribe('/topic/notifications', (msg: IMessage) => {
+        this.notification$.next(JSON.parse(msg.body));
+      });
+
+      const resellerId = Number(localStorage.getItem('idRev'));
+      if (resellerId) {
+        this.client.subscribe(`/topic/reseller/${resellerId}/avatar`, (msg: IMessage) => {
+          this.avatar$.next(JSON.parse(msg.body));
         });
       }
-    });
+    };
+
+    this.client.activate();
   }
 
-  connect() { this.stompClient.activate(); }
-  disconnect() { this.stompClient.deactivate(); }
+  disconnect() {
+    this.client?.deactivate();
+  }
 }

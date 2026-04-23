@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { ResellerService } from '../../../service/Reseller.service';
+import { NotificationWebsocketService } from '../../../service/notification-websocket.service';
 import { Reseller } from '../../../models/reseller.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-reseller-layout',
@@ -11,37 +14,59 @@ import { Reseller } from '../../../models/reseller.model';
   templateUrl: './reseller-layout.html',
   styleUrl: './reseller-layout.css',
 })
-export default class ResellerLayout {
+export default class ResellerLayout implements OnInit, OnDestroy {
+
+  private resellerService = inject(ResellerService);
+  private wsService       = inject(NotificationWebsocketService);
+  private router          = inject(Router);
+  public  i18n            = inject(TranslationService);
 
   collapsed  = false;
   darkMode   = false;
   notifOpen  = false;
-  notifCount = 3;
+  notifCount = 0;
   avatarOpen = false;
 
-  // Placeholder until backend profile loading is wired up
   reseller: Reseller = {
-    idRev: 0,
-    username: 'Reseller',
-    email: '',
-    nomEntreprise: 'TRACI',
-    deviceCostByDay: 0,
-    daysCount: 0,
-    phone: '',
-    clientCount: 0,
-    createdAt: '',
+    idRev: 0, username: '', email: '', nomEntreprise: 'TRACI',
+    deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0, createdAt: '',
   };
 
+  notifications: { text: string; time: string }[] = [];
+
+  private wsSub?: Subscription;
+
   get initials(): string {
-    return (this.reseller.username ?? 'R')
-      .split(' ')
-      .map((w: string) => w[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    const name = this.reseller.username || this.reseller.nomEntreprise || 'R';
+    return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  constructor(public i18n: TranslationService, private router: Router) {}
+  ngOnInit() {
+    // Load real profile from backend — survives refresh
+    this.resellerService.getMyProfile().subscribe({
+      next: (r: Reseller) => { this.reseller = r; },
+      error: (err) => {
+        // Fallback to localStorage values set during login
+        const username = localStorage.getItem('username') ?? 'Reseller';
+        const email    = localStorage.getItem('email') ?? '';
+        this.reseller = { ...this.reseller, username, email };
+        console.error('Failed to load reseller profile', err);
+      }
+    });
+
+    // WebSocket notifications
+    this.wsSub = this.wsService.notification$.subscribe(notif => {
+      const text = notif.type === 'NEW_CLIENT'
+        ? `New client added: ${notif.message}`
+        : `Payment received: ${notif.message}`;
+      this.notifications.unshift({ text, time: 'just now' });
+      this.notifCount++;
+    });
+  }
+
+  ngOnDestroy() {
+    this.wsSub?.unsubscribe();
+  }
 
   toggleCollapse(): void { this.collapsed = !this.collapsed; }
   toggleDark(): void     { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark', this.darkMode); }
@@ -52,26 +77,13 @@ export default class ResellerLayout {
   async toggleLang(): Promise<void> { await this.i18n.toggle(); }
   get lang(): string { return this.i18n.lang(); }
 
-  goToProfile(): void {
-    this.avatarOpen = false;
-    this.router.navigate(['/reseller-dashboard/profile']);
-  }
-
-  openSupport(): void {
-    this.avatarOpen = false;
-    alert('Support: contact@traci.tn');
-  }
-
+  goToProfile(): void { this.avatarOpen = false; this.router.navigate(['/reseller-dashboard/profile']); }
+  openSupport(): void { this.avatarOpen = false; alert('Support: contact@traci.tn'); }
   logout(): void {
     this.avatarOpen = false;
+    localStorage.clear();
     this.router.navigate(['/bo-reseller-access']);
   }
-
-  notifications = [
-    { text: 'New client subscription',   time: '5 min ago'  },
-    { text: 'Device #1032 went offline', time: '18 min ago' },
-    { text: 'Invoice #84 paid',          time: '1 hr ago'   },
-  ];
 
   navItems = [
     {

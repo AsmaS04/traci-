@@ -102,14 +102,6 @@
         <span>Activity</span>
       </button>
 
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='preferences'" (click)="switchTab('preferences')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-        </svg>
-        <span>{{ i18n.t('adm_profile_preferences') }}</span>
-      </button>
-    </div>
 
     <!-- Content panels -->
     <div class="tab-content">
@@ -319,65 +311,5 @@
         </div>
       </div>
       }
-
-      <!-- ── PREFERENCES TAB ─────────────────────────────── -->
-      @if (activeTab==='preferences') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_preferences') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_preferences_sub') }}</p>
-        </div>
-        <div class="section-card">
-          <p class="section-title">{{ i18n.t('adm_pref_theme') }}</p>
-          <div class="theme-options">
-            <label class="theme-opt" [class.theme-opt--selected]="preferences.theme==='light'">
-              <input type="radio" name="theme" value="light" [(ngModel)]="preferences.theme"/>
-              <div class="theme-preview theme-preview--light"></div>
-              <span>{{ i18n.t('adm_pref_light') }}</span>
-            </label>
-            <label class="theme-opt" [class.theme-opt--selected]="preferences.theme==='dark'">
-              <input type="radio" name="theme" value="dark" [(ngModel)]="preferences.theme"/>
-              <div class="theme-preview theme-preview--dark"></div>
-              <span>{{ i18n.t('adm_pref_dark') }}</span>
-            </label>
-            <label class="theme-opt" [class.theme-opt--selected]="preferences.theme==='system'">
-              <input type="radio" name="theme" value="system" [(ngModel)]="preferences.theme"/>
-              <div class="theme-preview theme-preview--system"></div>
-              <span>{{ i18n.t('adm_pref_system') }}</span>
-            </label>
-          </div>
-        </div>
-        <div class="section-card" style="margin-top:1.2rem">
-          <p class="section-title">{{ i18n.t('adm_pref_language') }}</p>
-          <div class="lang-options">
-            <label class="lang-opt" [class.lang-opt--selected]="preferences.language==='en'">
-              <input type="radio" name="lang" value="en" [(ngModel)]="preferences.language"/>
-              <span class="lang-flag">🇬🇧</span> English
-            </label>
-            <label class="lang-opt" [class.lang-opt--selected]="preferences.language==='fr'">
-              <input type="radio" name="lang" value="fr" [(ngModel)]="preferences.language"/>
-              <span class="lang-flag">🇫🇷</span> Français
-            </label>
-          </div>
-        </div>
-        <div class="section-card" style="margin-top:1.2rem">
-          <p class="section-title">{{ i18n.t('adm_pref_timezone') }}</p>
-          <div class="form-group" style="max-width:300px">
-            <select [(ngModel)]="preferences.timezone">
-              <option value="GMT+1">GMT +1 (Tunisia)</option>
-              <option value="GMT+0">GMT +0 (London)</option>
-              <option value="GMT+2">GMT +2 (Cairo)</option>
-              <option value="GMT+3">GMT +3 (Riyadh)</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-actions" style="margin-top:1.4rem">
-          <button class="btn-cancel">{{ i18n.t('adm_pref_reset') }}</button>
-          <button class="btn-save" (click)="savePreferences()">Save {{ i18n.t('adm_profile_preferences') }}</button>
-        </div>
-      </div>
-      }
-
-    </div>
-  </div>
-</div>
+     
+        

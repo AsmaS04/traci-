@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslationService } from '../../../service/translation.service';
 
-type TabName = 'profile' | 'security' | 'notifications' | 'activity' | 'preferences';
+type TabName = 'profile' | 'security' | 'notifications' | 'activity' ;
 
 @Component({
   selector: 'app-admin-profil',
@@ -144,11 +144,5 @@ export class AdminProfil {
     { icon: 'amber', labelKey: 'adm_view_alerts',  entity: '3 alerts',         date: '09 Mar 2026 · 16:44' },
     { icon: 'blue',  labelKey: 'act_reseller_upd', entity: 'NetPlus Tunis',    date: '08 Mar 2026 · 10:30' },
   ];
-
-  // ── Preferences ───────────────────────────────────────
-  preferences = { theme: 'light', language: 'en', timezone: 'GMT+1' };
-
-  savePreferences() {
-    this.i18n.loadTranslations(this.preferences.language as 'en' | 'fr');
-  }
+  
 }
