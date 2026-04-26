@@ -1,4 +1,3 @@
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,30 +7,28 @@ import { AdminService } from '../../../service/Admin.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { Reseller } from '../../../models/reseller.model';
 import ApexCharts from 'apexcharts';
-// add to imports at top:
 import { NotificationWebsocketService, AppNotification } from '../../../service/notification-websocket.service';
 import { Subscription } from 'rxjs';
 
-
-interface ResellerHealth {
-  name: string;
-  clients: number;
-  status: 'healthy' | 'low' | 'problem';
-  lastActivity: string;
+interface SystemEvent {
+  time: string;
+  type: 'reseller' | 'client' | 'device' | 'admin';
+  label: string;
+  detail: string;
 }
 
-interface EmergencyItem {
-  level: 'critical' | 'warning';
+interface AlertEntry {
+  severity: 'critical' | 'warning';
   label: string;
-  count: number;
+  detail: string;
   route: string;
 }
 
-interface ActivityItem {
-  type: 'reseller' | 'client' | 'device';
-  label: string;
-  detail: string;
-  time: string;
+interface TopReseller {
+  rank: number;
+  name: string;
+  clients: number;
+  devices: number;
 }
 
 @Component({
@@ -48,67 +45,67 @@ export class Dashboard implements OnInit, OnDestroy {
   private refreshInterval: any = null;
   private notifSub!: Subscription;
 
- constructor(
-  private router: Router,
-  public i18n: TranslationService,
-  private adminService: AdminService,
-  private resellerService: ResellerService,
-  private notifWs: NotificationWebsocketService
-) {}
+  constructor(
+    private router: Router,
+    public i18n: TranslationService,
+    private adminService: AdminService,
+    private resellerService: ResellerService,
+    private notifWs: NotificationWebsocketService
+  ) {}
 
-  totalResellers = 0;
-  inactiveResellers = 0;
-  totalClients = 0;
-  criticalIssues = 0;
-  loading = true;
+  totalResellers    = 0;
+  totalClients      = 0;
+  criticalIssues    = 0;
+  loading           = true;
 
-  devActive = 0;
-  devOffline = 0;
-  devExpiring = 0;
-  devTotal = 0;
-
-  emergencyItems: EmergencyItem[] = [];
-  resellerHealth: ResellerHealth[] = [];
+  devActive         = 0;
+  devOffline        = 0;
+  devExpiring       = 0;
+  devTotal          = 0;
 
   newResellersMonth = 0;
-  newClientsMonth = 0;
-  bestReseller = '—';
-  bestResellerGrowth = '';
+  newClientsMonth   = 0;
 
-  smartInsights: string[] = [];
+  totalRevenueMonth   = 18450;
+  totalRevenueAllTime = 142800;
+  revenueGrowthPct    = '+12.4%';
 
-  recentActivity: ActivityItem[] = [
-    { type: 'reseller', label: 'New reseller registered',  detail: 'TechVision SARL', time: '2min' },
-    { type: 'client',   label: 'New client added',         detail: 'Société Elyes — by Reseller Khalil', time: '14min' },
-    { type: 'device',   label: 'Device went offline',      detail: 'Device #4821 — Client Ahmed', time: '32min' },
-    { type: 'client',   label: 'New client added',         detail: 'Alpha Corp — by Reseller Nour', time: '1h' },
-    { type: 'reseller', label: 'Reseller updated profile', detail: 'NetPlus Tunis', time: '2h' },
-  ];
+  alertEntries: AlertEntry[]  = [];
+  topResellers: TopReseller[] = [];
+  systemEvents: SystemEvent[] = [];
 
   showAddReseller = false;
   resellerForm: any = {};
 
   ngOnInit() {
-  this.loadAll();
-  this.refreshInterval = setInterval(() => this.loadAll(), 30000);
+    this.loadAll();
+    this.refreshInterval = setInterval(() => this.loadAll(), 30000);
 
-  this.notifSub = this.notifWs.notification$.subscribe((n: AppNotification) => {
-    this.loadDashboard();
-    if (n.type === 'NEW_CLIENT') {
-      this.recentActivity.unshift({ type: 'client', label: 'New client added', detail: n.message, time: 'just now' });
-    } else if (n.type === 'NEW_PAYMENT') {
-      this.recentActivity.unshift({ type: 'reseller', label: 'Payment received', detail: n.message, time: 'just now' });
-    }
-    if (this.recentActivity.length > 10) this.recentActivity.pop();
-  });
-}
+    this.notifSub = this.notifWs.notification$.subscribe((n: AppNotification) => {
+      const type = n.type as string;
+      const now  = new Date();
+      const t    = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+      this.systemEvents.unshift({
+        time:   t,
+        type:   this.evtTypeMap(type),
+        label:  (n as any).label  ?? type,
+        detail: (n as any).detail ?? (n as any).message ?? '',
+      });
+      if (this.systemEvents.length > 50) this.systemEvents.pop();
+
+      if (['NEW_CLIENT', 'NEW_RESELLER', 'DEVICE_ASSIGNED'].includes(type)) {
+        this.loadDashboard();
+      }
+    });
+  }
 
   ngOnDestroy() {
-  if (this.refreshInterval) clearInterval(this.refreshInterval);
-  if (this.donutChart) this.donutChart.destroy();
-  if (this.areaChart) this.areaChart.destroy();
-  this.notifSub?.unsubscribe();
-}
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
+    if (this.donutChart) this.donutChart.destroy();
+    if (this.areaChart)  this.areaChart.destroy();
+    this.notifSub?.unsubscribe();
+  }
 
   private loadAll() {
     this.loadDashboard();
@@ -118,75 +115,91 @@ export class Dashboard implements OnInit, OnDestroy {
   private loadDashboard() {
     this.adminService.getDashboardStats().subscribe({
       next: (stats) => {
-        this.totalResellers = stats['totalResellers'] ?? 0;
-        this.totalClients = stats['totalClients'] ?? 0;
-        this.devTotal = stats['totalDevices'] ?? 0;
-        this.devActive = stats['activeDevices'] ?? 0;
-        this.devOffline = stats['offlineDevices'] ?? 0;
-        this.devExpiring = stats['expiringDevices'] ?? 0;
-        this.inactiveResellers = stats['inactiveResellers'] ?? 0;
-
-        this.emergencyItems = [];
-        if (this.devOffline > 0) {
-          this.emergencyItems.push({ level: 'critical', label: 'Devices offline', count: this.devOffline, route: '/admin/devices' });
-        }
-        if (this.devExpiring > 0) {
-          this.emergencyItems.push({ level: 'warning', label: 'Subscriptions expiring soon', count: this.devExpiring, route: '/admin/devices' });
-        }
-
-        this.criticalIssues = this.devOffline;
-        this.loading = false;
-
+        this.totalResellers    = stats['totalResellers']    ?? 0;
+        this.totalClients      = stats['totalClients']      ?? 0;
+        this.devTotal          = stats['totalDevices']      ?? 0;
+        this.devActive         = stats['activeDevices']     ?? 0;
+        this.devOffline        = stats['offlineDevices']    ?? 0;
+        this.devExpiring       = stats['expiringDevices']   ?? 0;
+        this.criticalIssues    = this.devOffline;
+        this.newResellersMonth = stats['newResellersMonth'] ?? 0;
+        this.newClientsMonth   = stats['newClientsMonth']   ?? 0;
+        this.loading           = false;
         this.renderDonutChart();
       },
       error: () => { this.loading = false; }
+    });
+
+    this.adminService.getEvents().subscribe({
+      next: (events) => {
+        this.systemEvents = events.map(e => ({
+          time:   new Date(e.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          type:   this.evtTypeMap(e.type),
+          label:  e.label,
+          detail: e.detail ?? '',
+        }));
+      },
+      error: (err) => console.error('Failed to load events', err)
     });
   }
 
   private loadResellers() {
     this.resellerService.getAll().subscribe({
       next: (resellers: Reseller[]) => {
-        this.resellerHealth = resellers.map(r => {
-          const clients = r.clientCount ?? 0;
-          let status: 'healthy' | 'low' | 'problem' = 'healthy';
-          if (clients === 0) status = 'problem';
-          return {
-            name: r.nomEntreprise || r.username || '—',
-            clients,
-            status,
-            lastActivity: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—'
-          };
-        });
-        this.resellerHealth.sort((a, b) => b.clients - a.clients);
+        const sorted = [...resellers].sort((a, b) => (b.clientCount ?? 0) - (a.clientCount ?? 0));
 
-        this.inactiveResellers = this.resellerHealth.filter(r => r.status === 'problem').length;
-        if (this.inactiveResellers > 0 && !this.emergencyItems.find(e => e.label.includes('Resellers'))) {
-          this.emergencyItems.push({ level: 'warning', label: 'Resellers inactive (0 clients)', count: this.inactiveResellers, route: '/admin/resellers' });
+        this.topResellers = sorted.slice(0, 5).map((r, i) => ({
+          rank:    i + 1,
+          name:    r.nomEntreprise || r.username || '—',
+          clients: r.clientCount ?? 0,
+          devices: (r as any).deviceCount ?? 0,
+        }));
+
+        const inactiveCount = resellers.filter(r => (r.clientCount ?? 0) === 0).length;
+
+        this.alertEntries = [];
+        if (inactiveCount > 0) {
+          this.alertEntries.push({
+            severity: 'warning',
+            label:    `${inactiveCount} reseller(s) with 0 clients`,
+            detail:   'No activity — follow up needed',
+            route:    '/admin/resellers',
+          });
         }
-
-        this.bestReseller = this.resellerHealth[0]?.name ?? '—';
-        this.bestResellerGrowth = (this.resellerHealth[0]?.clients ?? 0) > 0 ? `${this.resellerHealth[0].clients} clients` : '';
-        this.newResellersMonth = Math.min(resellers.length, 12);
-        this.newClientsMonth = this.totalClients > 0 ? Math.min(this.totalClients, 47) : 0;
-
-        this.smartInsights = [];
-        if (this.inactiveResellers > 0) this.smartInsights.push(`${this.inactiveResellers} reseller(s) have 0 clients — need attention`);
-        if (this.devOffline > 0) this.smartInsights.push(`${this.devOffline} device(s) currently offline`);
-        if (this.newClientsMonth === 0) this.smartInsights.push(`No new clients this month`);
+        if (this.devExpiring > 0) {
+          this.alertEntries.push({
+            severity: 'critical',
+            label:    `${this.devExpiring} subscription(s) expiring soon`,
+            detail:   'Client renewals required',
+            route:    '/admin/devices',
+          });
+        }
       },
       error: (err) => console.error('Failed to load resellers', err)
     });
   }
 
-  // ── ApexCharts ────────────────────────────────────────
+  private evtTypeMap(type: string): 'reseller' | 'client' | 'device' | 'admin' {
+    if (type.includes('RESELLER')) return 'reseller';
+    if (type.includes('CLIENT'))   return 'client';
+    if (type.includes('DEVICE'))   return 'device';
+    return 'admin';
+  }
+
+  fmt(n: number) { return new Intl.NumberFormat().format(n); }
+  fmtCurrency(n: number) { return `${new Intl.NumberFormat('fr-FR').format(n)} TND`; }
+  navigateTo(p: string) { this.router.navigate([p]); }
+  evtClass(t: string) {
+    return t === 'reseller' ? 'ev--teal' : t === 'client' ? 'ev--blue' : t === 'device' ? 'ev--amber' : 'ev--purple';
+  }
 
   private renderDonutChart() {
     this.adminService.getDeviceStatus().subscribe({
       next: (data) => {
-        const active = data['active'] ?? 0;
-        const offline = data['offline'] ?? 0;
+        const active   = data['active']   ?? 0;
+        const offline  = data['offline']  ?? 0;
         const expiring = data['expiring'] ?? 0;
-        const total = active + offline + expiring;
+        const total    = active + offline + expiring;
 
         const el = document.getElementById('donut-chart');
         if (!el) return;
@@ -195,45 +208,16 @@ export class Dashboard implements OnInit, OnDestroy {
         this.donutChart = new ApexCharts(el, {
           series: [active, offline, expiring],
           colors: ['#0D9488', '#DC2626', '#F59E0B'],
-          chart: {
-            height: 280,
-            width: '100%',
-            type: 'donut',
-            fontFamily: 'Manrope, sans-serif',
-          },
+          chart: { height: 280, width: '100%', type: 'donut', fontFamily: 'Manrope, sans-serif' },
           stroke: { colors: ['transparent'] },
           plotOptions: {
             pie: {
               donut: {
                 labels: {
                   show: true,
-                  name: {
-                    show: true,
-                    offsetY: 20,
-                    fontFamily: 'Manrope, sans-serif',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: '#94a3b8',
-                  },
-                  total: {
-                    showAlways: true,
-                    show: true,
-                    label: 'Total Devices',
-                    fontFamily: 'Manrope, sans-serif',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: '#94a3b8',
-                    formatter: () => total.toLocaleString(),
-                  },
-                  value: {
-                    show: true,
-                    fontFamily: 'Manrope, sans-serif',
-                    fontSize: '28px',
-                    fontWeight: 800,
-                    color: '#0f172a',
-                    offsetY: -20,
-                    formatter: (val: string) => parseInt(val).toLocaleString(),
-                  },
+                  name:  { show: true, offsetY: 20, fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 600, color: '#94a3b8' },
+                  total: { showAlways: true, show: true, label: 'Total Devices', fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 600, color: '#94a3b8', formatter: () => total.toLocaleString() },
+                  value: { show: true, fontFamily: 'Manrope, sans-serif', fontSize: '28px', fontWeight: 800, color: '#0f172a', offsetY: -20, formatter: (val: string) => parseInt(val).toLocaleString() },
                 },
                 size: '78%',
               },
@@ -242,28 +226,10 @@ export class Dashboard implements OnInit, OnDestroy {
           grid: { padding: { top: -2 } },
           labels: ['Active', 'Offline', 'Expiring'],
           dataLabels: { enabled: false },
-          legend: {
-            position: 'bottom',
-            fontFamily: 'Manrope, sans-serif',
-            fontSize: '12px',
-            fontWeight: 600,
-            labels: { colors: '#475569' },
-            markers: { size: 5, offsetX: -2 },
-            itemMargin: { horizontal: 12, vertical: 4 },
-          },
-          tooltip: {
-            style: { fontFamily: 'Manrope, sans-serif', fontSize: '12px' },
-            y: {
-              formatter: (val: number) => {
-                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0';
-                return `${val.toLocaleString()} (${pct}%)`;
-              }
-            }
-          },
+          legend: { position: 'bottom', fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, markers: { size: 5, offsetX: -2 }, itemMargin: { horizontal: 12, vertical: 4 } },
+          tooltip: { style: { fontFamily: 'Manrope, sans-serif', fontSize: '12px' }, y: { formatter: (val: number) => { const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0'; return `${val.toLocaleString()} (${pct}%)`; } } },
         });
         this.donutChart.render();
-
-        // Render growth chart after donut
         this.renderAreaChart();
       },
       error: (err) => console.error('Failed to load device status', err)
@@ -273,8 +239,8 @@ export class Dashboard implements OnInit, OnDestroy {
   private renderAreaChart() {
     this.adminService.getGrowthData().subscribe({
       next: (data) => {
-        const labels: string[] = data['labels'] ?? [];
-        const clients: number[] = data['clients'] ?? [];
+        const labels:    string[] = data['labels']    ?? [];
+        const clients:   number[] = data['clients']   ?? [];
         const resellers: number[] = data['resellers'] ?? [];
 
         const el = document.getElementById('area-chart');
@@ -282,79 +248,18 @@ export class Dashboard implements OnInit, OnDestroy {
         if (this.areaChart) this.areaChart.destroy();
 
         this.areaChart = new ApexCharts(el, {
-          series: [
-            { name: 'Clients', data: clients },
-            { name: 'Resellers', data: resellers },
-          ],
+          series: [{ name: 'Clients', data: clients }, { name: 'Resellers', data: resellers }],
           colors: ['#3B82F6', '#0D9488'],
-          chart: {
-            height: 260,
-            width: '100%',
-            type: 'area',
-            fontFamily: 'Manrope, sans-serif',
-            toolbar: { show: false },
-            zoom: { enabled: false },
-          },
-          fill: {
-            type: 'gradient',
-            gradient: {
-              shadeIntensity: 1,
-              opacityFrom: 0.25,
-              opacityTo: 0.02,
-              stops: [0, 100],
-            },
-          },
-          stroke: {
-            width: 2.5,
-            curve: 'smooth',
-          },
+          chart: { height: 260, width: '100%', type: 'area', fontFamily: 'Manrope, sans-serif', toolbar: { show: false }, zoom: { enabled: false } },
+          fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.25, opacityTo: 0.02, stops: [0, 100] } },
+          stroke: { width: 2.5, curve: 'smooth' },
           dataLabels: { enabled: false },
-          xaxis: {
-            categories: labels,
-            labels: {
-              style: {
-                fontFamily: 'Manrope, sans-serif',
-                fontSize: '11px',
-                fontWeight: 600,
-                colors: '#94a3b8',
-              },
-            },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-          },
-          yaxis: {
-            labels: {
-              style: {
-                fontFamily: 'Manrope, sans-serif',
-                fontSize: '11px',
-                colors: '#94a3b8',
-              },
-            },
-          },
-          grid: {
-            borderColor: 'rgba(0,0,0,0.05)',
-            strokeDashArray: 4,
-            xaxis: { lines: { show: false } },
-          },
-          legend: {
-            position: 'bottom',
-            fontFamily: 'Manrope, sans-serif',
-            fontSize: '12px',
-            fontWeight: 600,
-            labels: { colors: '#475569' },
-            markers: { size: 5, offsetX: -2 },
-            itemMargin: { horizontal: 12, vertical: 4 },
-          },
-          tooltip: {
-            style: { fontFamily: 'Manrope, sans-serif', fontSize: '12px' },
-            x: { show: true },
-          },
-          markers: {
-            size: 4,
-            strokeWidth: 2.5,
-            strokeColors: '#ffffff',
-            hover: { size: 7 },
-          },
+          xaxis: { categories: labels, labels: { style: { fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: 600, colors: '#94a3b8' } }, axisBorder: { show: false }, axisTicks: { show: false } },
+          yaxis: { labels: { style: { fontFamily: 'Manrope, sans-serif', fontSize: '11px', colors: '#94a3b8' } } },
+          grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4, xaxis: { lines: { show: false } } },
+          legend: { position: 'bottom', fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, markers: { size: 5, offsetX: -2 }, itemMargin: { horizontal: 12, vertical: 4 } },
+          tooltip: { style: { fontFamily: 'Manrope, sans-serif', fontSize: '12px' }, x: { show: true } },
+          markers: { size: 4, strokeWidth: 2.5, strokeColors: '#ffffff', hover: { size: 7 } },
         });
         this.areaChart.render();
       },
@@ -362,14 +267,6 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   }
 
-  // ── Helpers ───────────────────────────────────────────
-  fmt(n: number) { return new Intl.NumberFormat().format(n); }
-  navigateTo(p: string) { this.router.navigate([p]); }
-  statusClass(s: string) { return s === 'healthy' ? 'st--healthy' : s === 'low' ? 'st--low' : 'st--problem'; }
-  statusLabel(s: string) { return s === 'healthy' ? 'Healthy' : s === 'low' ? 'Low Activity' : 'Problem'; }
-  actClass(t: string) { return t === 'reseller' ? 'at--teal' : t === 'client' ? 'at--blue' : 'at--red'; }
-
-  // ── Modal ─────────────────────────────────────────────
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
   get resellerEmailError(): string { return (this.resellerForm.email ?? '') && !this.isValidEmail(this.resellerForm.email) ? 'msg_error_invalid_email' : ''; }
@@ -377,22 +274,17 @@ export class Dashboard implements OnInit, OnDestroy {
 
   openAddReseller() { this.resellerForm = { username: '', nomEntreprise: '', email: '', phone: '' }; this.showAddReseller = true; }
   closeAddReseller() { this.showAddReseller = false; }
+
   saveReseller() {
-  console.log('saveReseller called');
-  console.log('email valid:', this.isValidEmail(this.resellerForm.email));
-  console.log('phone valid:', this.isValidPhone(this.resellerForm.phone));
-  console.log('form:', this.resellerForm);
-
-  if (!this.isValidEmail(this.resellerForm.email) || !this.isValidPhone(this.resellerForm.phone)) return;
-
-  this.resellerService.create({
-    username: this.resellerForm.username,
-    nomEntreprise: this.resellerForm.nomEntreprise,
-    email: this.resellerForm.email,
-    phone: this.resellerForm.phone
-  }).subscribe({
-    next: () => { this.loadAll(); this.showAddReseller = false; },
-    error: (err) => console.error('Failed to create reseller', err)
-  });
-}
+    if (!this.isValidEmail(this.resellerForm.email) || !this.isValidPhone(this.resellerForm.phone)) return;
+    this.resellerService.create({
+      username:      this.resellerForm.username,
+      nomEntreprise: this.resellerForm.nomEntreprise,
+      email:         this.resellerForm.email,
+      phone:         this.resellerForm.phone,
+    }).subscribe({
+      next: () => { this.loadAll(); this.showAddReseller = false; },
+      error: (err) => console.error('Failed to create reseller', err)
+    });
+  }
 }

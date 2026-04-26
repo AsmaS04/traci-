@@ -3,15 +3,20 @@ import { Client, IMessage } from '@stomp/stompjs';
 import { Subject } from 'rxjs';
 
 export interface AppNotification {
-  type: 'NEW_CLIENT' | 'NEW_PAYMENT';
-  message: string;
-  timestamp: string;
+  type: 'NEW_CLIENT'      | 'NEW_PAYMENT'      |
+        'NEW_RESELLER'    | 'UPDATE_RESELLER'  | 'DELETE_RESELLER' |
+        'UPDATE_CLIENT'   | 'DELETE_CLIENT'    |
+        'DEVICE_ASSIGNED';
+  label?:     string;
+  detail?:    string;
+  message?:   string;
+  timestamp:  string;
 }
 
 export interface AvatarEvent {
   resellerId: number;
-  avatarUrl: string;
-  message: string;
+  avatarUrl:  string;
+  message:    string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -20,13 +25,13 @@ export class NotificationWebsocketService {
   private client!: Client;
 
   notification$ = new Subject<AppNotification>();
-  avatar$ = new Subject<AvatarEvent>();
+  avatar$        = new Subject<AvatarEvent>();
 
   connect() {
     this.client = new Client({
-      brokerURL: 'ws://localhost:8080/ws/websocket',
+      brokerURL:      'ws://localhost:8080/ws/websocket',
       reconnectDelay: 5000,
-      debug: () => {}
+      debug:          () => {}
     });
 
     this.client.onConnect = () => {

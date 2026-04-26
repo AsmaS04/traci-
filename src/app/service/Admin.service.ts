@@ -1,5 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+export interface SystemEventDTO {
+  id: number;
+  type: string;
+  label: string;
+  detail: string;
+  createdAt: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -28,5 +37,9 @@ export class AdminService {
 
   getDeviceAnalytics() {
     return this.http.get<Record<string, any>>(`${this.apiUrl}/devices/analytics`);
+  }
+
+  getEvents(): Observable<SystemEventDTO[]> {
+    return this.http.get<SystemEventDTO[]>('http://localhost:8080/api/events');
   }
 }

@@ -4,7 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { TranslationService } from '../../../service/translation.service';
 import { ClientService } from '../../../service/Client.service';
 import { ResellerService } from '../../../service/Reseller.service';
+import { DeviceService } from '../../../service/Device.service';
+import { AbonnementService, AbonnementDTO } from '../../../service/Abonnement.service';
+import { ToastService } from '../../../service/Toast.service';
 import { Client } from '../../../models/client.model';
+import { Device } from '../../../models/device.model';
 import { Reseller } from '../../../models/reseller.model';
 
 @Component({
@@ -16,9 +20,12 @@ import { Reseller } from '../../../models/reseller.model';
 })
 export default class ResellerClientsComponent implements OnInit {
 
-  readonly i18n = inject(TranslationService);
-  private clientService = inject(ClientService);
+  readonly i18n           = inject(TranslationService);
+  private clientService   = inject(ClientService);
   private resellerService = inject(ResellerService);
+  private deviceService   = inject(DeviceService);
+  private aboService      = inject(AbonnementService);
+  private toastService    = inject(ToastService);
 
   clients: Client[] = [];
   reseller: Reseller = {
@@ -42,7 +49,7 @@ export default class ResellerClientsComponent implements OnInit {
   filterStatus: 'all' | 'active' | 'inactive' = 'all';
 
   isActive(c: Client): boolean { return (c.graceDaysLeft ?? 0) > 0; }
-  fullName(c: Client): string { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
+  fullName(c: Client): string  { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
 
   get filtered(): Client[] {
     return this.clients.filter(c => {
@@ -57,24 +64,78 @@ export default class ResellerClientsComponent implements OnInit {
     });
   }
 
-  panelOpen = false;
+  // ── Panel ─────────────────────────────────────────────
+  panelOpen   = false;
   panelClient: Client | null = null;
   panelTab: 'profile' | 'devices' | 'operations' = 'profile';
 
-  openPanel(c: Client) { this.panelClient = c; this.panelTab = 'profile'; this.panelOpen = true; }
-  closePanel() { this.panelOpen = false; }
-  switchPanelTab(t: 'profile' | 'devices' | 'operations') { this.panelTab = t; }
-  get panelInactive(): number { return 0; }
+  // Panel data
+  panelDevices: Device[] = [];
+  panelAbos: AbonnementDTO[] = [];
+  panelDevicesLoading  = false;
+  panelAbosLoading     = false;
 
-  showModal = false;
+  openPanel(c: Client) {
+    this.panelClient = c;
+    this.panelTab    = 'profile';
+    this.panelOpen   = true;
+    this.panelDevices = [];
+    this.panelAbos    = [];
+  }
+
+  closePanel() { this.panelOpen = false; }
+
+  switchPanelTab(t: 'profile' | 'devices' | 'operations') {
+    this.panelTab = t;
+    if (!this.panelClient) return;
+
+    if (t === 'devices' && this.panelDevices.length === 0) {
+      this.panelDevicesLoading = true;
+      this.deviceService.getByClient(this.panelClient.idClient).subscribe({
+        next: (data) => { this.panelDevices = data; this.panelDevicesLoading = false; },
+        error: () => { this.panelDevicesLoading = false; }
+      });
+    }
+
+    if (t === 'operations' && this.panelAbos.length === 0) {
+      this.panelAbosLoading = true;
+      this.aboService.getByClient(this.panelClient.idClient).subscribe({
+        next: (data) => { this.panelAbos = data; this.panelAbosLoading = false; },
+        error: () => { this.panelAbosLoading = false; }
+      });
+    }
+  }
+
+  deviceStatusClass(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'actif')  return 'dev-pill--actif';
+    if (s === 'expiré') return 'dev-pill--expired';
+    if (s === 'libre')  return 'dev-pill--libre';
+    return 'dev-pill--inactive';
+  }
+
+  aboStatusClass(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'actif')  return 'abo-pill--actif';
+    if (s === 'expiré') return 'abo-pill--expired';
+    return 'abo-pill--inactive';
+  }
+
+  formatDate(d: string | null | undefined): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  // ── Add / Edit / Delete ───────────────────────────────
+  showModal  = false;
   showDelete = false;
-  isEdit = false;
+  isEdit     = false;
   selected: Client | null = null;
   form: Partial<Client> = {};
 
   openAdd() {
     this.isEdit = false;
-    this.form = { firstName: '', lastName: '', email: '', phone: '', location: 'Tunis' };
+    this.form = { firstName: '', lastName: '', email: '', phone: '', location: 'Tunis', region: '' };
     this.showModal = true;
   }
 
@@ -87,24 +148,25 @@ export default class ResellerClientsComponent implements OnInit {
   openDelete(c: Client) { this.selected = c; this.showDelete = true; this.closePanel(); }
 
   isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+
+  getProgressWidth(a: any) {
+    return Math.min((a.joursRestants / (a.dureeMois * 30)) * 100, 100);
+  }
   isValidPhone(p: string) { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
   get formEmailError() { return (this.form.email ?? '') && !this.isValidEmail(this.form.email ?? '') ? 'msg_error_invalid_email' : ''; }
   get formPhoneError() { return (this.form.phone ?? '') && !this.isValidPhone(this.form.phone ?? '') ? 'msg_error_invalid_phone' : ''; }
 
   saveClient() {
-  
-  console.log('called');
-  console.log('email:', this.form.email, 'valid:', this.isValidEmail(this.form.email ?? ''));
-  console.log('phone:', this.form.phone, 'valid:', this.isValidPhone(this.form.phone ?? ''));
-  if (!this.isValidEmail(this.form.email ?? '') || !this.isValidPhone(this.form.phone ?? '')) return;
+    if (!this.isValidEmail(this.form.email ?? '') || !this.isValidPhone(this.form.phone ?? '')) return;
 
     if (this.isEdit && this.selected) {
       this.clientService.updateMyClient(this.selected.idClient, this.form).subscribe({
         next: (updated) => {
           this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
           this.showModal = false;
+          this.toastService.success(`${this.fullName(updated)} updated successfully`);
         },
-        error: (err: any) => console.error('Failed to update client', err)
+        error: () => this.toastService.error('Failed to update client')
       });
     } else {
       this.clientService.createMyClient({
@@ -114,43 +176,33 @@ export default class ResellerClientsComponent implements OnInit {
         next: (created) => {
           this.clients.push(created);
           this.showModal = false;
+          this.toastService.success(`${this.fullName(created)} added successfully`);
         },
-        error: (err: any) => console.error('Failed to create client', err)
+        error: () => this.toastService.error('Failed to create client')
       });
     }
   }
 
   confirmDelete() {
     if (!this.selected) return;
+    const name = this.fullName(this.selected);
     this.clientService.delete(this.selected.idClient).subscribe({
       next: () => {
         this.clients = this.clients.filter(c => c.idClient !== this.selected!.idClient);
         this.showDelete = false;
-        this.selected = null;
+        this.selected   = null;
+        this.toastService.success(`${name} deleted`);
       },
-      error: (err: any) => console.error('Failed to delete client', err)
+      error: () => this.toastService.error('Failed to delete client')
     });
   }
 
-  closeModal() { this.showModal = false; }
+  closeModal()  { this.showModal  = false; }
   closeDelete() { this.showDelete = false; }
+
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
-  get totalCount() { return this.clients.length; }
-  get activeCount() { return this.clients.filter(c => this.isActive(c)).length; }
+  get totalCount()    { return this.clients.length; }
+  get activeCount()   { return this.clients.filter(c => this.isActive(c)).length; }
   get inactiveCount() { return this.clients.filter(c => !this.isActive(c)).length; }
   initials(c: Client) { return ((c.firstName ?? '?')[0] + (c.lastName ?? '?')[0]).toUpperCase(); }
-
-  devicesForClient(_id: number): any[] { return []; }
-  transactionsForClient(_id: number): any[] { return []; }
-  totalPaidByClient(_id: number): number { return 0; }
-  deviceStatusClass(_s: string): string { return ''; }
-  daysUntilExpiry(_date: string): number { return 0; }
-  expiryUrgency(_date: string): string { return ''; }
-
-  showDeviceModal = false;
-  deviceForm: any = {};
-  readonly simProviders = ['none', 'Ooredoo', 'Tunisie Telecom', 'Orange'];
-  openAddDevice() { this.showDeviceModal = true; }
-  saveDevice() { this.showDeviceModal = false; }
-  closeDeviceModal() { this.showDeviceModal = false; }
 }

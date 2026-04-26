@@ -4,13 +4,14 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { NotificationWebsocketService } from '../../../service/notification-websocket.service';
+import { ToastComponent } from '../../../shared/toast/toast.component';
 import { Reseller } from '../../../models/reseller.model';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-reseller-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
   templateUrl: './reseller-layout.html',
   styleUrl: './reseller-layout.css',
 })

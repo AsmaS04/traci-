@@ -1,3 +1,50 @@
+@if (loading) {
+  <div class="page">
+    <div class="sk-page-header">
+      <div style="display:flex;flex-direction:column;gap:.4rem">
+        <div class="sk sk-text-sm" style="width:90px"></div>
+        <div class="sk sk-text-lg" style="width:160px"></div>
+      </div>
+      <div class="sk sk-btn" style="width:140px"></div>
+    </div>
+    <div class="sk-kpi-strip">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <div class="sk-kpi">
+          <div class="sk sk-text-xl" style="width:48px"></div>
+          <div class="sk sk-text-sm" style="width:64px"></div>
+        </div>
+      }
+    </div>
+    <div class="sk-toolbar">
+      <div class="sk" style="width:220px;height:36px;border-radius:10px;"></div>
+      <div class="sk" style="width:140px;height:36px;border-radius:10px;"></div>
+      <div class="sk" style="width:140px;height:36px;border-radius:10px;"></div>
+      <div class="sk sk-text-sm" style="width:80px"></div>
+    </div>
+    <div class="sk-table-card">
+      <div class="sk-table-header">
+        <div class="sk sk-text" style="width:40px"></div>
+        <div class="sk sk-text" style="width:80px"></div>
+        <div class="sk sk-text" style="width:60px"></div>
+        <div class="sk sk-text" style="width:60px"></div>
+      </div>
+      @for (_ of [1,2,3,4,5,6]; track $index) {
+        <div class="sk-table-row">
+          <div class="sk sk-avatar"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:.3rem">
+            <div class="sk sk-text" style="width:160px"></div>
+            <div class="sk sk-text-sm" style="width:100px"></div>
+          </div>
+          <div class="sk sk-text" style="width:80px"></div>
+          <div class="sk sk-text" style="width:60px"></div>
+          <div class="sk sk-text" style="width:70px"></div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (!loading) {
 <div class="page">
 
   <div class="page-header">
@@ -5,44 +52,76 @@
       <p class="page-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
       <h1 class="page-title">{{ i18n.t('nav_devices') }}</h1>
     </div>
+    <button class="btn-primary" (click)="openAssignModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <line x1="12" y1="8" x2="12" y2="12"/><line x1="10" y1="10" x2="14" y2="10"/>
+      </svg>
+      {{ i18n.t('res_assign_device') }}
+      @if (libreCount > 0) { <span class="btn-badge">{{ libreCount }} libre</span> }
+    </button>
   </div>
 
+  <!-- ── KPI Strip ───────────────────────────────────── -->
   <div class="kpi-strip">
-    <div class="kpi-card"><p class="kpi-val">{{ totalCount }}</p><p class="kpi-label">{{ i18n.t('filter_all') }}</p></div>
+    <div class="kpi-card">
+      <p class="kpi-val">{{ totalCount }}</p>
+      <p class="kpi-label">{{ i18n.t('filter_all') }}</p>
+    </div>
     <div class="kpi-div"></div>
-    <div class="kpi-card"><p class="kpi-val">{{ activeCount }}</p><p class="kpi-label">{{ i18n.t('filter_active') }}</p></div>
+    <div class="kpi-card kpi-card--active">
+      <p class="kpi-val">{{ activeCount }}</p>
+      <p class="kpi-label">{{ i18n.t('filter_active') }}</p>
+    </div>
     <div class="kpi-div"></div>
-    <div class="kpi-card"><p class="kpi-val">{{ expiredCount }}</p><p class="kpi-label">{{ i18n.t('dev_expired') }}</p></div>
+    <div class="kpi-card kpi-card--expired">
+      <p class="kpi-val">{{ expiredCount }}</p>
+      <p class="kpi-label">{{ i18n.t('dev_expired') }}</p>
+    </div>
     <div class="kpi-div"></div>
-    <div class="kpi-card"><p class="kpi-val">{{ inactiveCount }}</p><p class="kpi-label">{{ i18n.t('filter_inactive') }}</p></div>
+    <div class="kpi-card kpi-card--inactive">
+      <p class="kpi-val">{{ inactiveCount }}</p>
+      <p class="kpi-label">{{ i18n.t('filter_inactive') }}</p>
+    </div>
+    <div class="kpi-div"></div>
+    <div class="kpi-card kpi-card--libre">
+      <p class="kpi-val">{{ libreCount }}</p>
+      <p class="kpi-label">Libre</p>
+    </div>
   </div>
 
+  <!-- ── Filters ─────────────────────────────────────── -->
   <div class="filters-panel">
     <div class="filters-row">
       <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
         <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('dev_search_placeholder')"/>
       </div>
       <select class="filter-select" [(ngModel)]="filterStatus">
         <option value="all">{{ i18n.t('filter_all') }}</option>
-        <option value="active">{{ i18n.t('filter_active') }}</option>
-        <option value="expired">{{ i18n.t('dev_expired') }}</option>
-        <option value="inactive">{{ i18n.t('filter_inactive') }}</option>
+        <option value="actif">{{ i18n.t('filter_active') }}</option>
+        <option value="expiré">{{ i18n.t('dev_expired') }}</option>
+        <option value="inactif">{{ i18n.t('filter_inactive') }}</option>
+        <option value="libre">Libre</option>
       </select>
       <select class="filter-select" [(ngModel)]="filterModel">
         @for (m of modelOptions; track m) {
-        <option [value]="m">{{ m === 'all' ? i18n.t('dev_all_models') : m }}</option>
+          <option [value]="m">{{ m === 'all' ? i18n.t('dev_all_models') : m }}</option>
         }
       </select>
     </div>
     <span class="result-count">{{ filtered.length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
   </div>
 
+  <!-- ── Table ───────────────────────────────────────── -->
   <div class="table-card">
     <div class="table-scroll">
       <table class="dev-table">
         <thead>
           <tr>
+            <th style="width:4px;padding:0;"></th>
             <th class="col-id">#</th>
             <th>{{ i18n.t('res_serial_number') }}</th>
             <th>IMEI</th>
@@ -56,11 +135,21 @@
         </thead>
         <tbody>
           @for (d of filtered; track d.idDevice) {
-          <tr class="table-row" (click)="openPanel(d)">
+          <tr class="table-row"
+            [class.row--actif]="(d.status||('' ))?.toLowerCase()==='actif'"
+            [class.row--libre]="(d.status||('')  )?.toLowerCase()==='libre'"
+            [class.row--expiré]="(d.status||('') )?.toLowerCase()==='expiré'"
+            [class.row--inactif]="(d.status||(''))?.toLowerCase()==='inactif'"
+            (click)="openPanel(d)">
+            <td class="row-accent"></td>
             <td class="col-id"><span class="id-badge">#{{ d.idDevice }}</span></td>
             <td>
               <div class="serial-cell">
-                <div class="device-icon" [class.device-icon--expired]="d.status.toLowerCase()==='expired'" [class.device-icon--inactive]="d.status.toLowerCase()==='inactive'">
+                <div class="device-icon"
+                  [class.device-icon--actif]="d.status?.toLowerCase()==='actif'"
+                  [class.device-icon--libre]="d.status?.toLowerCase()==='libre'"
+                  [class.device-icon--expiré]="d.status?.toLowerCase()==='expiré'"
+                  [class.device-icon--inactif]="d.status?.toLowerCase()==='inactif'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
                 </div>
                 <span class="serial-text">{{ d.numDevice || '—' }}</span>
@@ -71,17 +160,21 @@
             <td class="name-cell">{{ d.clientName || '—' }}</td>
             <td>
               @if (d.simProvider) {
-              <span class="sim-cell">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/></svg>
-                {{ d.simProvider }}
-              </span>
+                <span class="sim-cell">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/></svg>
+                  {{ d.simProvider }}
+                </span>
               } @else {
-              <span class="no-sim-cell">—</span>
+                <span class="no-sim-cell">—</span>
               }
             </td>
-            <td>{{ d.dateActivation || '—' }}</td>
+            <td class="serial-text">{{ d.dateActivation || '—' }}</td>
             <td>
-              <span class="status-pill" [class]="statusClass(d.status)">
+              <span class="status-pill"
+                [class.status--active]="d.status?.toLowerCase()==='actif'"
+                [class.status--libre]="d.status?.toLowerCase()==='libre'"
+                [class.status--expired]="d.status?.toLowerCase()==='expiré'"
+                [class.status--inactive]="d.status?.toLowerCase()==='inactif'">
                 <span class="status-dot"></span>{{ d.status || '—' }}
               </span>
             </td>
@@ -93,14 +186,16 @@
           </tr>
           }
           @if (filtered.length === 0) {
-          <tr><td colspan="9" class="empty-row"><p>{{ i18n.t('res_no_devices') }}</p></td></tr>
+            <tr><td colspan="10" class="empty-row">{{ i18n.t('res_no_devices') }}</td></tr>
           }
         </tbody>
       </table>
     </div>
   </div>
 </div>
+}
 
+<!-- ══ DETAIL PANEL ══════════════════════════════════════ -->
 @if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
 
 @if (panelDevice) {
@@ -111,26 +206,103 @@
       {{ i18n.t('btn_back') }}
     </button>
   </div>
-  <div class="panel-eyebrow">{{ i18n.t('dev_detail_eyebrow') }}</div>
+  <p class="panel-eyebrow">{{ i18n.t('dev_detail_eyebrow') }}</p>
   <h2 class="panel-title">{{ panelDevice.model || '—' }}</h2>
-  <div class="panel-body">
-    <div class="dev-identity-card">
-      <div class="dev-identity-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-      </div>
-      <div class="dev-identity-info">
-        <p class="dev-identity-model">{{ panelDevice.model || '—' }}</p>
-        <p class="dev-identity-serial">{{ panelDevice.numDevice || '—' }}</p>
-        <span class="status-pill" [class]="statusClass(panelDevice.status)">
-          <span class="status-dot"></span>{{ panelDevice.status || '—' }}
-        </span>
-      </div>
+
+  <div class="dev-identity-card">
+    <div class="dev-identity-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
     </div>
-    <div class="detail-grid">
-      <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice.imei || '—' }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelDevice.clientName || '—' }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ panelDevice.dateActivation || '—' }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val">{{ panelDevice.simProvider || '—' }}</p></div>
+    <div class="dev-identity-info">
+      <p class="dev-identity-model">{{ panelDevice.model || '—' }}</p>
+      <p class="dev-identity-serial">{{ panelDevice.numDevice || '—' }}</p>
+      <span class="status-pill"
+        [class.status--active]="panelDevice.status?.toLowerCase()==='actif'"
+        [class.status--libre]="panelDevice.status?.toLowerCase()==='libre'"
+        [class.status--expired]="panelDevice.status?.toLowerCase()==='expiré'"
+        [class.status--inactive]="panelDevice.status?.toLowerCase()==='inactif'">
+        <span class="status-dot"></span>{{ panelDevice.status || '—' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice.imei || '—' }}</p></div>
+    <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelDevice.clientName || '—' }}</p></div>
+    <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ panelDevice.dateActivation || '—' }}</p></div>
+    <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val">{{ panelDevice.simProvider || '—' }}</p></div>
+  </div>
+</div>
+}
+
+<!-- ══ ASSIGN MODAL ════════════════════════════════════════ -->
+@if (showAssignModal) {
+<div class="modal-backdrop" (click)="closeAssignModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('res_assign_device') }}</h2>
+      <button class="modal-close" (click)="closeAssignModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>CLIENT</label>
+        @if (clients.length === 0) {
+          <p class="form-hint form-hint--warn">No clients yet — add a client first.</p>
+        } @else {
+          <select class="form-select" [(ngModel)]="assignForm.clientId">
+            <option [ngValue]="null" disabled>Select a client…</option>
+            @for (c of clients; track c.idClient) {
+              <option [ngValue]="c.idClient">{{ clientFullName(c) }}</option>
+            }
+          </select>
+        }
+      </div>
+
+      <div class="form-group">
+        <label>LIBRE DEVICE</label>
+        @if (libreDevices.length === 0) {
+          <p class="form-hint form-hint--warn">No libre devices available.</p>
+        } @else {
+          <select class="form-select" [(ngModel)]="assignForm.deviceId">
+            <option [ngValue]="null" disabled>Select a device…</option>
+            @for (d of libreDevices; track d.idDevice) {
+              <option [ngValue]="d.idDevice">{{ d.model }} — {{ d.numDevice }} ({{ d.imei }})</option>
+            }
+          </select>
+        }
+        @if (selectedLibreDevice) {
+          <div class="device-preview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+            <span>{{ selectedLibreDevice.model }} · {{ selectedLibreDevice.numDevice }}</span>
+            <span class="status-pill status--libre"><span class="status-dot"></span>Libre</span>
+          </div>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>DURATION (MONTHS)</label>
+          <input type="number" class="form-input" min="1" max="36" [(ngModel)]="assignForm.dureeMois" placeholder="e.g. 12"/>
+        </div>
+        <div class="form-group">
+          <label>PRICE / DEVICE / MONTH (TND)</label>
+          <input type="number" class="form-input" min="0" step="0.5" [(ngModel)]="assignForm.prixUnitaire" placeholder="e.g. 15"/>
+        </div>
+      </div>
+
+      @if (assignForm.dureeMois >= 1 && assignForm.prixUnitaire > 0) {
+        <div class="total-preview">
+          <span>Total subscription</span>
+          <strong>{{ fmt(assignForm.dureeMois * assignForm.prixUnitaire) }} TND</strong>
+        </div>
+      }
+      @if (assignError) { <p class="form-error">{{ assignError }}</p> }
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeAssignModal()" [disabled]="assignSaving">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save"   (click)="saveAssign()" [disabled]="!canSaveAssign || assignSaving">
+        @if (assignSaving) { Saving… } @else { Assign Device }
+      </button>
     </div>
   </div>
 </div>

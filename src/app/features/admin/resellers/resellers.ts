@@ -38,25 +38,20 @@ export class Resellers implements OnInit {
 
   resellers: Reseller[] = [];
 
-  ngOnInit() {
-    this.loadResellers();
-  }
+  ngOnInit() { this.loadResellers(); }
 
   private loadResellers() {
     this.loading = true;
     this.resellerService.getAll().subscribe({
-      next: (data) => {
-        this.resellers = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load resellers', err);
-        this.loading = false;
-      }
+      next: (data) => { this.resellers = data; this.loading = false; },
+      error: (err) => { console.error('Failed to load resellers', err); this.loading = false; }
     });
   }
 
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
+
+  get activeCount():   number { return this.resellers.filter(r => (r.clientCount ?? 0) > 0).length; }
+  get inactiveCount(): number { return this.resellers.filter(r => (r.clientCount ?? 0) === 0).length; }
 
   get filtered(): Reseller[] {
     const q = this.searchQuery.toLowerCase().trim();
@@ -96,56 +91,31 @@ export class Resellers implements OnInit {
   private loadResellerClients(resellerId: number) {
     this.resellerService.getClientsByReseller(resellerId).subscribe({
       next: (data) => { this.selectedClients = data; },
-      error: (err) => {
-        console.error('Failed to load reseller clients', err);
-        this.selectedClients = [];
-      }
+      error: (err) => { console.error('Failed to load reseller clients', err); this.selectedClients = []; }
     });
   }
 
-  backToTable(): void {
-    this.view = 'table';
-    this.selected = null;
-    this.selectedClients = [];
-  }
+  backToTable(): void { this.view = 'table'; this.selected = null; this.selectedClients = []; }
 
-  openAdd(): void {
-    this.formData = {};
-    this.modalMode = 'add';
-    this.showModal = true;
-  }
+  openAdd(): void { this.formData = {}; this.modalMode = 'add'; this.showModal = true; }
 
   openEdit(r: Reseller, e: Event): void {
     e.stopPropagation();
-    this.formData = { ...r };
+    this.formData  = { ...r };
     this.modalMode = 'edit';
     this.showModal = true;
   }
 
-  isValidEmail(e: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
-  }
-  isValidPhone(p: string): boolean {
-    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
-  }
-  get formEmailError(): string {
-    return (this.formData.email ?? '') && !this.isValidEmail(this.formData.email ?? '')
-      ? 'msg_error_invalid_email' : '';
-  }
-  get formPhoneError(): string {
-    return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '')
-      ? 'msg_error_invalid_phone' : '';
-  }
+  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
+  get formEmailError(): string { return (this.formData.email ?? '') && !this.isValidEmail(this.formData.email ?? '') ? 'msg_error_invalid_email' : ''; }
+  get formPhoneError(): string { return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '') ? 'msg_error_invalid_phone' : ''; }
 
   saveForm(): void {
     if (!this.isValidEmail(this.formData.email ?? '') || !this.isValidPhone(this.formData.phone ?? '')) return;
-
     if (this.modalMode === 'add') {
       this.resellerService.create(this.formData).subscribe({
-        next: () => {
-          this.loadResellers();
-          this.closeModal();
-        },
+        next: () => { this.loadResellers(); this.closeModal(); },
         error: (err) => console.error('Failed to create reseller', err)
       });
     } else {
@@ -163,11 +133,7 @@ export class Resellers implements OnInit {
 
   closeModal(): void { this.showModal = false; this.formData = {}; }
 
-  askDelete(r: Reseller, e: Event): void {
-    e.stopPropagation();
-    this.toDelete = r;
-    this.showDeleteModal = true;
-  }
+  askDelete(r: Reseller, e: Event): void { e.stopPropagation(); this.toDelete = r; this.showDeleteModal = true; }
 
   confirmDelete(): void {
     if (!this.toDelete) return;

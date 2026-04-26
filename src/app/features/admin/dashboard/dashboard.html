@@ -1,3 +1,56 @@
+@if (loading) {
+  <div class="page">
+    <div class="sk-page-header" style="margin-bottom:1.4rem">
+      <div style="display:flex;flex-direction:column;gap:.4rem">
+        <div class="sk sk-text-sm" style="width:90px"></div>
+        <div class="sk sk-text-lg" style="width:180px"></div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <div class="sk sk-btn" style="width:130px"></div>
+        <div class="sk sk-btn" style="width:110px"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.4rem">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="sk-card" style="display:flex;align-items:center;gap:.75rem">
+          <div class="sk sk-avatar sk-circle"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:.4rem">
+            <div class="sk sk-text-xl" style="width:48px"></div>
+            <div class="sk sk-text-sm" style="width:80px"></div>
+          </div>
+        </div>
+      }
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.4rem">
+      @for (_ of [1,2]; track $index) {
+        <div class="sk-card" style="min-height:200px;display:flex;flex-direction:column;gap:.75rem">
+          <div class="sk sk-text-lg" style="width:140px"></div>
+          <div class="sk sk-text" style="width:100%"></div>
+          <div class="sk sk-text" style="width:90%"></div>
+          <div class="sk sk-text" style="width:80%"></div>
+          <div class="sk sk-text" style="width:85%"></div>
+        </div>
+      }
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:.75rem;margin-bottom:1.4rem">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="sk-card" style="min-height:180px"></div>
+      }
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+      @for (_ of [1,2]; track $index) {
+        <div class="sk-card" style="min-height:160px;display:flex;flex-direction:column;gap:.75rem">
+          <div class="sk sk-text-lg" style="width:120px"></div>
+          <div class="sk sk-text" style="width:100%"></div>
+          <div class="sk sk-text" style="width:90%"></div>
+          <div class="sk sk-text" style="width:80%"></div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (!loading) {
 <div class="page">
 
   <!-- ══ HEADER ══════════════════════════════════════════ -->
@@ -11,20 +64,17 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
         Add Reseller
       </button>
-      <button class="act-btn" (click)="navigateTo('/admin/clients')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
-        Add Client
-      </button>
       <button class="act-btn act-btn--amber" (click)="navigateTo('/admin/devices')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         View Alerts
-        @if (emergencyItems.length > 0) { <span class="act-badge">{{ emergencyItems.length }}</span> }
+        @if (alertEntries.length > 0) { <span class="act-badge">{{ alertEntries.length }}</span> }
       </button>
     </div>
   </div>
 
   <!-- ══ ROW 1 — KPIs ════════════════════════════════════ -->
   <div class="kpi-row">
+
     <div class="kpi" (click)="navigateTo('/admin/resellers')">
       <div class="kpi-icon kpi-icon--teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -48,16 +98,15 @@
       @if (newClientsMonth === 0) { <span class="kpi-chip kpi-chip--warn">0 growth ⚠</span> }
     </div>
 
-    <div class="kpi" [class.kpi--warn]="inactiveResellers > 0" (click)="navigateTo('/admin/resellers')">
-      <div class="kpi-icon" [class.kpi-icon--orange]="inactiveResellers > 0" [class.kpi-icon--green]="inactiveResellers === 0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div class="kpi" (click)="navigateTo('/admin/devices')">
+      <div class="kpi-icon kpi-icon--teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
       </div>
       <div class="kpi-body">
-        <p class="kpi-num" [class.kpi-num--orange]="inactiveResellers > 0">{{ inactiveResellers }}</p>
-        <p class="kpi-label">Inactive Resellers</p>
+        <p class="kpi-num">{{ fmt(devActive) }}</p>
+        <p class="kpi-label">Active Devices</p>
       </div>
-      @if (inactiveResellers === 0) { <span class="kpi-chip kpi-chip--up">All active</span> }
-      @if (inactiveResellers > 0) { <span class="kpi-chip kpi-chip--warn">Need attention</span> }
+      <span class="kpi-chip kpi-chip--up">Running subs</span>
     </div>
 
     <div class="kpi" [class.kpi--alert]="criticalIssues > 0">
@@ -69,86 +118,83 @@
         <p class="kpi-label">Critical Issues</p>
       </div>
       @if (criticalIssues === 0) { <span class="kpi-chip kpi-chip--up">All clear</span> }
-      @if (criticalIssues > 0) { <span class="kpi-chip kpi-chip--down">Needs action</span> }
+      @if (criticalIssues > 0)   { <span class="kpi-chip kpi-chip--down">Needs action</span> }
     </div>
+
   </div>
 
-  <!-- ══ ROW 2 — EMERGENCY + RESELLER HEALTH ════════════ -->
+  <!-- ══ ROW 2 — SYSTEM LOG + REVENUE ════════════════════ -->
   <div class="core-row">
-    <div class="card emergency-card">
+
+    <div class="card syslog-card">
       <div class="card-head">
         <p class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Action Required
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          System Events
         </p>
-        @if (emergencyItems.length > 0) { <span class="card-subtitle">Needs immediate attention</span> }
+        <span class="card-subtitle">Today</span>
       </div>
-
-      @if (emergencyItems.length === 0) {
-        <div class="empty-ok">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <p>No critical issues right now</p>
-        </div>
-      }
-
-      @for (item of emergencyItems; track $index) {
-        <div class="emg-item" [class.emg--critical]="item.level==='critical'" [class.emg--warning]="item.level==='warning'" (click)="navigateTo(item.route)">
-          <div class="emg-dot" [class.emg-dot--red]="item.level==='critical'" [class.emg-dot--orange]="item.level==='warning'"></div>
-          <span class="emg-label">{{ item.label }}</span>
-          <span class="emg-count" [class.emg-count--red]="item.level==='critical'" [class.emg-count--orange]="item.level==='warning'">{{ item.count }}</span>
-          <svg class="emg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      }
-
-      @if (smartInsights.length > 0) {
-        <div class="insights-section">
-          <p class="insights-title">Smart Insights</p>
-          @for (insight of smartInsights; track $index) {
-            <div class="insight-item">
-              <span class="insight-dot"></span>
-              <p class="insight-text">{{ insight }}</p>
+      <div class="syslog-list">
+        @for (evt of systemEvents; track $index) {
+          <div class="syslog-item">
+            <span class="syslog-time">{{ evt.time }}</span>
+            <div class="syslog-dot" [class]="evtClass(evt.type)"></div>
+            <div class="syslog-body">
+              <p class="syslog-label">{{ evt.label }}</p>
+              <p class="syslog-detail">{{ evt.detail }}</p>
             </div>
-          }
-        </div>
-      }
+          </div>
+        }
+        @if (systemEvents.length === 0) {
+          <div class="empty-state"><p class="empty-msg">No events today</p></div>
+        }
+      </div>
     </div>
 
-    <div class="card health-card">
+    <div class="card revenue-card">
       <div class="card-head">
-        <p class="card-title">Reseller Health</p>
-        <button class="view-all" (click)="navigateTo('/admin/resellers')">View all →</button>
+        <p class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue
+        </p>
+        <span class="card-subtitle">From subscriptions</span>
       </div>
-      <div class="ht-head">
-        <span>#</span><span>Reseller</span><span>Clients</span><span>Last Active</span><span>Status</span>
-      </div>
-      @for (r of resellerHealth.slice(0, 8); track r.name; let i = $index) {
-        <div class="ht-row" (click)="navigateTo('/admin/resellers')">
-          <span class="ht-rank" [class.rank--1]="i===0" [class.rank--2]="i===1" [class.rank--3]="i===2">{{ i + 1 }}</span>
-          <span class="ht-name">{{ r.name }}</span>
-          <span class="ht-num">{{ r.clients }}</span>
-          <span class="ht-date">{{ r.lastActivity }}</span>
-          <span class="ht-badge" [class]="statusClass(r.status)">{{ statusLabel(r.status) }}</span>
+      <div class="rev-body">
+        <div class="rev-main">
+          <p class="rev-label">This Month</p>
+          <p class="rev-num">{{ fmtCurrency(totalRevenueMonth) }}</p>
+          <span class="rev-growth">{{ revenueGrowthPct }} vs last month</span>
         </div>
-      }
-      @if (resellerHealth.length === 0) { <div class="empty-state"><p class="empty-msg">No resellers yet</p></div> }
+        <div class="rev-divider"></div>
+        <div class="rev-secondary">
+          <div class="rev-stat">
+            <p class="rev-stat-num">{{ fmtCurrency(totalRevenueAllTime) }}</p>
+            <p class="rev-stat-label">All Time</p>
+          </div>
+          <div class="rev-stat">
+            <p class="rev-stat-num">{{ fmt(devActive) }}</p>
+            <p class="rev-stat-label">Active Subs</p>
+          </div>
+          <div class="rev-stat">
+            <p class="rev-stat-num" [class.rev-warn]="devExpiring > 0">{{ devExpiring }}</p>
+            <p class="rev-stat-label">Expiring Soon</p>
+          </div>
+        </div>
+      </div>
     </div>
+
   </div>
 
-  <!-- ══ ROW 3 — CHARTS + GROWTH ════════════════════════ -->
+  <!-- ══ ROW 3 — CHARTS ══════════════════════════════════ -->
   <div class="charts-row">
-    <!-- Donut Chart -->
     <div class="card chart-card">
       <p class="card-title">Device Status</p>
       <div id="donut-chart"></div>
     </div>
-
-    <!-- Area Chart -->
     <div class="card chart-card chart-card--wide">
       <p class="card-title">Growth — Last 6 Months</p>
       <div id="area-chart"></div>
     </div>
-
-    <!-- Growth Numbers -->
     <div class="card growth-card">
       <p class="card-title">This Month</p>
       <div class="growth-stack">
@@ -165,29 +211,65 @@
         </div>
         <div class="growth-item growth-item--hl" (click)="navigateTo('/admin/resellers')">
           <p class="growth-sub">Best Performing</p>
-          <p class="growth-best">{{ bestReseller }}</p>
-          @if (bestResellerGrowth) { <p class="growth-detail">{{ bestResellerGrowth }}</p> }
+          <p class="growth-best">{{ topResellers[0]?.name ?? '—' }}</p>
+          @if (topResellers[0]?.clients) { <p class="growth-detail">{{ topResellers[0].clients }} clients</p> }
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ══ ROW 4 — ACTIVITY ═══════════════════════════════ -->
-  <div class="card activity-card">
-    <p class="card-title">Recent Activity</p>
-    @for (a of recentActivity; track $index) {
-      <div class="act-row">
-        <div class="act-dot" [class]="actClass(a.type)"></div>
-        <div class="act-body">
-          <p class="act-label">{{ a.label }}</p>
-          <p class="act-detail">{{ a.detail }}</p>
-        </div>
-        <span class="act-time">{{ a.time }}</span>
+  <!-- ══ ROW 4 — ALERTS + TOP RESELLERS ════════════════= -->
+  <div class="bottom-row">
+
+    <div class="card alerts-card">
+      <div class="card-head">
+        <p class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Alerts
+        </p>
+        @if (alertEntries.length > 0) { <span class="card-subtitle">{{ alertEntries.length }} active</span> }
       </div>
-    }
+      @if (alertEntries.length === 0) {
+        <div class="empty-ok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <p>No active alerts</p>
+        </div>
+      }
+      @for (alert of alertEntries; track $index) {
+        <div class="alrt-item" [class.alrt--critical]="alert.severity==='critical'" [class.alrt--warning]="alert.severity==='warning'" (click)="navigateTo(alert.route)">
+          <div class="alrt-dot" [class.alrt-dot--red]="alert.severity==='critical'" [class.alrt-dot--orange]="alert.severity==='warning'"></div>
+          <div class="alrt-body">
+            <p class="alrt-label">{{ alert.label }}</p>
+            <p class="alrt-detail">{{ alert.detail }}</p>
+          </div>
+          <svg class="emg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      }
+    </div>
+
+    <div class="card top-res-card">
+      <div class="card-head">
+        <p class="card-title">Top Resellers</p>
+        <button class="view-all" (click)="navigateTo('/admin/resellers')">View all →</button>
+      </div>
+      <div class="tr-head">
+        <span>#</span><span>Reseller</span><span>Clients</span><span>Devices</span>
+      </div>
+      @for (r of topResellers; track r.rank) {
+        <div class="tr-row" (click)="navigateTo('/admin/resellers')">
+          <span class="ht-rank" [class.rank--1]="r.rank===1" [class.rank--2]="r.rank===2" [class.rank--3]="r.rank===3">{{ r.rank }}</span>
+          <span class="ht-name">{{ r.name }}</span>
+          <span class="tr-num">{{ r.clients }}</span>
+          <span class="tr-num">{{ r.devices }}</span>
+        </div>
+      }
+      @if (topResellers.length === 0) { <div class="empty-state"><p class="empty-msg">No resellers yet</p></div> }
+    </div>
+
   </div>
 
 </div>
+}
 
 <!-- ══ MODAL ═════════════════════════════════════════════ -->
 @if (showAddReseller) {

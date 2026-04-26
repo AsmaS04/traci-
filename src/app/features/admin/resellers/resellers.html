@@ -1,3 +1,47 @@
+@if (loading) {
+  <div class="page">
+    <div class="sk-page-header">
+      <div style="display:flex;flex-direction:column;gap:.4rem">
+        <div class="sk sk-text-sm" style="width:90px"></div>
+        <div class="sk sk-text-lg" style="width:160px"></div>
+      </div>
+      <div class="sk sk-btn" style="width:120px"></div>
+    </div>
+    <div class="sk-kpi-strip">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="sk-kpi">
+          <div class="sk sk-text-xl" style="width:48px"></div>
+          <div class="sk sk-text-sm" style="width:64px"></div>
+        </div>
+      }
+    </div>
+    <div class="sk-toolbar">
+      <div class="sk" style="width:220px;height:36px;border-radius:10px;"></div>
+      <div class="sk sk-text-sm" style="width:80px"></div>
+    </div>
+    <div class="sk-table-card">
+      <div class="sk-table-header">
+        <div class="sk sk-text" style="width:40px"></div>
+        <div class="sk sk-text" style="width:80px"></div>
+        <div class="sk sk-text" style="width:60px"></div>
+      </div>
+      @for (_ of [1,2,3,4,5,6]; track $index) {
+        <div class="sk-table-row">
+          <div class="sk sk-avatar"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:.3rem">
+            <div class="sk sk-text" style="width:160px"></div>
+            <div class="sk sk-text-sm" style="width:110px"></div>
+          </div>
+          <div class="sk sk-text" style="width:80px"></div>
+          <div class="sk sk-text" style="width:60px"></div>
+          <div class="sk sk-text" style="width:60px"></div>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (!loading) {
 <div class="page">
 
   <!-- ═══════════════════ TABLE VIEW ═══════════════════ -->
@@ -14,6 +58,22 @@
       </button>
     </header>
 
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <div class="kpi-card">
+        <p class="kpi-val">{{ resellers.length }}</p>
+        <p class="kpi-label">Total</p>
+      </div>
+      <div class="kpi-card kpi-card--active">
+        <p class="kpi-val">{{ activeCount }}</p>
+        <p class="kpi-label">With clients</p>
+      </div>
+      <div class="kpi-card kpi-card--inactive">
+        <p class="kpi-val">{{ inactiveCount }}</p>
+        <p class="kpi-label">No clients</p>
+      </div>
+    </div>
+
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -27,7 +87,8 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th class="col-id"  (click)="sortBy('idRev')"># {{ sortIcon('idRev') }}</th>
+            <th style="width:4px;padding:0;"></th>
+            <th class="col-id" (click)="sortBy('idRev')"># {{ sortIcon('idRev') }}</th>
             <th (click)="sortBy('username')">{{ i18n.t('col_name') }} {{ sortIcon('username') }}</th>
             <th (click)="sortBy('nomEntreprise')">{{ i18n.t('col_company') }} {{ sortIcon('nomEntreprise') }}</th>
             <th (click)="sortBy('email')">{{ i18n.t('form_email') }} {{ sortIcon('email') }}</th>
@@ -39,11 +100,16 @@
         </thead>
         <tbody>
           @for (r of filtered; track r.idRev) {
-            <tr (click)="openDetail(r)" class="table-row">
+            <tr (click)="openDetail(r)" class="table-row"
+              [class.row--healthy]="(r.clientCount ?? 0) > 0"
+              [class.row--inactive]="(r.clientCount ?? 0) === 0">
+              <td class="row-accent"></td>
               <td class="col-id"><span class="id-badge">#{{ r.idRev }}</span></td>
               <td>
                 <div class="name-cell">
-                  <div class="avatar">{{ (r.username || '?').charAt(0).toUpperCase() }}</div>
+                  <div class="avatar" [class.avatar--healthy]="(r.clientCount ?? 0) > 0" [class.avatar--inactive]="(r.clientCount ?? 0) === 0">
+                    {{ (r.username || '?').charAt(0).toUpperCase() }}
+                  </div>
                   <div>
                     <p class="name-primary">{{ r.username }}</p>
                     <p class="name-secondary">{{ r.email }}</p>
@@ -54,22 +120,24 @@
               <td>{{ r.email }}</td>
               <td>{{ r.phone || '—' }}</td>
               <td>
-                <span class="clients-count">{{ r.clientCount ?? 0 }}</span>
+                <span class="client-count-badge" [class.client-count--healthy]="(r.clientCount ?? 0) > 0" [class.client-count--empty]="(r.clientCount ?? 0) === 0">
+                  {{ r.clientCount ?? 0 }}
+                </span>
               </td>
               <td>{{ formatDate(r.createdAt) }}</td>
               <td class="col-actions" (click)="$event.stopPropagation()">
-                <button class="action-btn action-btn--edit" (click)="openEdit(r, $event)">
+                <button class="action-btn action-btn--edit"   (click)="openEdit(r, $event)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 <button class="action-btn action-btn--delete" (click)="askDelete(r, $event)">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 </button>
               </td>
             </tr>
           }
           @empty {
             <tr>
-              <td colspan="8" class="empty-state">
+              <td colspan="9" class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <p>{{ i18n.t('no_resellers') }}</p>
               </td>
@@ -101,11 +169,16 @@
       </div>
     </header>
 
-    <div class="profile-card">
-      <div class="profile-avatar">{{ (selected.username || '?').charAt(0).toUpperCase() }}</div>
+    <div class="profile-card" [class.profile-card--healthy]="(selected.clientCount ?? 0) > 0" [class.profile-card--inactive]="(selected.clientCount ?? 0) === 0">
+      <div class="profile-avatar" [class.avatar--healthy]="(selected.clientCount ?? 0) > 0" [class.avatar--inactive]="(selected.clientCount ?? 0) === 0">
+        {{ (selected.username || '?').charAt(0).toUpperCase() }}
+      </div>
       <div class="profile-info">
         <div class="profile-name-row">
           <h2 class="profile-name">{{ selected.username }}</h2>
+          @if ((selected.clientCount ?? 0) === 0) {
+            <span class="inactive-badge">No clients</span>
+          }
         </div>
         <p class="profile-company">{{ selected.nomEntreprise }}</p>
         <div class="profile-meta">
@@ -114,11 +187,11 @@
             {{ selected.email }}
           </span>
           <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             {{ selected.phone }}
           </span>
           <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             {{ i18n.t('member_since') }} {{ formatDate(selected.createdAt) }}
           </span>
         </div>
@@ -140,25 +213,18 @@
       </div>
     </div>
 
-    <!-- ── Linked Clients ───────────────────────────────── -->
     @if (selectedClients.length > 0) {
-    <div class="client-ids-panel">
-      <p class="panel-title">{{ i18n.t('nav_clients') }} ({{ selectedClients.length }})</p>
-      <div class="linked-device-list">
+    <div class="clients-list-section">
+      <p class="section-label">{{ i18n.t('nav_clients') }} ({{ selectedClients.length }})</p>
+      <div class="client-cards">
         @for (c of selectedClients; track c.idClient) {
-        <div class="linked-device-card">
-          <div class="ld-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
+        <div class="client-mini-card">
+          <div class="client-mini-avatar">{{ (c.firstName || '?').charAt(0) }}</div>
+          <div class="client-mini-body">
+            <p class="client-mini-name">{{ c.firstName }} {{ c.lastName }}</p>
+            <p class="client-mini-email">{{ c.email }}</p>
           </div>
-          <div class="ld-body">
-            <div class="ld-top-row">
-              <p class="ld-model">{{ c.firstName }} {{ c.lastName }}</p>
-            </div>
-            <p class="ld-serial">{{ c.email }}</p>
-            <p class="ld-serial">{{ c.phone }} · {{ c.location || '—' }}</p>
-          </div>
+          <span class="region-pill">{{ c.location || '—' }}</span>
         </div>
         }
       </div>
@@ -211,9 +277,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-ghost"   (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
-        <button class="btn-primary" (click)="saveForm()">
-          {{ modalMode === 'add' ? i18n.t('add_reseller') : i18n.t('btn_save') }}
-        </button>
+        <button class="btn-primary" (click)="saveForm()">{{ modalMode === 'add' ? i18n.t('add_reseller') : i18n.t('btn_save') }}</button>
       </div>
     </div>
   </div>
@@ -224,12 +288,10 @@
   <div class="modal-backdrop" (click)="cancelDelete()">
     <div class="modal modal--sm" (click)="$event.stopPropagation()">
       <div class="delete-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </div>
       <h2 class="modal-title" style="text-align:center">{{ i18n.t('delete_reseller_title') }}</h2>
-      <p class="delete-msg">
-        {{ i18n.t('delete_confirm_pre') }} <strong>{{ toDelete?.username }}</strong> ({{ toDelete?.nomEntreprise }}){{ i18n.t('delete_confirm_post') }}
-      </p>
+      <p class="delete-msg">{{ i18n.t('delete_confirm_pre') }} <strong>{{ toDelete?.username }}</strong> ({{ toDelete?.nomEntreprise }}){{ i18n.t('delete_confirm_post') }}</p>
       <div class="modal-footer" style="justify-content:center">
         <button class="btn-ghost"  (click)="cancelDelete()">{{ i18n.t('btn_cancel') }}</button>
         <button class="btn-danger" (click)="confirmDelete()">{{ i18n.t('btn_confirm_delete') }}</button>
@@ -239,3 +301,4 @@
   }
 
 </div>
+}

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslationService } from '../../../service/translation.service';
 import { NotificationWebsocketService, AppNotification } from '../../../service/notification-websocket.service';
+import { ToastComponent } from '../../../shared/toast/toast.component';
 import { Subscription } from 'rxjs';
 
 interface SearchResult {
@@ -26,7 +27,7 @@ interface UiNotification {
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, FormsModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, FormsModule, ToastComponent],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
 })
@@ -55,11 +56,12 @@ export class AdminLayout implements OnInit, OnDestroy {
   ngOnInit() {
     this.notifWs.connect();
     this.notifSub = this.notifWs.notification$.subscribe((n: AppNotification) => {
+      const type = n.type as string;
       const ui: UiNotification = {
-        icon: n.type === 'NEW_CLIENT' ? 'client' : 'reseller',
-        textKey: n.type === 'NEW_CLIENT' ? 'act_client_added' : 'act_payment_received',
-        sub: n.message,
-        time: 'just now'
+        icon:    type.includes('CLIENT') ? 'client' : type.includes('DEVICE') ? 'device' : 'reseller',
+        textKey: type === 'NEW_CLIENT' ? 'act_client_added' : 'act_payment_received',
+        sub:     n.detail ?? n.message ?? n.label ?? '',
+        time:    'just now',
       };
       this.notifications.unshift(ui);
       this.notifCount++;
@@ -72,10 +74,10 @@ export class AdminLayout implements OnInit, OnDestroy {
   }
 
   private readonly allItems: SearchResult[] = [
-    { type:'client',   id:1,  title:'Société Elyes',       subtitle:'TechVision SARL · Tunis',    status:'Active',   active:true,  route:'/admin/clients'   },
-    { type:'client',   id:2,  title:'Transport Mrad',       subtitle:'NetPlus Solutions · Sfax',   status:'Active',   active:true,  route:'/admin/clients'   },
-    { type:'reseller', id:1,  title:'TechVision SARL',      subtitle:'Khalil Mansour · Tunis',     status:'Active',   active:true,  route:'/admin/resellers' },
-    { type:'device',   id:4821, title:'Device #4821',       subtitle:'Alpha Logistics · Tunis',    status:'Offline',  active:false, route:'/admin/clients'   },
+    { type:'client',   id:1,    title:'Société Elyes',   subtitle:'TechVision SARL · Tunis',  status:'Active',  active:true,  route:'/admin/clients'   },
+    { type:'client',   id:2,    title:'Transport Mrad',  subtitle:'NetPlus Solutions · Sfax', status:'Active',  active:true,  route:'/admin/clients'   },
+    { type:'reseller', id:1,    title:'TechVision SARL', subtitle:'Khalil Mansour · Tunis',   status:'Active',  active:true,  route:'/admin/resellers' },
+    { type:'device',   id:4821, title:'Device #4821',    subtitle:'Alpha Logistics · Tunis',  status:'Offline', active:false, route:'/admin/clients'   },
   ];
 
   onSearch(): void {
@@ -94,8 +96,7 @@ export class AdminLayout implements OnInit, OnDestroy {
     this.router.navigate([r.route]);
   }
 
-  closeSearch(): void { setTimeout(() => { this.searchOpen = false; }, 180); }
-
+  closeSearch(): void  { setTimeout(() => { this.searchOpen = false; }, 180); }
   toggleSidebar(): void { this.collapsed = !this.collapsed; }
   toggleDark(): void {
     this.darkMode = !this.darkMode;
@@ -108,7 +109,7 @@ export class AdminLayout implements OnInit, OnDestroy {
   goToProfile(): void  { this.avatarOpen = false; this.router.navigate(['/admin/profil']); }
   logout(): void       { this.avatarOpen = false; this.router.navigate(['/bo-admin-access']); }
   async toggleLang(): Promise<void> { await this.i18n.toggle(); }
-  get lang(): string { return this.i18n.lang(); }
+  get lang(): string   { return this.i18n.lang(); }
 
   navItems = [
     { labelKey:'nav_dashboard',    route:'/admin/dashboard',

@@ -11,4 +11,5 @@ export interface Client {
   idRev: number | null;
   resellerName: string | null;
   createdAt: string;
+  region: string;
 }

@@ -186,7 +186,7 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   get addPhoneError(): string { return (this.addForm.phone ?? '') && !this.isValidPhone(this.addForm.phone) ? 'msg_error_invalid_phone' : ''; }
 
   openAddClient() {
-    this.addForm = { firstName: '', lastName: '', email: '', phone: '' };
+    this.addForm = { firstName: '', lastName: '', email: '', phone: '', region:"" };
     this.showAddModal = true;
   }
 
@@ -197,6 +197,7 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
       lastName:  this.addForm.lastName,
       email:     this.addForm.email,
       phone:     this.addForm.phone,
+      region:    this.addForm.region,
     }).subscribe({
       next: (created) => {
         this.clients.update(list => [...list, created]);

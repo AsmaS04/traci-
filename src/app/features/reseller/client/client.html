@@ -14,19 +14,19 @@
     </button>
   </div>
 
-  <!-- ── Summary pills ──────────────────────────────────── -->
-  <div class="summary-row">
-    <div class="summary-pill">
-      <span class="pill-num">{{ totalCount }}</span>
-      <span class="pill-label">{{ i18n.t('filter_all') }}</span>
+  <!-- ── KPI Strip ──────────────────────────────────────── -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <p class="kpi-val">{{ totalCount }}</p>
+      <p class="kpi-label">{{ i18n.t('filter_all') }}</p>
     </div>
-    <div class="summary-pill summary-pill--active">
-      <span class="pill-num">{{ activeCount }}</span>
-      <span class="pill-label">{{ i18n.t('filter_active') }}</span>
+    <div class="kpi-card kpi-card--active">
+      <p class="kpi-val">{{ activeCount }}</p>
+      <p class="kpi-label">{{ i18n.t('filter_active') }}</p>
     </div>
-    <div class="summary-pill summary-pill--inactive">
-      <span class="pill-num">{{ inactiveCount }}</span>
-      <span class="pill-label">{{ i18n.t('filter_inactive') }}</span>
+    <div class="kpi-card kpi-card--inactive">
+      <p class="kpi-val">{{ inactiveCount }}</p>
+      <p class="kpi-label">{{ i18n.t('filter_inactive') }}</p>
     </div>
   </div>
 
@@ -52,9 +52,9 @@
       <table class="clients-table">
         <thead>
           <tr>
+            <th style="width:4px;padding:0;"></th>
             <th>#</th>
             <th>{{ i18n.t('col_name') }}</th>
-            <th>{{ i18n.t('form_email') }}</th>
             <th>{{ i18n.t('form_phone') }}</th>
             <th>{{ i18n.t('col_region') }}</th>
             <th>{{ i18n.t('col_status') }}</th>
@@ -63,19 +63,19 @@
         </thead>
         <tbody>
           @for (c of filtered; track c.idClient) {
-          <tr class="table-row" (click)="openPanel(c)">
+          <tr class="table-row" [class.row--active]="isActive(c)" [class.row--inactive]="!isActive(c)" (click)="openPanel(c)">
+            <td class="row-accent"></td>
             <td class="cell-id">#{{ c.idClient }}</td>
             <td>
               <div class="client-cell">
-                <div class="client-avatar">{{ initials(c) }}</div>
-                <div class="client-info">
+                <div class="client-avatar" [class.avatar--active]="isActive(c)" [class.avatar--inactive]="!isActive(c)">{{ initials(c) }}</div>
+                <div>
                   <p class="client-name">{{ fullName(c) }}</p>
                   <p class="client-email">{{ c.email }}</p>
                 </div>
               </div>
             </td>
-            <td>{{ c.email }}</td>
-            <td>{{ c.phone }}</td>
+            <td class="client-email">{{ c.phone }}</td>
             <td><span class="region-pill">{{ c.location || '—' }}</span></td>
             <td>
               <span class="status-pill" [class.status--active]="isActive(c)" [class.status--inactive]="!isActive(c)">
@@ -85,18 +85,18 @@
             </td>
             <td>
               <div class="row-actions" (click)="$event.stopPropagation()">
-                <button class="row-btn" (click)="openEdit(c)" title="Edit">
+                <button class="row-btn" (click)="openEdit(c)">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button class="row-btn row-btn--danger" (click)="openDelete(c)" title="Delete">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <button class="row-btn row-btn--danger" (click)="openDelete(c)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
                 </button>
               </div>
             </td>
           </tr>
           }
           @if (filtered.length === 0) {
-          <tr><td colspan="7" class="empty-row">{{ i18n.t('no_clients') }}</td></tr>
+            <tr><td colspan="7" class="empty-row">{{ i18n.t('no_clients') }}</td></tr>
           }
         </tbody>
       </table>
@@ -104,7 +104,7 @@
   </div>
 </div>
 
-<!-- ══ SLIDE-OVER PANEL ════════════════════════════════════ -->
+<!-- ══ SLIDE PANEL ════════════════════════════════════════ -->
 @if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
 
 @if (panelClient) {
@@ -115,12 +115,12 @@
       {{ i18n.t('btn_back') }}
     </button>
     <div class="panel-header-actions">
-      <button class="panel-btn-edit" (click)="openEdit(panelClient)">{{ i18n.t('btn_edit') }}</button>
+      <button class="panel-btn-edit"   (click)="openEdit(panelClient)">{{ i18n.t('btn_edit') }}</button>
       <button class="panel-btn-delete" (click)="openDelete(panelClient)">{{ i18n.t('btn_delete') }}</button>
     </div>
   </div>
 
-  <div class="panel-eyebrow">{{ i18n.t('client_profile') }}</div>
+  <p class="panel-eyebrow">{{ i18n.t('client_profile') }}</p>
   <h2 class="panel-title">{{ fullName(panelClient) }}</h2>
 
   <div class="panel-tabs">
@@ -131,71 +131,142 @@
     <button class="panel-tab" [class.panel-tab--active]="panelTab==='devices'" (click)="switchPanelTab('devices')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
       {{ i18n.t('res_stat_devices') }}
+      @if (panelDevices.length > 0) { <span class="tab-count">{{ panelDevices.length }}</span> }
     </button>
     <button class="panel-tab" [class.panel-tab--active]="panelTab==='operations'" (click)="switchPanelTab('operations')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       {{ i18n.t('res_operations') }}
+      @if (panelAbos.length > 0) { <span class="tab-count">{{ panelAbos.length }}</span> }
     </button>
   </div>
 
   <div class="panel-body">
+
+    <!-- ── Profile tab ─────────────────────────────────── -->
     @if (panelTab==='profile') {
-    <div class="profile-card">
-      <div class="profile-avatar">{{ initials(panelClient) }}</div>
-      <div class="profile-main">
-        <div class="profile-name-row">
-          <p class="profile-name">{{ fullName(panelClient) }}</p>
-          <span class="status-pill" [class.status--active]="isActive(panelClient)" [class.status--inactive]="!isActive(panelClient)">
-            <span class="status-dot"></span>
-            {{ isActive(panelClient) ? i18n.t('status_active') : i18n.t('status_inactive') }}
-          </span>
+      <div class="profile-card">
+        <div class="profile-avatar" [class.avatar--active]="isActive(panelClient)" [class.avatar--inactive]="!isActive(panelClient)">
+          {{ initials(panelClient) }}
         </div>
-        <p class="profile-under">{{ i18n.t('under_reseller') }} {{ reseller.nomEntreprise }}</p>
-        <div class="profile-contacts">
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            {{ panelClient.email }}
-          </span>
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.32-1.32a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7 2 2 0 0 1 1.72 2z"/></svg>
-            {{ panelClient.phone }}
-          </span>
-          <span class="contact-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            {{ panelClient.location || '—' }}
-          </span>
+        <div class="profile-main">
+          <div class="profile-name-row">
+            <p class="profile-name">{{ fullName(panelClient) }}</p>
+            <span class="status-pill" [class.status--active]="isActive(panelClient)" [class.status--inactive]="!isActive(panelClient)">
+              <span class="status-dot"></span>
+              {{ isActive(panelClient) ? i18n.t('status_active') : i18n.t('status_inactive') }}
+            </span>
+          </div>
+          <p class="profile-under">{{ i18n.t('under_reseller') }} {{ reseller.nomEntreprise }}</p>
+          <div class="profile-contacts">
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              {{ panelClient.email }}
+            </span>
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.96a16 16 0 0 0 6.13 6.13l1.32-1.32a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7 2 2 0 0 1 1.72 2z"/></svg>
+              {{ panelClient.phone }}
+            </span>
+            <span class="contact-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ panelClient.location || '—' }}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="stat-row">
-      <div class="mini-stat">
-        <p class="mini-val">{{ panelClient.graceDaysLeft ?? 0 }}</p>
-        <p class="mini-label">Grace days left</p>
+      <div class="stat-row">
+        <div class="mini-stat">
+          <p class="mini-val">{{ panelClient.graceDaysLeft ?? 0 }}</p>
+          <p class="mini-label">Days Left</p>
+        </div>
+        <div class="mini-stat">
+          <p class="mini-val">{{ panelClient.graceDaysUsed ?? 0 }}</p>
+          <p class="mini-label">Days Used</p>
+        </div>
+        <div class="mini-stat">
+          <p class="mini-val--sm">{{ reseller.nomEntreprise }}</p>
+          <p class="mini-label">{{ i18n.t('assigned_reseller') }}</p>
+        </div>
       </div>
-      <div class="mini-stat">
-        <p class="mini-val">{{ panelClient.graceDaysUsed ?? 0 }}</p>
-        <p class="mini-label">Grace days used</p>
-      </div>
-      <div class="mini-stat">
-        <p class="mini-val mini-val--sm">{{ reseller.nomEntreprise }}</p>
-        <p class="mini-label">{{ i18n.t('assigned_reseller') }}</p>
-      </div>
-    </div>
     }
 
+    <!-- ── Devices tab ──────────────────────────────────── -->
     @if (panelTab==='devices') {
-    <p style="color:var(--text-secondary);padding:2rem;text-align:center">Device details will be available when backend device endpoints are connected.</p>
+      @if (panelDevicesLoading) {
+        <div class="tab-loading">
+          <div class="spinner"></div><p>Loading devices…</p>
+        </div>
+      } @else if (panelDevices.length === 0) {
+        <div class="tab-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+          <p>No devices assigned to this client</p>
+        </div>
+      } @else {
+        <div class="devices-list">
+          @for (d of panelDevices; track d.idDevice) {
+            <div class="device-item" [class.device-item--actif]="d.status.toLowerCase()==='actif'" [class.device-item--expired]="d.status.toLowerCase()==='expiré'" [class.device-item--inactive]="d.status.toLowerCase()==='inactif'">
+              <div class="device-item-icon" [class.dii--actif]="d.status.toLowerCase()==='actif'" [class.dii--expired]="d.status.toLowerCase()==='expiré'" [class.dii--inactive]="d.status.toLowerCase()==='inactif'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+              </div>
+              <div class="device-item-body">
+                <div class="device-item-top">
+                  <p class="device-item-model">{{ d.model || '—' }}</p>
+                  <span class="dev-pill" [class]="deviceStatusClass(d.status)">{{ d.status }}</span>
+                </div>
+                <p class="device-item-serial">{{ d.numDevice || '—' }}</p>
+                <p class="device-item-imei">IMEI {{ d.imei || '—' }}</p>
+                @if (d.dateActivation) {
+                  <p class="device-item-date">Activated {{ formatDate(d.dateActivation) }}</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
     }
 
+    <!-- ── Operations tab ──────────────────────────────── -->
     @if (panelTab==='operations') {
-    <p style="color:var(--text-secondary);padding:2rem;text-align:center">Operations will be available when backend transaction endpoints are connected.</p>
+      @if (panelAbosLoading) {
+        <div class="tab-loading">
+          <div class="spinner"></div><p>Loading subscriptions…</p>
+        </div>
+      } @else if (panelAbos.length === 0) {
+        <div class="tab-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <p>No subscriptions found</p>
+        </div>
+      } @else {
+        <div class="abos-list">
+          @for (a of panelAbos; track a.idAbo) {
+            <div class="abo-item">
+              <div class="abo-item-header">
+                <div class="abo-item-left">
+                  <p class="abo-ref">#{{ a.idAbo }}</p>
+                  <span class="abo-pill" [class]="aboStatusClass(a.status)">{{ a.status }}</span>
+                </div>
+                <p class="abo-amount">{{ fmt(a.totalTtc) }} TND</p>
+              </div>
+              <div class="abo-item-details">
+                <span>{{ a.dureeMois }} months · {{ a.nbDevices }} device(s)</span>
+                <span>{{ formatDate(a.startDate) }} → {{ formatDate(a.endDate) }}</span>
+              </div>
+              @if (a.joursRestants > 0) {
+                <div class="abo-days-bar">
+                  <div class="abo-days-fill" [style.width.%]="getProgressWidth(a)"></div>
+                </div>
+                <p class="abo-days-label">{{ a.joursRestants }} days remaining</p>
+              }
+            </div>
+          }
+        </div>
+      }
     }
+
   </div>
 </div>
 }
 
-<!-- ══ ADD / EDIT CLIENT MODAL ═════════════════════════════ -->
+<!-- ══ ADD / EDIT MODAL ═══════════════════════════════════ -->
 @if (showModal) {
 <div class="modal-backdrop" (click)="closeModal()">
   <div class="modal" (click)="$event.stopPropagation()">
@@ -223,7 +294,7 @@
           <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX" [class.input--error]="formPhoneError"/>
           @if (formPhoneError) { <span class="field-error">{{ i18n.t(formPhoneError) }}</span> }
         </div>
-        <div class="form-group">
+        <div class="form-group form-group--full">
           <label>{{ i18n.t('col_region') }}</label>
           <input type="text" [(ngModel)]="form.location" placeholder="e.g. Tunis"/>
         </div>
@@ -231,13 +302,13 @@
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
-      <button class="btn-save" (click)="saveClient(); $event.stopPropagation()">{{ i18n.t('btn_save') }}</button>
+      <button class="btn-save"   (click)="saveClient(); $event.stopPropagation()">{{ i18n.t('btn_save') }}</button>
     </div>
   </div>
 </div>
 }
 
-<!-- ══ DELETE CONFIRM ══════════════════════════════════════ -->
+<!-- ══ DELETE ═════════════════════════════════════════════ -->
 @if (showDelete) {
 <div class="modal-backdrop" (click)="closeDelete()">
   <div class="modal modal--sm" (click)="$event.stopPropagation()">
