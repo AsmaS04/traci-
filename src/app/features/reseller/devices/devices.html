@@ -19,25 +19,20 @@
       <div class="sk" style="width:220px;height:36px;border-radius:10px;"></div>
       <div class="sk" style="width:140px;height:36px;border-radius:10px;"></div>
       <div class="sk" style="width:140px;height:36px;border-radius:10px;"></div>
-      <div class="sk sk-text-sm" style="width:80px"></div>
     </div>
     <div class="sk-table-card">
       <div class="sk-table-header">
-        <div class="sk sk-text" style="width:40px"></div>
-        <div class="sk sk-text" style="width:80px"></div>
-        <div class="sk sk-text" style="width:60px"></div>
-        <div class="sk sk-text" style="width:60px"></div>
+        @for (_ of [1,2,3,4,5]; track $index) { <div class="sk sk-text" style="width:80px"></div> }
       </div>
       @for (_ of [1,2,3,4,5,6]; track $index) {
         <div class="sk-table-row">
           <div class="sk sk-avatar"></div>
           <div style="flex:1;display:flex;flex-direction:column;gap:.3rem">
-            <div class="sk sk-text" style="width:160px"></div>
-            <div class="sk sk-text-sm" style="width:100px"></div>
+            <div class="sk sk-text" style="width:120px"></div>
+            <div class="sk sk-text-sm" style="width:80px"></div>
           </div>
           <div class="sk sk-text" style="width:80px"></div>
           <div class="sk sk-text" style="width:60px"></div>
-          <div class="sk sk-text" style="width:70px"></div>
         </div>
       }
     </div>
@@ -62,41 +57,24 @@
     </button>
   </div>
 
-  <!-- ── KPI Strip ───────────────────────────────────── -->
+  <!-- KPI Strip -->
   <div class="kpi-strip">
-    <div class="kpi-card">
-      <p class="kpi-val">{{ totalCount }}</p>
-      <p class="kpi-label">{{ i18n.t('filter_all') }}</p>
-    </div>
+    <div class="kpi-card"><p class="kpi-val">{{ totalCount }}</p><p class="kpi-label">{{ i18n.t('filter_all') }}</p></div>
     <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--active">
-      <p class="kpi-val">{{ activeCount }}</p>
-      <p class="kpi-label">{{ i18n.t('filter_active') }}</p>
-    </div>
+    <div class="kpi-card kpi-card--active"><p class="kpi-val">{{ activeCount }}</p><p class="kpi-label">{{ i18n.t('filter_active') }}</p></div>
     <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--expired">
-      <p class="kpi-val">{{ expiredCount }}</p>
-      <p class="kpi-label">{{ i18n.t('dev_expired') }}</p>
-    </div>
+    <div class="kpi-card kpi-card--expired"><p class="kpi-val">{{ expiredCount }}</p><p class="kpi-label">{{ i18n.t('dev_expired') }}</p></div>
     <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--inactive">
-      <p class="kpi-val">{{ inactiveCount }}</p>
-      <p class="kpi-label">{{ i18n.t('filter_inactive') }}</p>
-    </div>
+    <div class="kpi-card kpi-card--inactive"><p class="kpi-val">{{ inactiveCount }}</p><p class="kpi-label">{{ i18n.t('filter_inactive') }}</p></div>
     <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--libre">
-      <p class="kpi-val">{{ libreCount }}</p>
-      <p class="kpi-label">Libre</p>
-    </div>
+    <div class="kpi-card kpi-card--libre"><p class="kpi-val">{{ libreCount }}</p><p class="kpi-label">Libre</p></div>
   </div>
 
-  <!-- ── Filters ─────────────────────────────────────── -->
+  <!-- Filters -->
   <div class="filters-panel">
     <div class="filters-row">
       <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('dev_search_placeholder')"/>
       </div>
       <select class="filter-select" [(ngModel)]="filterStatus">
@@ -115,7 +93,7 @@
     <span class="result-count">{{ filtered.length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
   </div>
 
-  <!-- ── Table ───────────────────────────────────────── -->
+  <!-- Table -->
   <div class="table-card">
     <div class="table-scroll">
       <table class="dev-table">
@@ -136,10 +114,10 @@
         <tbody>
           @for (d of filtered; track d.idDevice) {
           <tr class="table-row"
-            [class.row--actif]="(d.status||('' ))?.toLowerCase()==='actif'"
-            [class.row--libre]="(d.status||('')  )?.toLowerCase()==='libre'"
-            [class.row--expiré]="(d.status||('') )?.toLowerCase()==='expiré'"
-            [class.row--inactif]="(d.status||(''))?.toLowerCase()==='inactif'"
+            [class.row--actif]="d.status?.toLowerCase()==='actif'"
+            [class.row--libre]="d.status?.toLowerCase()==='libre'"
+            [class.row--expiré]="d.status?.toLowerCase()==='expiré'"
+            [class.row--inactif]="d.status?.toLowerCase()==='inactif'"
             (click)="openPanel(d)">
             <td class="row-accent"></td>
             <td class="col-id"><span class="id-badge">#{{ d.idDevice }}</span></td>
@@ -164,9 +142,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/></svg>
                   {{ d.simProvider }}
                 </span>
-              } @else {
-                <span class="no-sim-cell">—</span>
-              }
+              } @else { <span class="no-sim-cell">—</span> }
             </td>
             <td class="serial-text">{{ d.dateActivation || '—' }}</td>
             <td>
@@ -197,7 +173,6 @@
 
 <!-- ══ DETAIL PANEL ══════════════════════════════════════ -->
 @if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
-
 @if (panelDevice) {
 <div class="slide-panel" [class.slide-panel--open]="panelOpen">
   <div class="panel-topbar">
@@ -208,7 +183,6 @@
   </div>
   <p class="panel-eyebrow">{{ i18n.t('dev_detail_eyebrow') }}</p>
   <h2 class="panel-title">{{ panelDevice.model || '—' }}</h2>
-
   <div class="dev-identity-card">
     <div class="dev-identity-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
@@ -225,7 +199,6 @@
       </span>
     </div>
   </div>
-
   <div class="detail-grid">
     <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice.imei || '—' }}</p></div>
     <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelDevice.clientName || '—' }}</p></div>
@@ -235,75 +208,152 @@
 </div>
 }
 
-<!-- ══ ASSIGN MODAL ════════════════════════════════════════ -->
+<!-- ══ HYBRID ASSIGN MODAL ═══════════════════════════════ -->
 @if (showAssignModal) {
 <div class="modal-backdrop" (click)="closeAssignModal()">
-  <div class="modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2 class="modal-title">{{ i18n.t('res_assign_device') }}</h2>
-      <button class="modal-close" (click)="closeAssignModal()">&#x2715;</button>
+<div class="assign-modal" (click)="$event.stopPropagation()">
+
+  <div class="am-header">
+    <div>
+      <h2 class="am-title">{{ i18n.t('res_assign_device') }}</h2>
+      <p class="am-sub">{{ libreCount }} libre device{{ libreCount !== 1 ? 's' : '' }} available</p>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>CLIENT</label>
-        @if (clients.length === 0) {
-          <p class="form-hint form-hint--warn">No clients yet — add a client first.</p>
-        } @else {
-          <select class="form-select" [(ngModel)]="assignForm.clientId">
-            <option [ngValue]="null" disabled>Select a client…</option>
-            @for (c of clients; track c.idClient) {
-              <option [ngValue]="c.idClient">{{ clientFullName(c) }}</option>
-            }
-          </select>
-        }
-      </div>
+    <button class="am-close" (click)="closeAssignModal()" [disabled]="assignInProgress">✕</button>
+  </div>
 
-      <div class="form-group">
-        <label>LIBRE DEVICE</label>
-        @if (libreDevices.length === 0) {
-          <p class="form-hint form-hint--warn">No libre devices available.</p>
-        } @else {
-          <select class="form-select" [(ngModel)]="assignForm.deviceId">
-            <option [ngValue]="null" disabled>Select a device…</option>
-            @for (d of libreDevices; track d.idDevice) {
-              <option [ngValue]="d.idDevice">{{ d.model }} — {{ d.numDevice }} ({{ d.imei }})</option>
-            }
-          </select>
+  <!-- Client selector -->
+  <div class="am-client-select">
+    <label class="am-field-label">Select Client</label>
+    @if (clients.length === 0) {
+      <p class="am-warn">No clients yet — add a client first.</p>
+    } @else {
+      <select class="am-select" [(ngModel)]="selectedClientId" [disabled]="assignInProgress">
+        <option [ngValue]="null" disabled>Select a client…</option>
+        @for (c of clients; track c.idClient) {
+          <option [ngValue]="c.idClient">{{ clientFullName(c) }}</option>
         }
-        @if (selectedLibreDevice) {
-          <div class="device-preview">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-            <span>{{ selectedLibreDevice.model }} · {{ selectedLibreDevice.numDevice }}</span>
-            <span class="status-pill status--libre"><span class="status-dot"></span>Libre</span>
+      </select>
+    }
+  </div>
+
+  <!-- Tabs -->
+  <div class="am-tabs">
+    <button class="am-tab" [class.am-tab--active]="assignTab==='pick'" (click)="switchAssignTab('pick')" [disabled]="assignInProgress">
+      ☑ Pick Devices
+      @if (selectedDeviceIds.size > 0 && assignTab==='pick') { <span class="am-tab-badge">{{ selectedDeviceIds.size }}</span> }
+    </button>
+    <button class="am-tab" [class.am-tab--active]="assignTab==='count'" (click)="switchAssignTab('count')" [disabled]="assignInProgress">
+      🔢 Assign by Count
+    </button>
+  </div>
+
+  <!-- Tab A: Pick -->
+  @if (assignTab === 'pick') {
+    <div class="am-body">
+      @if (libreDevices.length === 0) {
+        <div class="am-empty"><span>📦</span><p>No libre devices available</p></div>
+      } @else {
+        <div class="am-select-all" (click)="toggleSelectAll()">
+          <div class="am-checkbox" [class.am-checkbox--checked]="allSelected" [class.am-checkbox--partial]="someSelected">
+            @if (allSelected)  { <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg> }
+            @if (someSelected) { <span>—</span> }
           </div>
-        }
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>DURATION (MONTHS)</label>
-          <input type="number" class="form-input" min="1" max="36" [(ngModel)]="assignForm.dureeMois" placeholder="e.g. 12"/>
+          <span class="am-select-all-label">@if (allSelected) { Deselect all } @else { Select all ({{ libreDevices.length }}) }</span>
+          @if (selectedDeviceIds.size > 0) { <span class="am-selected-count">{{ selectedDeviceIds.size }} selected</span> }
         </div>
-        <div class="form-group">
-          <label>PRICE / DEVICE / MONTH (TND)</label>
-          <input type="number" class="form-input" min="0" step="0.5" [(ngModel)]="assignForm.prixUnitaire" placeholder="e.g. 15"/>
-        </div>
-      </div>
-
-      @if (assignForm.dureeMois >= 1 && assignForm.prixUnitaire > 0) {
-        <div class="total-preview">
-          <span>Total subscription</span>
-          <strong>{{ fmt(assignForm.dureeMois * assignForm.prixUnitaire) }} TND</strong>
+        <div class="am-device-list">
+          @for (d of libreDevices; track d.idDevice) {
+            <div class="am-device-row" [class.am-device-row--checked]="isSelected(d.idDevice)" (click)="toggleDevice(d.idDevice)">
+              <div class="am-checkbox" [class.am-checkbox--checked]="isSelected(d.idDevice)">
+                @if (isSelected(d.idDevice)) { <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg> }
+              </div>
+              <div class="am-device-icon">📡</div>
+              <div class="am-device-info">
+                <p class="am-device-model">{{ d.model || '—' }}</p>
+                <p class="am-device-serial">{{ d.numDevice || '—' }}</p>
+              </div>
+              <p class="am-device-imei">{{ d.imei || '—' }}</p>
+            </div>
+          }
         </div>
       }
-      @if (assignError) { <p class="form-error">{{ assignError }}</p> }
     </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeAssignModal()" [disabled]="assignSaving">{{ i18n.t('btn_cancel') }}</button>
-      <button class="btn-save"   (click)="saveAssign()" [disabled]="!canSaveAssign || assignSaving">
-        @if (assignSaving) { Saving… } @else { Assign Device }
-      </button>
+  }
+
+  <!-- Tab B: Count -->
+  @if (assignTab === 'count') {
+    <div class="am-body">
+      <div class="am-count-section">
+        <label class="am-field-label">Number of devices to assign</label>
+        <div class="am-count-row">
+          <button class="am-count-btn" (click)="assignCount = assignCount > 1 ? assignCount-1 : 1; updateCountPreview()" [disabled]="assignCount <= 1">−</button>
+          <input class="am-count-input" type="number" [(ngModel)]="assignCount" min="1" [max]="libreDevices.length" (ngModelChange)="updateCountPreview()"/>
+          <button class="am-count-btn" (click)="assignCount = assignCount < libreDevices.length ? assignCount+1 : libreDevices.length; updateCountPreview()" [disabled]="assignCount >= libreDevices.length">+</button>
+          <span class="am-count-hint">of {{ libreDevices.length }} available</span>
+        </div>
+        @if (countPreview.length > 0) {
+          <div class="am-preview">
+            <p class="am-preview-label">First {{ countPreview.length }} devices:</p>
+            <div class="am-preview-list">
+              @for (d of countPreview; track d.idDevice) {
+                <div class="am-preview-row">
+                  <span class="am-preview-num">#{{ $index + 1 }}</span>
+                  <span class="am-preview-model">{{ d.model || '—' }}</span>
+                  <span class="am-preview-serial">{{ d.numDevice || '—' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+        @if (libreDevices.length === 0) {
+          <div class="am-empty"><span>📦</span><p>No libre devices available</p></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Shared config -->
+  <div class="am-config">
+    <div class="am-config-row">
+      <div class="am-field">
+        <label class="am-field-label">Duration (months)</label>
+        <input class="am-field-input" type="number" [(ngModel)]="assignDuration" min="1" max="24" [disabled]="assignInProgress"/>
+      </div>
+      <div class="am-field">
+        <label class="am-field-label">Price / device / month (TND)</label>
+        <input class="am-field-input" type="number" [(ngModel)]="assignPrice" min="0" step="0.5" [disabled]="assignInProgress"/>
+      </div>
+      <div class="am-field am-field--summary">
+        <label class="am-field-label">Summary</label>
+        <p class="am-summary">
+          <strong>{{ devicesToAssign.length }}</strong> device{{ devicesToAssign.length !== 1 ? 's' : '' }}
+          · <strong>{{ assignDuration }}</strong> month{{ assignDuration !== 1 ? 's' : '' }}
+          · <strong>{{ assignPrice * assignDuration * devicesToAssign.length | number:'1.2-2' }} TND</strong> total
+        </p>
+      </div>
     </div>
   </div>
+
+  @if (assignInProgress) {
+    <div class="am-progress">
+      <div class="am-progress-bar"><div class="am-progress-fill" [style.width.%]="assignProgress"></div></div>
+      <p class="am-progress-label">{{ assignDone }} / {{ assignTotal }} assigned…</p>
+    </div>
+  }
+
+  <div class="am-footer">
+    <button class="am-btn-cancel" (click)="closeAssignModal()" [disabled]="assignInProgress">Cancel</button>
+    <button class="am-btn-assign" (click)="runBulkAssign()" [disabled]="!canAssign">
+      @if (assignInProgress) { <span class="spinner-sm"></span> Assigning… }
+      @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Assign {{ devicesToAssign.length > 0 ? devicesToAssign.length + ' Device' + (devicesToAssign.length > 1 ? 's' : '') : '' }}
+      }
+    </button>
+  </div>
+
+</div>
 </div>
 }

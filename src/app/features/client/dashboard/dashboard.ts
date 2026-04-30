@@ -3,219 +3,205 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ClientService, AbonnementDTO, PaiementDTO } from '../../../service/Client.service';
+import { ToastService } from '../../../service/Toast.service';
 import { Device } from '../../../models/device.model';
 import { Client } from '../../../models/client.model';
-import { PaymentComponent } from '../payment/payment';
-
-export interface RecentInvoice {
-  id: string;
-  date: string;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
-}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, PaymentComponent],
+  imports: [CommonModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
 export default class DashboardComponent implements OnInit {
 
-  i18n   = inject(TranslationService);
-  router = inject(Router);
+  i18n          = inject(TranslationService);
+  router        = inject(Router);
   private clientService = inject(ClientService);
+  private toast         = inject(ToastService);
 
-  abonnement   = signal<AbonnementDTO | null>(null);
-  isLoading    = signal(true);
-
-  showWarningModal          = signal(false);
-  showProfileDropdown       = signal(false);
-  showForfaitsModal         = signal(false);
-  showPaymentModal          = signal(false);
+  abonnement         = signal<AbonnementDTO | null>(null);
+  isLoading          = signal(true);
+  renewLoading       = signal(false);
+  showExpiryOverlay  = signal(false);   // full-screen warning on open
+  showForfaitsModal  = signal(false);
+  showPaymentModal   = signal(false);
   selectedForfaitForPayment = signal<any>(null);
 
-  user = { prenom: 'Client', nom: '', email: '' };
+  user: { prenom: string; nom: string; email: string } = { prenom: 'Client', nom: '', email: '' };
   clientDevices: Device[] = [];
-  activeDevicesCount = 0;
-  expiredDevicesCount = 0;
-  recentInvoices: RecentInvoice[] = [];
-  stats = { totalPaye: 0, nombreFactures: 0, support: '24/7' };
 
   forfaits = [
-    { dureeMois: 3,  dureeLabel: '3 Mois', prix: 60,  prixUnitaire: 20, populaire: false, economie: 0 },
-    { dureeMois: 6,  dureeLabel: '6 Mois', prix: 102, prixUnitaire: 17, populaire: true,  economie: 15 },
-    { dureeMois: 12, dureeLabel: '1 An',    prix: 180, prixUnitaire: 15, populaire: false, economie: 25 },
+    { dureeMois: 3,  dureeLabel: '3 Months', prix: 60,  prixUnitaire: 20, populaire: false, economie: 0  },
+    { dureeMois: 6,  dureeLabel: '6 Months', prix: 102, prixUnitaire: 17, populaire: true,  economie: 15 },
+    { dureeMois: 12, dureeLabel: '1 Year',   prix: 180, prixUnitaire: 15, populaire: false, economie: 25 },
   ];
 
+  // ── Computed ──────────────────────────────────────────
   get daysLeft(): number {
     const abo = this.abonnement();
     return abo ? Math.max(0, abo.joursRestants) : 0;
   }
 
-  getCountdownColor(): string {
-    if (this.daysLeft <= 0)  return 'danger';
-    if (this.daysLeft < 7)   return 'danger';
+  get totalDays(): number {
+    const abo = this.abonnement();
+    if (!abo) return 1;
+    const start = new Date(abo.startDate).getTime();
+    const end   = new Date(abo.endDate).getTime();
+    return Math.max(1, Math.round((end - start) / 86400000));
+  }
+
+  get remainingPercent(): number {
+    return Math.min(100, Math.max(0, Math.round((this.daysLeft / this.totalDays) * 100)));
+  }
+
+  get ringDashoffset(): number {
+    return 282.74 * (1 - this.remainingPercent / 100);
+  }
+
+  // Progress bar / ring color: green → orange → red → deep red
+  get progressColor(): string {
+    if (this.daysLeft <= 0)                              return '#7f1d1d'; // deep red: expired
+    if (this.daysLeft <= 7)                              return '#DC2626'; // red: critical
+    if (this.daysLeft <= this.totalDays * 0.5)           return '#D97706'; // orange: half gone
+    return '#0D9488';                                                       // green: healthy
+  }
+
+  get urgencyLevel(): 'safe' | 'warning' | 'danger' | 'expired' {
+    if (!this.abonnement()) return 'expired';
+    if (this.daysLeft <= 0)  return 'expired';
+    if (this.daysLeft <= 7)  return 'danger';
     if (this.daysLeft <= 15) return 'warning';
     return 'safe';
   }
 
   get urgencyColor(): string {
-    const map: Record<string, string> = { safe: '#0D9488', warning: '#D97706', danger: '#DC2626' };
-    return map[this.getCountdownColor()] ?? '#0D9488';
+    return { safe: '#0D9488', warning: '#D97706', danger: '#DC2626', expired: '#7f1d1d' }[this.urgencyLevel];
   }
 
-  get showExpiryBanner(): boolean { return this.daysLeft > 0 && this.daysLeft <= 15; }
+  get urgencyBg(): string {
+    return { safe: 'rgba(13,148,136,0.05)', warning: 'rgba(217,119,6,0.05)', danger: 'rgba(220,38,38,0.05)', expired: 'rgba(127,29,29,0.06)' }[this.urgencyLevel];
+  }
 
-  get contextualSubtitle(): string {
+  get progressPercent(): number {
     const abo = this.abonnement();
-    if (!abo) return this.i18n.t('dash_overview');
-    if (this.daysLeft <= 0)  return this.i18n.t('dash_msg_expired');
-    if (this.daysLeft < 7)   return this.i18n.t('dash_msg_critical').replace('{n}', String(this.daysLeft));
-    if (this.daysLeft <= 15) return this.i18n.t('dash_msg_expiring').replace('{n}', String(this.daysLeft));
-    const dateStr = new Date(abo.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    return this.i18n.t('dash_msg_active').replace('{date}', dateStr);
+    if (!abo) return 100;
+    const start = new Date(abo.startDate).getTime();
+    const end   = new Date(abo.endDate).getTime();
+    return Math.min(100, Math.max(0, Math.round(((Date.now() - start) / (end - start)) * 100)));
   }
 
-  get statusLabel(): 'active' | 'expiring' | 'expired' {
-    if (this.daysLeft <= 0)  return 'expired';
-    if (this.daysLeft <= 15) return 'expiring';
-    return 'active';
-  }
-
-  get gracePeriodDays(): number { return 10; }
-
-  getProgressPercentage(): number {
+  get expiryDateStr(): string {
     const abo = this.abonnement();
-    if (!abo) return 0;
-    const debut = new Date(abo.startDate).getTime();
-    const fin   = new Date(abo.endDate).getTime();
-    return Math.min(100, Math.max(0, Math.round(((Date.now() - debut) / (fin - debut)) * 100)));
+    if (!abo) return '—';
+    return new Date(abo.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  getProgressColor(): string { return this.getCountdownColor(); }
-
-  invoiceStatusClass(s: string): string {
-    if (s === 'paid')    return 'inv--paid';
-    if (s === 'pending') return 'inv--pending';
-    return 'inv--overdue';
+  get timeRemainingLabel(): string {
+    if (this.daysLeft <= 0) return 'Expired';
+    if (this.daysLeft < 30) return `${this.daysLeft} day${this.daysLeft === 1 ? '' : 's'}`;
+    const months = Math.round(this.daysLeft / 30);
+    return `${months} month${months === 1 ? '' : 's'}`;
   }
 
+  get planLabel(): string {
+    const abo = this.abonnement();
+    if (!abo) return 'No Plan';
+    return abo.dureeLabel ?? `${abo.dureeMois} Month Plan`;
+  }
+
+  get statusChipLabel(): string {
+    return { safe: 'ACTIVE', warning: 'EXPIRING SOON', danger: 'CRITICAL', expired: 'EXPIRED' }[this.urgencyLevel];
+  }
+
+  // Always show grace period button when not fully healthy
+  get showGracePeriodButton(): boolean {
+    return this.urgencyLevel !== 'safe';
+  }
+
+  get graceDaysLeft(): number {
+    const abo = this.abonnement();
+    return (abo as any)?.graceDaysLeft ?? 10;
+  }
+
+  get smartMessage(): { icon: 'ok' | 'warn'; title: string; body: string; level: 'ok' | 'warn' | 'danger' | 'expired' } {
+    switch (this.urgencyLevel) {
+      case 'safe':    return { icon: 'ok',   title: 'Everything is running smoothly',               body: 'No action required at the moment.',                          level: 'ok'      };
+      case 'warning': return { icon: 'warn', title: `Subscription expires in ${this.daysLeft} days`, body: 'Plan ahead — renew before your service is interrupted.',     level: 'warn'    };
+      case 'danger':  return { icon: 'warn', title: `⚠ Only ${this.daysLeft} days left`,            body: 'Your service will stop very soon. Renew immediately.',       level: 'danger'  };
+      case 'expired': return { icon: 'warn', title: 'Your subscription has expired',                 body: 'Renew now to restore access to your devices.',              level: 'expired' };
+    }
+  }
+
+  get activeDevicesCount(): number {
+    return this.clientDevices.filter(d =>
+['actif','active'].includes((d.status ?? '').toLowerCase())
+    ).length;
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────
   ngOnInit() {
     this.isLoading.set(true);
-    this.loadProfile();
-    this.loadDevices();
-    this.loadAbonnement();
-    this.loadPayments();
-  }
-
-  private loadProfile() {
     this.clientService.getMyProfile().subscribe({
-      next: (client: Client) => {
-        this.user = { prenom: client.firstName ?? 'Client', nom: client.lastName ?? '', email: client.email ?? '' };
-      },
-      error: (err: any) => console.error('Failed to load profile', err)
+      next: (c: Client) => { this.user = { prenom: c.firstName ?? 'Client', nom: c.lastName ?? '', email: c.email ?? '' }; },
+      error: () => {}
     });
-  }
-
-  private loadDevices() {
     this.clientService.getMyDevices().subscribe({
-      next: (devices: Device[]) => {
-        this.clientDevices = devices;
-        this.activeDevicesCount = devices.filter(d => ['active', 'attribué', 'actif'].includes((d.status ?? '').toLowerCase())).length;
-        this.expiredDevicesCount = devices.filter(d => ['expired', 'inactif'].includes((d.status ?? '').toLowerCase())).length;
-      },
-      error: (err: any) => console.error('Failed to load devices', err)
+      next: (d: Device[]) => { this.clientDevices = d; },
+      error: () => {}
     });
-  }
-
-  loadAbonnement() {
     this.clientService.getActiveAbonnement().subscribe({
       next: (abo: AbonnementDTO) => {
         this.abonnement.set(abo);
         this.isLoading.set(false);
-        if (abo.joursRestants > 0 && abo.joursRestants <= 15) this.showWarningModal.set(true);
+        // Show full-screen overlay if 7 days or fewer remain
+        if (abo.joursRestants <= 7) {
+          this.showExpiryOverlay.set(true);
+        }
       },
-      error: (err: any) => {
-        console.error('No active abonnement or error', err);
-        this.abonnement.set(null);
-        this.isLoading.set(false);
-      }
+      error: () => { this.abonnement.set(null); this.isLoading.set(false); }
     });
   }
 
-  private loadPayments() {
-    this.clientService.getMyPayments().subscribe({
-      next: (payments: PaiementDTO[]) => {
-        this.recentInvoices = payments.slice(0, 3).map(p => ({
-          id: p.payRef,
-          date: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
-          amount: p.amount ?? 0,
-          status: (p.paymentStatus === 'completed' ? 'paid' : p.paymentStatus === 'pending' ? 'pending' : 'overdue') as 'paid' | 'pending' | 'overdue'
-        }));
-        const completed = payments.filter(p => p.paymentStatus === 'completed');
-        this.stats = {
-          totalPaye: completed.reduce((sum, p) => sum + (p.amount ?? 0), 0),
-          nombreFactures: completed.length,
-          support: '24/7'
-        };
-      },
-      error: (err: any) => console.error('Failed to load payments', err)
-    });
+  // ── Actions ───────────────────────────────────────────
+  dismissOverlay()     { this.showExpiryOverlay.set(false); }
+  openRenewModal()     { this.showForfaitsModal.set(true); this.showExpiryOverlay.set(false); }
+  closeForfaitsModal() { this.showForfaitsModal.set(false); }
+
+  activateGracePeriod() {
+    this.toast.info(`Grace period gives you ${this.graceDaysLeft} extra days — activation coming soon.`);
   }
 
-  toggleProfileDropdown() { this.showProfileDropdown.set(!this.showProfileDropdown()); }
-  closeProfileDropdown()  { this.showProfileDropdown.set(false); }
-  closeWarningModal()     { this.showWarningModal.set(false); }
-  openForfaitsModal()     { this.showForfaitsModal.set(true); this.showWarningModal.set(false); }
-  closeForfaitsModal()    { this.showForfaitsModal.set(false); }
-
-  selectForfait(forfait: any) {
+  selectForfait(f: any) {
+    if (this.renewLoading()) return;
+    this.renewLoading.set(true);
     const nbDevices = this.clientDevices.length || 1;
-    this.clientService.renewAbonnement(forfait.dureeMois, forfait.prixUnitaire, nbDevices).subscribe({
+    this.clientService.renewAbonnement(f.dureeMois, f.prixUnitaire, nbDevices).subscribe({
       next: (newAbo: AbonnementDTO) => {
         this.clientService.initPayment(newAbo.idAbo, newAbo.totalTtc).subscribe({
           next: (payment: PaiementDTO) => {
+            this.renewLoading.set(false);
             this.closeForfaitsModal();
-            this.selectedForfaitForPayment.set({ ...forfait, payRef: payment.payRef, aboId: newAbo.idAbo });
+            this.selectedForfaitForPayment.set({ ...f, payRef: payment.payRef, aboId: newAbo.idAbo });
             this.showPaymentModal.set(true);
+            this.toast.success('Plan selected — complete payment to activate.');
           },
-          error: (err: any) => console.error('Failed to init payment', err)
+          error: () => { this.renewLoading.set(false); this.toast.error('Failed to initialise payment. Please try again.'); }
         });
       },
-      error: (err: any) => console.error('Failed to renew', err)
+      error: () => { this.renewLoading.set(false); this.toast.error('Failed to renew subscription. Please try again.'); }
     });
   }
 
-  onPaymentSuccess(data: any) {
-    const forfait = this.selectedForfaitForPayment();
-    if (forfait?.payRef) {
-      this.clientService.confirmPayment(forfait.payRef, data.orderId ?? 'MANUAL').subscribe({
-        next: () => {
-          this.showPaymentModal.set(false);
-          this.loadAbonnement();
-          this.loadPayments();
-          alert(`✅ Paiement réussi! Montant: ${data.amount} TND`);
-        },
-        error: (err: any) => console.error('Failed to confirm payment', err)
-      });
-    } else {
-      this.showPaymentModal.set(false);
-      this.loadAbonnement();
-    }
-  }
-
-  navigateTo(path: string) { this.router.navigate([path]); }
-  demanderProlongation() { this.closeWarningModal(); alert('✅ Demande de prolongation envoyée!'); }
-  telechargerFacture() { alert('📥 Téléchargement de la facture en cours...'); }
-  isExpiringSoon(days: number): boolean { return days > 0 && days <= 15; }
+  navigateTo(p: string) { this.router.navigate([p]); }
 
   getDeviceIcon(model: string): string {
-    if ((model ?? '').includes('BOX')) return '📦';
-    if ((model ?? '').includes('MINI')) return '📱';
-    if ((model ?? '').includes('PRO')) return '💼';
-    if ((model ?? '').includes('LITE')) return '⚡';
+    const m = (model ?? '').toUpperCase();
+    if (m.includes('BOX'))  return '📦';
+    if (m.includes('MINI')) return '📱';
+    if (m.includes('PRO'))  return '💼';
+    if (m.includes('LITE')) return '⚡';
     return '📡';
   }
 }

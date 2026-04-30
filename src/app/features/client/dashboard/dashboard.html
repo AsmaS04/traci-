@@ -1,405 +1,387 @@
-<!-- Dashboard Client - TRACI Professional -->
-<div class="dashboard-page">
+<!-- ══ FULL-SCREEN EXPIRY OVERLAY (shows when ≤7 days left) ══ -->
+@if (showExpiryOverlay()) {
+  <div class="expiry-overlay">
+    <div class="expiry-overlay-card">
 
-  <!-- ══ SKELETON LOADER ══════════════════════════════════ -->
-  @if (isLoading()) {
-    <div class="skeleton-wrap animate-fade-in">
-      <div class="skel skel--title"></div>
-      <div class="skel skel--subtitle"></div>
-      <div class="skel-layout">
-        <div class="skel skel--main-card"></div>
-        <div class="skel-right">
-          <div class="skel skel--stat"></div>
-          <div class="skel skel--stat"></div>
-          <div class="skel skel--stat"></div>
-          <div class="skel skel--stat"></div>
-        </div>
-      </div>
-    </div>
-  }
-
-  @if (!isLoading() && abonnement(); as abo) {
-
-    <!-- ══ EXPIRY BANNER (≤15 days) ════════════════════════ -->
-    @if (showExpiryBanner) {
-      <div class="expiry-banner" [ngClass]="'expiry-banner--' + getCountdownColor()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="expiry-overlay-icon" [class.eo-icon--red]="daysLeft > 0" [class.eo-icon--deepred]="daysLeft <= 0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        <span>{{ contextualSubtitle }}</span>
-        <button class="banner-renew-btn" (click)="openForfaitsModal()">
-          {{ i18n.t('dash_renew_now') }} →
+      </div>
+
+      @if (daysLeft > 0) {
+        <h2 class="eo-title">Only {{ daysLeft }} day{{ daysLeft === 1 ? '' : 's' }} left</h2>
+        <p class="eo-sub">Your subscription expires on <strong>{{ expiryDateStr }}</strong>.</p>
+        <p class="eo-body">Your service will stop after this date if not renewed. Take action now to avoid interruption.</p>
+      } @else {
+        <h2 class="eo-title eo-title--expired">Subscription Expired</h2>
+        <p class="eo-sub">Your subscription expired on <strong>{{ expiryDateStr }}</strong>.</p>
+        <p class="eo-body">Your devices are currently inactive. Renew your plan to restore full access.</p>
+      }
+
+      <div class="eo-actions">
+        <button class="eo-btn-primary" (click)="openRenewModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Renew Subscription
+        </button>
+        <button class="eo-btn-secondary" (click)="dismissOverlay()">
+          Continue to Dashboard →
         </button>
       </div>
-    }
 
-    <!-- ══ WELCOME SECTION ══════════════════════════════════ -->
-    <div class="welcome-section animate-fade-in">
-      <div class="welcome-content">
-        <p class="page-eyebrow">{{ i18n.t('dash_client_space') }}</p>
-        <h1 class="page-title">
-          {{ i18n.t('dash_welcome') }}, {{ user.prenom }}!
-        </h1>
-        <p class="page-subtitle">{{ contextualSubtitle }}</p>
+    </div>
+  </div>
+}
+
+<!-- ══ SKELETON ════════════════════════════════════════════ -->
+@if (isLoading()) {
+  <div class="dash-page">
+
+    <div style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.4rem">
+      <div class="sk" style="height:32px;width:210px;border-radius:8px"></div>
+      <div class="sk" style="height:10px;width:260px;border-radius:6px"></div>
+    </div>
+
+    <div class="sk-hero-shell">
+      <div class="sk-hero-body">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.7rem">
+          <div class="sk" style="height:10px;width:75px;border-radius:6px"></div>
+          <div class="sk" style="height:18px;width:60px;border-radius:99px"></div>
+        </div>
+        <div class="sk" style="height:34px;width:200px;border-radius:8px;margin-bottom:1.2rem"></div>
+        <div style="display:flex;gap:2rem;margin-bottom:1.1rem">
+          @for (i of [1,2,3]; track i) {
+            <div style="display:flex;flex-direction:column;gap:0.3rem">
+              <div class="sk" style="height:9px;width:65px;border-radius:5px"></div>
+              <div class="sk" style="height:16px;width:95px;border-radius:6px"></div>
+            </div>
+          }
+        </div>
+        <div class="sk" style="height:8px;width:100%;border-radius:99px;margin-bottom:1.2rem"></div>
+        <div style="display:flex;gap:0.75rem">
+          <div class="sk" style="height:38px;width:155px;border-radius:11px"></div>
+          <div class="sk" style="height:38px;width:200px;border-radius:11px"></div>
+        </div>
+      </div>
+      <div class="sk-ring-shell">
+        <div class="sk" style="width:120px;height:120px;border-radius:50%"></div>
+        <div class="sk" style="height:10px;width:70px;border-radius:6px;margin-top:0.6rem"></div>
       </div>
     </div>
 
-    <!-- ══ MAIN GRID ═════════════════════════════════════════ -->
-    <div class="dashboard-grid">
-
-      <!-- ── LEFT COLUMN ──────────────────────────────────── -->
-      <div class="left-column">
-
-        <!-- Subscription card -->
-        <div class="subscription-card card animate-slide-in">
-
-          <!-- Header -->
-          <div class="card-header">
-            <div class="subscription-info">
-              <div class="service-icon">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="service-name">{{ abo.dureeLabel + ' - Abonnement'}}</h3>
-                <p class="service-package">{{ i18n.t('dash_plan_duration') }}: {{ abo.dureeLabel }}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
+      @for (i of [1,2]; track i) {
+        <div class="sk-card-shell">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+            <div style="display:flex;align-items:center;gap:0.7rem">
+              <div class="sk" style="width:38px;height:38px;border-radius:10px;flex-shrink:0"></div>
+              <div style="display:flex;flex-direction:column;gap:0.3rem">
+                <div class="sk" style="height:13px;width:90px;border-radius:5px"></div>
+                <div class="sk" style="height:9px;width:110px;border-radius:5px"></div>
               </div>
             </div>
-
-            <!-- Status badge — dynamic based on urgency -->
-            <span class="status-badge" [ngClass]="'status-badge--' + statusLabel">
-              <span class="badge-dot"></span>
-              @if (statusLabel === 'active')   { {{ i18n.t('status_active') }} }
-              @if (statusLabel === 'expiring') { {{ i18n.t('dash_expiring_soon') }} }
-              @if (statusLabel === 'expired')  { {{ i18n.t('dash_expired') }} }
-            </span>
+            <div class="sk" style="height:10px;width:50px;border-radius:5px"></div>
           </div>
-
-          <!-- Countdown section -->
-          <div class="countdown-section">
-            <div class="countdown-main">
-
-              <!-- Days badge — color changes with urgency -->
-              <div class="countdown-box" [ngClass]="getCountdownColor()">
-                <div class="countdown-number">{{ abo.joursRestants }}</div>
-                <div class="countdown-label">{{ i18n.t('dash_days') }}</div>
+          @for (j of [1,2,3]; track j) {
+            <div style="display:flex;align-items:center;gap:0.65rem;padding:0.5rem 0.6rem;border-radius:9px;background:var(--bg,#f9fafb);margin-bottom:0.45rem">
+              <div class="sk" style="width:22px;height:22px;border-radius:5px;flex-shrink:0"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:0.25rem">
+                <div class="sk" style="height:10px;width:85px;border-radius:5px"></div>
+                <div class="sk" style="height:8px;width:60px;border-radius:5px"></div>
               </div>
-
-              <div class="countdown-details">
-                <p class="detail-label">{{ i18n.t('dash_expires_on') }}</p>
-                <p class="detail-value">{{ abo.endDate | date: 'dd MMM yyyy' }}</p>
-                <p class="detail-hint">{{ abo.startDate | date: 'dd MMM yyyy' }} – {{ abo.endDate | date: 'dd MMM yyyy' }}</p>
-                <!-- Inline urgency note -->
-                <p class="detail-urgency" [style.color]="urgencyColor">
-                  @if (daysLeft > 0) {
-                    {{ i18n.t('dash_expires_in').replace('{n}', daysLeft.toString()) }}
-                  }
-                  @if (daysLeft <= 0) {
-                    {{ i18n.t('dash_msg_expired') }}
-                  }
-                </p>
-              </div>
+              <div class="sk" style="height:18px;width:42px;border-radius:99px"></div>
             </div>
-
-            <!-- Progress bar with label -->
-            <div class="progress-wrapper">
-              <div class="progress-label-row">
-                <span class="progress-label">{{ i18n.t('dash_time_used') }}</span>
-                <span class="progress-pct" [style.color]="urgencyColor">
-                  {{ getProgressPercentage() | number:'1.0-0' }}%
-                </span>
-              </div>
-              <div class="progress-bar" [title]="i18n.t('dash_progress_tooltip').replace('{n}', daysLeft.toString())">
-                <div
-                  class="progress-fill"
-                  [ngClass]="getProgressColor()"
-                  [style.width.%]="getProgressPercentage()">
-                </div>
-              </div>
-              <p class="progress-hint">
-                {{ i18n.t('dash_progress_hint').replace('{n}', daysLeft.toString()) }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="card-actions">
-            <button class="btn btn-primary btn-lg" (click)="openForfaitsModal()">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              {{ i18n.t('dash_renew_subscription') }}
-            </button>
-
-            <button class="btn btn-secondary btn-lg" (click)="telechargerFacture()">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-              {{ i18n.t('dash_download_invoice') }}
-            </button>
-
-            <button class="btn btn-grace btn-lg" (click)="demanderProlongation()">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              {{ i18n.t('dash_grace_period') }} +{{ gracePeriodDays }}j
-            </button>
-          </div>
+          }
         </div>
+      }
+    </div>
 
-        <!-- Recent invoices preview -->
-        <div class="recent-invoices-card card animate-fade-in">
-          <div class="invoices-header">
-            <p class="section-label">{{ i18n.t('dash_recent_invoices') }}</p>
-            <button class="view-all-btn" (click)="navigateTo('/client-dashboard/factures')">
-              {{ i18n.t('dash_view_all') }} →
-            </button>
-          </div>
-          <div class="invoice-list">
-            @for (inv of recentInvoices; track inv.id) {
-              <div class="invoice-row">
-                <div class="invoice-file-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
-                  </svg>
-                </div>
-                <div class="invoice-info">
-                  <p class="invoice-id">{{ inv.id }}</p>
-                  <p class="invoice-date">{{ inv.date }}</p>
-                </div>
-                <p class="invoice-amount">{{ inv.amount }} TND</p>
-                <span class="invoice-badge" [ngClass]="invoiceStatusClass(inv.status)">
-                  @if (inv.status === 'paid')    { {{ i18n.t('inv_filter_paid') }} }
-                  @if (inv.status === 'pending') { {{ i18n.t('dash_inv_pending') }} }
-                  @if (inv.status === 'overdue') { {{ i18n.t('dash_inv_overdue') }} }
-                </span>
-              </div>
-            }
-          </div>
-        </div>
+    <div class="sk" style="height:70px;border-radius:14px"></div>
+  </div>
+}
 
-        <!-- MES APPAREILS IoT (Liste compacte) -->
-        <div class="recent-invoices-card card animate-fade-in" style="margin-top: 1.5rem;">
-          <div class="invoices-header">
-            <p class="section-label">Mes Appareils IoT</p>
-            <button class="view-all-btn" (click)="navigateTo('/client-dashboard/devices')">
-              {{ i18n.t('dash_view_all') || 'Voir tout' }} →
-            </button>
-          </div>
+<!-- ══ REAL CONTENT ════════════════════════════════════════ -->
+@if (!isLoading()) {
+<div class="dash-page">
 
-          <div class="invoice-list">
-            @for (device of clientDevices; track device.idDevice) {
-              <div class="invoice-row">
-                <div class="invoice-file-icon" style="font-size: 1.25rem; width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;">
-                  {{ getDeviceIcon(device.model) }}
-                </div>
-                <div class="invoice-info">
-                  <p class="invoice-id" style="font-size: 0.875rem;">{{ device.model }}</p>
-                  <p class="invoice-date" style="font-size: 0.75rem;">{{ device.numDevice }}</p>
-                </div>
-                <span class="invoice-badge" [ngClass]="device.status === 'active' ? 'inv--paid' : 'inv--overdue'" style="font-size: 0.75rem;">
-                  {{ device.status === 'active' ? 'Actif' : 'Expiré' }}
-                </span>
-              </div>
-            }
-          </div>
-        </div>
+  <!-- ── Greeting ──────────────────────────────────────── -->
+  <div class="greeting">
+    <h1 class="greeting-title">Hello, {{ user.prenom }}! 👋</h1>
+    <p class="greeting-sub">Here's an overview of your subscription and account.</p>
+  </div>
 
-      </div><!-- /left-column -->
+  <!-- ── Hero ──────────────────────────────────────────── -->
+  <div class="hero-card"
+    [style.background]="urgencyBg"
+    [class.hero--safe]="urgencyLevel==='safe'"
+    [class.hero--warning]="urgencyLevel==='warning'"
+    [class.hero--danger]="urgencyLevel==='danger'"
+    [class.hero--expired]="urgencyLevel==='expired'">
 
-      <!-- ── RIGHT COLUMN ─────────────────────────────────── -->
-      <div class="right-column">
-        <p class="right-col-title">{{ i18n.t('dash_account_summary') }}</p>
-        <div class="stats-grid">
+    <!-- LEFT -->
+    <div class="hero-left">
 
-          <!-- Total Paid -->
-          <div class="stat-card card animate-fade-in" style="animation-delay:0s">
-            <div class="stat-icon-wrapper blue">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <p class="stat-label">{{ i18n.t('dash_total_paid') }}</p>
-              <p class="stat-value">{{ stats.totalPaye }}</p>
-              <p class="stat-unit">TND</p>
-            </div>
-          </div>
+      <div class="plan-row">
+        <span class="plan-eyebrow">CURRENT PLAN</span>
+        <span class="plan-chip"
+          [class.chip--safe]="urgencyLevel==='safe'"
+          [class.chip--warning]="urgencyLevel==='warning'"
+          [class.chip--danger]="urgencyLevel==='danger'||urgencyLevel==='expired'">
+          {{ statusChipLabel }}
+        </span>
+      </div>
 
-          <!-- Invoices -->
-          <div class="stat-card card animate-fade-in" style="animation-delay:0.1s"
-               (click)="navigateTo('/client-dashboard/factures')">
-            <div class="stat-icon-wrapper green">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <p class="stat-label">{{ i18n.t('dash_invoices') }}</p>
-              <p class="stat-value">{{ stats.nombreFactures }}</p>
-              <p class="stat-unit">{{ i18n.t('inv_filter_paid') }}</p>
-            </div>
-          </div>
+      <h2 class="hero-plan-name">{{ planLabel }}</h2>
 
-          <!-- Support 24/7 -->
-          <div class="stat-card card animate-fade-in" style="animation-delay:0.2s">
-            <div class="stat-icon-wrapper teal">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <p class="stat-label">{{ i18n.t('dash_support') }}</p>
-              <p class="stat-value">{{ stats.support }}</p>
-              <p class="stat-unit stat-unit--green">{{ i18n.t('dash_available') }}</p>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="quick-actions-card card animate-fade-in" style="animation-delay:0.3s">
-            <div class="stat-icon-wrapper purple">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
-            </div>
-            <div class="quick-actions-body">
-              <p class="stat-label">{{ i18n.t('dash_quick_actions') }}</p>
-              <div class="quick-list">
-                <button class="quick-item" (click)="openForfaitsModal()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                  {{ i18n.t('dash_renew_now') }}
-                </button>
-                <button class="quick-item" (click)="navigateTo('/client-dashboard/factures')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  {{ i18n.t('dash_invoices') }}
-                </button>
-                <button class="quick-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  {{ i18n.t('dash_contact_support') }}
-                </button>
-                <button class="quick-item quick-item--upgrade" (click)="openForfaitsModal()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="18" x2="12" y2="6"/></svg>
-                  {{ i18n.t('dash_upgrade_plan') }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div><!-- /right-column -->
-
-    </div><!-- /dashboard-grid -->
-
-
-
-
-  }
-
-  <!-- ══ WARNING MODAL ══════════════════════════════════════ -->
-  @if (showWarningModal()) {
-    <div class="modal-backdrop" (click)="closeWarningModal()">
-      <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
-        <button class="modal-close" (click)="closeWarningModal()">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      <div class="hero-dates">
+        <div class="hero-date-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
+          <div>
+            <p class="date-lbl">Expires on</p>
+            <p class="date-val">{{ expiryDateStr }}</p>
+          </div>
+        </div>
+        <div class="date-sep"></div>
+        <div class="hero-date-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <div>
+            <p class="date-lbl">Time remaining</p>
+            <p class="date-val" [style.color]="progressColor">{{ timeRemainingLabel }}</p>
+          </div>
+        </div>
+        @if (abonnement()) {
+          <div class="date-sep"></div>
+          <div class="hero-date-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+            </svg>
+            <div>
+              <p class="date-lbl">Devices</p>
+              <p class="date-val">{{ clientDevices.length }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Progress bar with dynamic color -->
+      @if (abonnement()) {
+        <div class="progress-track">
+          <div class="progress-fill"
+            [style.width.%]="progressPercent"
+            [style.background]="progressColor">
+          </div>
+        </div>
+        <div class="progress-labels"><span>Start</span><span>{{ expiryDateStr }}</span></div>
+      }
+
+      @if (urgencyLevel !== 'safe') {
+        <div class="hero-notice"
+          [class.notice--warn]="urgencyLevel==='warning'"
+          [class.notice--danger]="urgencyLevel==='danger'||urgencyLevel==='expired'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          @if (urgencyLevel === 'expired') {
+            Your subscription has expired. Renew now to restore access.
+          } @else {
+            Your service will stop after {{ expiryDateStr }} if not renewed.
+          }
+        </div>
+      }
+
+      <!-- Actions -->
+      <div class="hero-actions">
+        <button class="btn-renew" (click)="openRenewModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Renew Subscription
         </button>
-        <div class="modal-body text-center">
-          <div class="modal-icon warning">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        <button class="btn-grace" (click)="activateGracePeriod()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <path d="M8 2v4h8V2"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="10" y1="12" x2="14" y2="12"/>
+          </svg>
+          Activate {{ graceDaysLeft }}-day Grace Period
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT — ring -->
+    <div class="hero-right">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 100 100">
+          <circle class="ring-track" cx="50" cy="50" r="45"/>
+          <circle class="ring-fill" cx="50" cy="50" r="45"
+            [attr.stroke]="progressColor"
+            [attr.stroke-dashoffset]="ringDashoffset"
+            stroke-dasharray="282.74"
+            transform="rotate(-90 50 50)"/>
+        </svg>
+        <div class="ring-center">
+          <p class="ring-value" [style.color]="progressColor">{{ daysLeft > 0 ? daysLeft : 0 }}</p>
+          <p class="ring-unit">days left</p>
+        </div>
+      </div>
+      <p class="ring-pct" [style.color]="progressColor">{{ remainingPercent }}% remaining</p>
+    </div>
+
+  </div>
+
+  <!-- ── Second row ────────────────────────────────────── -->
+  <div class="second-row">
+
+    <!-- Devices -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="sh-left">
+          <div class="section-icon si--teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
             </svg>
           </div>
-          <h3 class="modal-title">{{ i18n.t('warning_expiring_title') }}</h3>
-          <p class="modal-text">
-            {{ i18n.t('warning_expiring_msg') }}
-            <strong class="text-orange-500">{{ abonnement()?.joursRestants }} {{ i18n.t('warning_expiring_days') }}</strong>.
-          </p>
-          <div class="modal-actions-vertical">
-            <button class="btn btn-primary btn-lg w-full" (click)="openForfaitsModal()">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              {{ i18n.t('warning_renew_now') }}
-            </button>
-            <button class="btn btn-secondary btn-lg w-full" (click)="demanderProlongation()">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              {{ i18n.t('warning_request_extension') }}
-            </button>
+          <div>
+            <p class="section-title">Your Devices</p>
+            <p class="section-sub">{{ clientDevices.length }} registered · {{ activeDevicesCount }} active</p>
           </div>
         </div>
+        <button class="link-btn" (click)="navigateTo('/client-dashboard/devices')">View all →</button>
       </div>
-    </div>
-  }
 
-  <!-- ══ FORFAITS MODAL ═════════════════════════════════════ -->
-  @if (showForfaitsModal()) {
-    <div class="modal-backdrop" (click)="closeForfaitsModal()">
-      <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
-        <button class="modal-close" (click)="closeForfaitsModal()">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      @if (clientDevices.length === 0) {
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
           </svg>
-        </button>
-        <div class="modal-header text-center">
-          <h3 class="modal-title">{{ i18n.t('modal_choose_package') }}</h3>
-          <p class="modal-subtitle">{{ i18n.t('modal_select_duration') }}</p>
+          <p class="empty-title">No devices assigned yet</p>
+          <p class="empty-hint">Contact your reseller to get started</p>
+          <button class="empty-btn" (click)="navigateTo('/client-dashboard/devices')">View Devices</button>
         </div>
-        <div class="modal-body">
-          <div class="forfaits-grid">
-            @for (forfait of forfaits; track forfait.dureeMois) {
-              <div class="forfait-card" [ngClass]="{'popular': forfait.populaire}" (click)="selectForfait(forfait)">
-                @if (forfait.populaire) {
-                  <div class="popular-badge">
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                    {{ i18n.t('modal_popular') }}
-                  </div>
-                }
-                <div class="forfait-duration">{{ forfait.dureeLabel }}</div>
-                @if (forfait.economie) {
-                  <div class="economy-badge">{{ i18n.t('modal_save') }} {{ forfait.economie }}%</div>
-                }
-                <div class="forfait-price">
-                  <span class="price-amount">{{ forfait.prix }}</span>
-                  <span class="price-currency">TND</span>
-                </div>
-                <button class="btn btn-forfait w-full">{{ i18n.t('modal_subscribe') }}</button>
+      } @else {
+        <div class="device-list">
+          @for (d of clientDevices.slice(0,4); track d.idDevice) {
+            <div class="device-row">
+              <span class="device-icon-em">{{ getDeviceIcon(d.model) }}</span>
+              <div class="device-info">
+                <p class="device-name">{{ d.model || '—' }}</p>
+                <p class="device-serial">{{ d.numDevice || '—' }}</p>
               </div>
-            }
+              <span class="dev-pill"
+                [class.dp--actif]="['actif','active','attribué'].includes((d.status||'').toLowerCase())"
+                [class.dp--inactive]="!['actif','active','attribué'].includes((d.status||'').toLowerCase())">
+                {{ d.status || '—' }}
+              </span>
+            </div>
+          }
+          @if (clientDevices.length > 4) {
+            <button class="more-btn" (click)="navigateTo('/client-dashboard/devices')">
+              +{{ clientDevices.length - 4 }} more devices →
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Invoices -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="sh-left">
+          <div class="section-icon si--blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <div>
+            <p class="section-title">Invoices</p>
+            <p class="section-sub">Managed via Odoo</p>
           </div>
         </div>
+        <button class="link-btn" (click)="navigateTo('/client-dashboard/factures')">View all →</button>
+      </div>
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <p class="empty-title">No invoices yet</p>
+        <p class="empty-hint">Your invoices will appear here after payment</p>
+        <button class="empty-btn" (click)="navigateTo('/client-dashboard/factures')">View Invoices</button>
       </div>
     </div>
-  }
 
-  <!-- ══ PAYMENT MODAL ══════════════════════════════════════ -->
-  @if (showPaymentModal() && selectedForfaitForPayment(); as forfait) {
-    <app-payment
-      [amount]="forfait.prix"
-      [serviceNom]="abonnement()?.dureeLabel + ' - Abonnement' || 'Service IoT'"
-      [dureeLabel]="forfait.dureeLabel"
-      (close)="showPaymentModal.set(false)"
-      (paymentSuccess)="onPaymentSuccess($event)">
-    </app-payment>
-  }
+  </div>
+
+  <!-- ── Status banner ─────────────────────────────────── -->
+  <div class="status-banner"
+    [class.banner--ok]="smartMessage.level==='ok'"
+    [class.banner--warn]="smartMessage.level==='warn'"
+    [class.banner--danger]="smartMessage.level==='danger'||smartMessage.level==='expired'">
+    <div class="banner-icon">
+      @if (smartMessage.level === 'ok') {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      } @else {
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      }
+    </div>
+    <div class="banner-text">
+      <p class="banner-title">{{ smartMessage.title }}</p>
+      <p class="banner-body">{{ smartMessage.body }}</p>
+    </div>
+    @if (smartMessage.level === 'expired' || smartMessage.level === 'danger') {
+      <button class="banner-btn" (click)="openRenewModal()">Renew now</button>
+    }
+  </div>
 
 </div>
+}
+
+<!-- ══ RENEWAL MODAL ═══════════════════════════════════════ -->
+@if (showForfaitsModal()) {
+<div class="modal-backdrop" (click)="closeForfaitsModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Choose a Plan</h2>
+        <p class="modal-sub">All plans include full device management access</p>
+      </div>
+      <button class="modal-close" (click)="closeForfaitsModal()">&#x2715;</button>
+    </div>
+    <div class="forfaits-grid">
+      @for (f of forfaits; track f.dureeMois) {
+        <div class="forfait-card" [class.fc--popular]="f.populaire" (click)="selectForfait(f)">
+          @if (f.populaire) { <span class="fc-badge">Best value</span> }
+          @if (renewLoading()) {
+            <div class="fc-loading"><div class="spinner-sm"></div></div>
+          }
+          <p class="fc-duration">{{ f.dureeLabel }}</p>
+          <div class="fc-price-row">
+            <span class="fc-price">{{ f.prix }}</span>
+            <span class="fc-currency">TND</span>
+          </div>
+          <p class="fc-unit">{{ f.prixUnitaire }} TND / month</p>
+          @if (f.economie > 0) { <div class="fc-save">Save {{ f.economie }}%</div> }
+          <button class="fc-btn" [disabled]="renewLoading()">
+            {{ renewLoading() ? 'Processing…' : 'Select Plan' }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}

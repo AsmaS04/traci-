@@ -1,174 +1,131 @@
-<!-- Abonnements Client - TRACI -->
-<div class="abonnements-page">
+@if (loading()) {
+  <div class="page">
+    <div class="page-header">
+      <div class="sk" style="height:10px;width:80px;border-radius:5px;margin-bottom:0.5rem"></div>
+      <div class="sk" style="height:32px;width:220px;border-radius:8px"></div>
+    </div>
+    <div class="kpi-strip">
+      @for (i of [1,2,3,4]; track i) {
+        <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1.2rem 1.3rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem">
+            <div class="sk" style="height:9px;width:65px;border-radius:5px"></div>
+            <div class="sk" style="width:36px;height:36px;border-radius:10px"></div>
+          </div>
+          <div class="sk" style="height:36px;width:40px;border-radius:7px"></div>
+        </div>
+      }
+    </div>
+    <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1rem 1.3rem;margin-bottom:1.3rem;display:flex;gap:0.6rem">
+      @for (i of [1,2,3,4]; track i) { <div class="sk" style="height:32px;width:90px;border-radius:8px"></div> }
+    </div>
+    @for (i of [1,2]; track i) {
+      <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:16px;padding:1.6rem;margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:1.2rem">
+          <div class="sk" style="height:20px;width:200px;border-radius:6px"></div>
+          <div class="sk" style="height:24px;width:70px;border-radius:99px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:1.2rem">
+          @for (j of [1,2,3]; track j) {
+            <div>
+              <div class="sk" style="height:9px;width:60px;border-radius:5px;margin-bottom:0.35rem"></div>
+              <div class="sk" style="height:13px;width:90px;border-radius:5px"></div>
+            </div>
+          }
+        </div>
+        <div class="sk" style="height:8px;width:100%;border-radius:99px;margin-bottom:1.2rem"></div>
+        <div style="display:flex;gap:0.75rem;padding-top:1rem;border-top:1px solid var(--border,#e5e7eb)">
+          <div class="sk" style="height:36px;width:100px;border-radius:9px"></div>
+          <div class="sk" style="height:36px;width:90px;border-radius:9px"></div>
+        </div>
+      </div>
+    }
+  </div>
+}
 
-  <!-- Header -->
-  <div class="page-header animate-fade-in">
+@if (!loading()) {
+<div class="page">
+
+  <div class="page-header">
     <p class="page-eyebrow">{{ i18n.t('topbar_panel') }}</p>
-    <h1 class="page-title">{{ i18n.t('sub_title') }}</h1>
-    <p class="page-subtitle">{{ i18n.t('sub_subtitle') }}</p>
+    <h1 class="page-title">{{ i18n.t('sub_title') || 'My Subscriptions' }}</h1>
+    <p class="page-sub">{{ i18n.t('sub_subtitle') || 'Manage your IoT subscriptions' }}</p>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-row">
-    <!-- Total -->
-    <div class="stat-card" style="animation-delay: 0s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('sub_stat_total') }}</p>
-        <div class="stat-icon blue">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-        </div>
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-card-head">
+        <span class="kpi-label">{{ i18n.t('sub_stat_total') }}</span>
+        <div class="kpi-icon kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
       </div>
-      <p class="stat-value">{{ abonnementsStats().total }}</p>
+      <p class="kpi-val">{{ abonnementsStats().total }}</p>
     </div>
-
-    <!-- Actifs -->
-    <div class="stat-card" style="animation-delay: 0.1s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('sub_stat_active') }}</p>
-        <div class="stat-icon teal">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+    <div class="kpi-card">
+      <div class="kpi-card-head">
+        <span class="kpi-label">{{ i18n.t('sub_stat_active') }}</span>
+        <div class="kpi-icon kpi-icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
       </div>
-      <p class="stat-value">{{ abonnementsStats().actifs }}</p>
+      <p class="kpi-val">{{ abonnementsStats().actifs }}</p>
     </div>
-
-    <!-- Expirés -->
-    <div class="stat-card" style="animation-delay: 0.2s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('sub_stat_expired') }}</p>
-        <div class="stat-icon gray">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+    <div class="kpi-card">
+      <div class="kpi-card-head">
+        <span class="kpi-label">{{ i18n.t('sub_stat_expired') }}</span>
+        <div class="kpi-icon kpi-icon--gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       </div>
-      <p class="stat-value">{{ abonnementsStats().expires }}</p>
+      <p class="kpi-val">{{ abonnementsStats().expires }}</p>
     </div>
-
-    <!-- Annulés -->
-    <div class="stat-card" style="animation-delay: 0.3s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('sub_stat_cancelled') }}</p>
-        <div class="stat-icon red">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+    <div class="kpi-card">
+      <div class="kpi-card-head">
+        <span class="kpi-label">{{ i18n.t('sub_stat_cancelled') }}</span>
+        <div class="kpi-icon kpi-icon--red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
       </div>
-      <p class="stat-value">{{ abonnementsStats().annules }}</p>
+      <p class="kpi-val">{{ abonnementsStats().annules }}</p>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
-    <div class="filters-row">
-      <button
-        (click)="setFilter('ALL')"
-        [ngClass]="{'active': isFilterActive('ALL')}"
-        class="filter-btn">
-        {{ i18n.t('sub_filter_all') }}
-      </button>
-
-      <button
-        (click)="setFilter('ACTIVE')"
-        [ngClass]="{'active-success': isFilterActive('ACTIVE')}"
-        class="filter-btn">
-        {{ i18n.t('sub_filter_active') }}
-      </button>
-
-      <button
-        (click)="setFilter('EXPIRED')"
-        [ngClass]="{'active-gray': isFilterActive('EXPIRED')}"
-        class="filter-btn">
-        {{ i18n.t('sub_filter_expired') }}
-      </button>
-
-      <button
-        (click)="setFilter('CANCELLED')"
-        [ngClass]="{'active-danger': isFilterActive('CANCELLED')}"
-        class="filter-btn">
-        {{ i18n.t('sub_filter_cancelled') }}
-      </button>
-    </div>
+  <div class="filter-bar">
+    <button class="filter-btn" [class.filter-btn--active]="isFilterActive('ALL')"       (click)="setFilter('ALL')">{{ i18n.t('sub_filter_all') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-green]="isFilterActive('ACTIVE')"   (click)="setFilter('ACTIVE')">{{ i18n.t('sub_filter_active') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-gray]="isFilterActive('EXPIRED')"  (click)="setFilter('EXPIRED')">{{ i18n.t('sub_filter_expired') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-red]="isFilterActive('CANCELLED')" (click)="setFilter('CANCELLED')">{{ i18n.t('sub_filter_cancelled') }}</button>
   </div>
 
-  <!-- Subscriptions List -->
-  @if (filteredAbonnements().length > 0) {
-    <div class="subscriptions-list">
+  @if (filteredAbonnements().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <h3 class="empty-title">{{ i18n.t('sub_no_subscriptions') }}</h3>
+      <p class="empty-sub">{{ i18n.t('sub_try_filters') }}</p>
+    </div>
+  } @else {
+    <div class="subs-list">
       @for (abo of filteredAbonnements(); track abo.idAbo) {
-        <div class="subscription-item">
-          <!-- Header -->
-          <div class="subscription-header">
-            <h3 class="subscription-title">{{abo.dureeLabel + ' - Abonnement' }}</h3>
-
-            <span [ngClass]="getStatutBadgeClass(abo.status)" class="subscription-badge">
-              {{ getStatutLabel(abo.status) }}
+        <div class="sub-card" [class.sub-card--active]="abo.status?.toLowerCase()==='actif'" [class.sub-card--expired]="abo.status?.toLowerCase()==='expiré'">
+          <div class="sub-header">
+            <h3 class="sub-title">{{ abo.dureeLabel }} — Subscription</h3>
+            <span class="badge" [class]="statusBadgeClass(abo.status)">
+              <span class="badge-dot"></span>{{ statusLabel(abo.status) }}
             </span>
           </div>
-
-          <!-- Details Grid -->
-          <div class="subscription-details">
-            <div class="detail-item">
-              <label>{{ i18n.t('sub_duration') }}</label>
-              <p class="value">{{ abo.dureeLabel }}</p>
-            </div>
-
-            <div class="detail-item">
-              <label>{{ i18n.t('sub_period') }}</label>
-              <p class="value">
-                {{ abo.startDate  | date: 'dd/MM/yyyy' }} - {{abo.endDate  | date: 'dd/MM/yyyy' }}
-              </p>
-            </div>
-
-            <div class="detail-item">
-              <label>{{ i18n.t('sub_price') }}</label>
-              <p class="value">{{ abo.totalTtc }} TND</p>
-            </div>
+          <div class="sub-details">
+            <div class="sub-detail-item"><p class="sdl">{{ i18n.t('sub_duration') }}</p><p class="sdv">{{ abo.dureeLabel }}</p></div>
+            <div class="sub-detail-item"><p class="sdl">{{ i18n.t('sub_period') }}</p><p class="sdv">{{ formatDate(abo.startDate) }} → {{ formatDate(abo.endDate) }}</p></div>
+            <div class="sub-detail-item"><p class="sdl">{{ i18n.t('sub_price') }}</p><p class="sdv sdv--price">{{ abo.totalTtc }} TND</p></div>
           </div>
-
-          <!-- Progress Bar (if active) -->
-          @if (abo.status === StatutAbonnement.ACTIF) {
-            <div class="subscription-progress">
-              <div class="progress-info">
-                <p class="progress-label">
-                  {{ abo.joursRestants }} {{ i18n.t('sub_days_remaining') }}
-                </p>
-                <p class="progress-percentage">
-                  {{ getProgressPercentage(abo) | number:'1.0-0' }}%
-                </p>
-              </div>
-              <div class="progress-bar">
-                <div
-                  class="progress-fill"
-                  [style.width.%]="getProgressPercentage(abo)">
-                </div>
+          @if (abo.status?.toLowerCase() === 'actif') {
+            <div class="sub-progress">
+              <div class="progress-info"><span class="progress-lbl">{{ abo.joursRestants }} {{ i18n.t('sub_days_remaining') }}</span><span class="progress-pct">{{ getRemainingPercent(abo) | number:'1.0-0' }}% left</span></div>
+              <div class="progress-track">
+                <div class="progress-fill" [style.width.%]="getProgressPercent(abo)" [style.background]="progressColor(abo)"></div>
               </div>
             </div>
           }
-
-          <!-- Actions -->
-          <div class="subscription-actions">
-            <button
-              (click)="openDetails(abo)"
-              class="btn-details">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+          <div class="sub-actions">
+            <button class="btn-secondary" (click)="openDetails(abo)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               {{ i18n.t('sub_details') }}
             </button>
-
-            @if (abo.status === 'actif' || abo.status === 'expiré') {
-              <button
-                (click)="renouvelerAbonnement(abo)"
-                class="btn-renew">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+            @if (abo.status?.toLowerCase() === 'actif' || abo.status?.toLowerCase() === 'expiré') {
+              <button class="btn-primary" (click)="renouvelerAbonnement(abo)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                 {{ i18n.t('sub_renew') }}
               </button>
             }
@@ -176,106 +133,44 @@
         </div>
       }
     </div>
-  } @else {
-    <!-- Empty State -->
-    <div class="empty-state">
-      <div class="empty-icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <h3 class="empty-title">{{ i18n.t('sub_no_subscriptions') }}</h3>
-      <p class="empty-subtitle">{{ i18n.t('sub_try_filters') }}</p>
-    </div>
-  }
-
-  <!-- Details Modal -->
-  @if (showDetailsModal() && selectedAbonnement(); as abo) {
-    <div class="modal-backdrop" (click)="closeDetails()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <button
-            (click)="closeDetails()"
-            class="modal-close">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <h3 class="modal-title">{{ i18n.t('sub_subscription_number') }} #{{ abo.idAbo }}</h3>
-          <p class="modal-subtitle">{{abo.dureeLabel + ' - Abonnement'}}</p>
-        </div>
-
-        <div class="modal-body">
-          <!-- Details Grid -->
-          <div class="modal-details-grid">
-            <div class="detail-box">
-              <label>{{ i18n.t('sub_duration') }}</label>
-              <p class="value">{{ abo.dureeLabel }}</p>
-            </div>
-
-            <div class="detail-box">
-              <label>{{ i18n.t('sub_price') }}</label>
-              <p class="value">{{ abo.totalTtc }} TND</p>
-            </div>
-
-            <div class="detail-box">
-              <label>{{ i18n.t('sub_start_date') }}</label>
-              <p class="value">{{ abo.startDate | date: 'dd/MM/yyyy' }}</p>
-            </div>
-
-            <div class="detail-box">
-              <label>{{ i18n.t('sub_end_date') }}</label>
-              <p class="value">{{ abo.endDate | date: 'dd/MM/yyyy' }}</p>
-            </div>
-
-            @if (abo.status === 'actif') {
-              <div class="detail-box">
-                <label>{{ i18n.t('sub_days_remaining') }}</label>
-                <p class="value">{{ abo.joursRestants }} {{ i18n.t('dash_days') }}</p>
-              </div>
-            }
-
-            <!-- <div class="detail-box">
-              <label>{{ i18n.t('sub_auto_renewal') }}</label>
-              <p class="value">
-                {{ abo.autoRenouvellement ? i18n.t('sub_enabled') : i18n.t('sub_disabled') }}
-              </p>
-            </div> -->
-
-            <div class="detail-box full-width">
-              <label>Statut</label>
-              <span [ngClass]="getStatutBadgeClass(abo.status)" class="subscription-badge">
-                {{ getStatutLabel(abo.status) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="modal-actions">
-            <button
-              (click)="closeDetails()"
-              class="btn-download">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {{ i18n.t('btn_download') }}
-            </button>
-
-            @if (abo.status === 'actif' || abo.status === 'expire') {
-              <button
-                (click)="renouvelerAbonnement(abo)"
-                class="btn-renew">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {{ i18n.t('sub_renew') }}
-              </button>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
   }
 
 </div>
+}
+
+@if (showDetailsModal() && selectedAbonnement()) {
+<div class="modal-backdrop" (click)="closeDetails()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Subscription #{{ selectedAbonnement()!.idAbo }}</h2>
+        <p class="modal-subtitle">{{ selectedAbonnement()!.dureeLabel }}</p>
+      </div>
+      <button class="modal-close" (click)="closeDetails()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_duration') }}</p><p class="detail-val">{{ selectedAbonnement()!.dureeLabel }}</p></div>
+        <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_price') }}</p><p class="detail-val sdv--price">{{ selectedAbonnement()!.totalTtc }} TND</p></div>
+        <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_start_date') }}</p><p class="detail-val">{{ formatDate(selectedAbonnement()!.startDate) }}</p></div>
+        <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_end_date') }}</p><p class="detail-val">{{ formatDate(selectedAbonnement()!.endDate) }}</p></div>
+        @if (selectedAbonnement()!.status?.toLowerCase() === 'actif') {
+          <div class="detail-item"><p class="detail-label">Days Remaining</p><p class="detail-val">{{ selectedAbonnement()!.joursRestants }}</p></div>
+        }
+        <div class="detail-item"><p class="detail-label">Status</p>
+          <span class="badge" [class]="statusBadgeClass(selectedAbonnement()!.status)"><span class="badge-dot"></span>{{ statusLabel(selectedAbonnement()!.status) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeDetails()">Close</button>
+      @if (selectedAbonnement()!.status?.toLowerCase() === 'actif' || selectedAbonnement()!.status?.toLowerCase() === 'expiré') {
+        <button class="btn-primary" (click)="renouvelerAbonnement(selectedAbonnement()!); closeDetails()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          {{ i18n.t('sub_renew') }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
+}

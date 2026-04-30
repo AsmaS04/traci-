@@ -5,6 +5,8 @@ import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { ClientService } from '../../../service/Client.service';
 import { DeviceService } from '../../../service/Device.service';
+import { AbonnementService } from '../../../service/Abonnement.service';
+import { ToastService } from '../../../service/Toast.service';
 import { Device } from '../../../models/device.model';
 import { Client } from '../../../models/client.model';
 import { Reseller } from '../../../models/reseller.model';
@@ -22,6 +24,8 @@ export default class ResellerDevicesComponent implements OnInit {
   private resellerService = inject(ResellerService);
   private clientService   = inject(ClientService);
   private deviceService   = inject(DeviceService);
+  private aboService      = inject(AbonnementService);
+  private toast           = inject(ToastService);
 
   reseller:     Reseller | null = null;
   devices:      Device[]        = [];
@@ -30,37 +34,35 @@ export default class ResellerDevicesComponent implements OnInit {
   loading = true;
 
   ngOnInit() {
-    // Load reseller profile first to get ID, then load scoped devices
     this.resellerService.getMyProfile().subscribe({
       next: (r: Reseller) => {
         this.reseller = r;
         this.loadDevices(r.idRev);
         this.loadLibreDevices(r.idRev);
       },
-      error: (err: any) => { console.error('Failed to load reseller profile', err); this.loading = false; }
+      error: () => { this.loading = false; }
     });
-
     this.clientService.getMyClients().subscribe({
       next: (data: Client[]) => { this.clients = data; },
-      error: (err: any) => console.error('Failed to load clients', err)
+      error: () => {}
     });
   }
 
   private loadDevices(resellerId: number) {
     this.deviceService.getByReseller(resellerId).subscribe({
       next: (data: Device[]) => { this.devices = data; this.loading = false; },
-      error: (err: any) => { console.error('Failed to load devices', err); this.loading = false; }
+      error: () => { this.loading = false; }
     });
   }
 
   private loadLibreDevices(resellerId: number) {
     this.deviceService.getLibreByReseller(resellerId).subscribe({
       next: (data: Device[]) => { this.libreDevices = data; },
-      error: (err: any) => console.error('Failed to load libre devices', err)
+      error: () => {}
     });
   }
 
-  // ── Search & filter ───────────────────────────────────
+  // ── Search & filter ────────────────────────────────────
   search        = '';
   filterStatus: 'all' | 'actif' | 'expiré' | 'inactif' | 'libre' = 'all';
   filterModel   = 'all';
@@ -100,88 +102,146 @@ export default class ResellerDevicesComponent implements OnInit {
     return 'model--box';
   }
 
-  statusClass(status: string): string {
-    const s = (status ?? '').toLowerCase();
-    if (s === 'actif')   return 'status--active';
-    if (s === 'expiré')  return 'status--expired';
-    if (s === 'libre')   return 'status--libre';
-    return 'status--inactive';
-  }
+  fmt(n: number): string { return new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0); }
+  clientFullName(c: Client): string { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
 
-  fmt(n: number): string { return new Intl.NumberFormat().format(n); }
-
-  clientFullName(c: Client): string {
-    return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim();
-  }
-
-  // ── Detail panel ──────────────────────────────────────
-  panelOpen    = false;
+  // ── Detail panel ───────────────────────────────────────
+  panelOpen   = false;
   panelDevice: Device | null = null;
 
   openPanel(d: Device) { this.panelDevice = d; this.panelOpen = true; }
-  closePanel() { this.panelOpen = false; }
+  closePanel()         { this.panelOpen = false; }
 
-  // ── Assign Device modal ───────────────────────────────
-  showAssignModal = false;
-  assignSaving    = false;
-  assignError     = '';
+  // ══════════════════════════════════════════════════════
+  // HYBRID ASSIGN MODAL
+  // ══════════════════════════════════════════════════════
+  showAssignModal  = false;
+  assignTab: 'pick' | 'count' = 'pick';
 
-  assignForm: {
-    clientId:     number | null;
-    deviceId:     number | null;
-    dureeMois:    number;
-    prixUnitaire: number;
-  } = { clientId: null, deviceId: null, dureeMois: 1, prixUnitaire: 0 };
+  // Step 1 — client selection
+  selectedClientId: number | null = null;
 
-  get selectedLibreDevice(): Device | null {
-    if (!this.assignForm.deviceId) return null;
-    return this.libreDevices.find(d => d.idDevice === this.assignForm.deviceId) ?? null;
-  }
+  // Shared fields
+  assignDuration = 1;
+  assignPrice    = 0;
+
+  // Tab A — multi-select
+  selectedDeviceIds: Set<number> = new Set();
+
+  // Tab B — assign by count
+  assignCount    = 1;
+  countPreview: Device[] = [];
+
+  // Progress
+  assignInProgress = false;
+  assignDone       = 0;
+  assignTotal      = 0;
+  assignErrors     = 0;
 
   openAssignModal() {
-    this.assignForm  = { clientId: null, deviceId: null, dureeMois: 1, prixUnitaire: 0 };
-    this.assignError = '';
-    this.showAssignModal = true;
+    this.selectedClientId  = null;
+    this.assignTab         = 'pick';
+    this.assignDuration    = 1;
+    this.assignPrice       = 0;
+    this.selectedDeviceIds = new Set();
+    this.assignCount       = 1;
+    this.countPreview      = [];
+    this.assignDone        = 0;
+    this.assignTotal       = 0;
+    this.assignErrors      = 0;
+    this.assignInProgress  = false;
+    this.showAssignModal   = true;
+    this.updateCountPreview();
   }
 
   closeAssignModal() {
-    if (this.assignSaving) return;
+    if (this.assignInProgress) return;
     this.showAssignModal = false;
   }
 
-  get canSaveAssign(): boolean {
-    return !!this.reseller &&
-           !!this.assignForm.clientId &&
-           !!this.assignForm.deviceId &&
-           this.assignForm.dureeMois >= 1 &&
-           this.assignForm.prixUnitaire >= 0;
+  switchAssignTab(t: 'pick' | 'count') {
+    this.assignTab = t;
+    if (t === 'count') this.updateCountPreview();
   }
 
-  saveAssign() {
-    if (!this.canSaveAssign || this.assignSaving || !this.reseller) return;
-    this.assignSaving = true;
-    this.assignError  = '';
+  toggleDevice(id: number) {
+    if (this.selectedDeviceIds.has(id)) this.selectedDeviceIds.delete(id);
+    else                                this.selectedDeviceIds.add(id);
+  }
 
-    this.deviceService.assignDevice({
-      resellerId:   this.reseller.idRev,
-      clientId:     this.assignForm.clientId!,
-      deviceId:     this.assignForm.deviceId!,
-      dureeMois:    this.assignForm.dureeMois,
-      prixUnitaire: this.assignForm.prixUnitaire,
-    }).subscribe({
-      next: () => {
-        this.assignSaving    = false;
-        this.showAssignModal = false;
-        this.loadDevices(this.reseller!.idRev);
-        this.loadLibreDevices(this.reseller!.idRev);
-      },
-      error: (err: any) => {
-        this.assignSaving = false;
-        this.assignError  = err.status === 409
-          ? 'This device is no longer available.'
-          : 'Assignment failed. Please try again.';
-        console.error('Assign failed', err);
+  isSelected(id: number) { return this.selectedDeviceIds.has(id); }
+
+  toggleSelectAll() {
+    if (this.selectedDeviceIds.size === this.libreDevices.length) {
+      this.selectedDeviceIds = new Set();
+    } else {
+      this.selectedDeviceIds = new Set(this.libreDevices.map(d => d.idDevice));
+    }
+  }
+
+  get allSelected()  { return this.libreDevices.length > 0 && this.selectedDeviceIds.size === this.libreDevices.length; }
+  get someSelected() { return this.selectedDeviceIds.size > 0 && !this.allSelected; }
+
+  updateCountPreview() {
+    this.countPreview = this.libreDevices.slice(0, Math.max(0, this.assignCount));
+  }
+
+  get devicesToAssign(): Device[] {
+    if (this.assignTab === 'pick') {
+      return this.libreDevices.filter(d => this.selectedDeviceIds.has(d.idDevice));
+    }
+    return this.countPreview;
+  }
+
+  get canAssign(): boolean {
+    return !this.assignInProgress &&
+           !!this.selectedClientId &&
+           !!this.reseller &&
+           this.assignDuration >= 1 &&
+           this.assignPrice >= 0 &&
+           this.devicesToAssign.length > 0;
+  }
+
+  get assignProgress(): number {
+    if (!this.assignTotal) return 0;
+    return Math.round((this.assignDone / this.assignTotal) * 100);
+  }
+
+  async runBulkAssign() {
+    if (!this.canAssign || !this.reseller || !this.selectedClientId) return;
+    const devices = this.devicesToAssign;
+
+    this.assignInProgress = true;
+    this.assignTotal      = devices.length;
+    this.assignDone       = 0;
+    this.assignErrors     = 0;
+
+    for (const device of devices) {
+      try {
+        await this.aboService.assignDevice(
+          this.reseller.idRev,
+          this.selectedClientId,
+          device.idDevice,
+          this.assignDuration,
+          this.assignPrice
+        ).toPromise();
+        this.assignDone++;
+      } catch {
+        this.assignErrors++;
+        this.assignDone++;
       }
-    });
+    }
+
+    this.assignInProgress = false;
+    const ok   = this.assignDone - this.assignErrors;
+    const fail = this.assignErrors;
+
+    if (fail === 0)       this.toast.success(`${ok} device${ok > 1 ? 's' : ''} assigned successfully`);
+    else if (ok === 0)    this.toast.error(`All ${fail} assignments failed`);
+    else                  this.toast.warning(`${ok} assigned, ${fail} failed`);
+
+    this.showAssignModal = false;
+    this.loadDevices(this.reseller.idRev);
+    this.loadLibreDevices(this.reseller.idRev);
   }
 }

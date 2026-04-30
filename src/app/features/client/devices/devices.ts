@@ -1,88 +1,78 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { Device } from '../../../models/device.model';
 import { TranslationService } from '../../../service/translation.service';
 import { ClientService } from '../../../service/Client.service';
+import { ToastService } from '../../../service/Toast.service';
 
 @Component({
   selector: 'app-devices',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './devices.html',
   styleUrl: './devices.css'
 })
 export default class DevicesComponent implements OnInit {
 
-  router = inject(Router);
-  i18n = inject(TranslationService);
+  i18n          = inject(TranslationService);
   private clientService = inject(ClientService);
+  private toast         = inject(ToastService);
 
-  devices = signal<Device[]>([]);
-  filteredDevices = signal<Device[]>([]);
-  selectedStatus = signal<'all' | 'active' | 'expired'>('all');
-  searchTerm = signal('');
+  devices        = signal<Device[]>([]);
+  loading        = signal(true);
+  filterStatus   = signal<'all' | 'actif' | 'expiré' | 'inactif'>('all');
+  search         = signal('');
+  panelOpen      = signal(false);
+  panelDevice    = signal<Device | null>(null);
 
-  get totalDevices()  { return this.devices().length; }
-  get activeDevices() { return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'active').length; }
-  get expiredDevices(){ return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'expired').length; }
+  filteredDevices = computed(() => {
+    const q   = this.search().toLowerCase().trim();
+    const f   = this.filterStatus();
+    return this.devices().filter(d => {
+      const matchSearch = !q ||
+        (d.model ?? '').toLowerCase().includes(q) ||
+        (d.numDevice ?? '').toLowerCase().includes(q) ||
+        (d.imei ?? '').toLowerCase().includes(q);
+      const matchStatus = f === 'all' || (d.status ?? '').toLowerCase() === f;
+      return matchSearch && matchStatus;
+    });
+  });
 
-  ngOnInit() { this.loadDevices(); }
+  get totalDevices()    { return this.devices().length; }
+  get activeDevices()   { return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'actif').length; }
+  get expiredDevices()  { return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'expiré').length; }
+  get inactiveDevices() { return this.devices().filter(d => (d.status ?? '').toLowerCase() === 'inactif').length; }
 
-  loadDevices() {
+  ngOnInit() {
+    this.loading.set(true);
     this.clientService.getMyDevices().subscribe({
-      next: (data: Device[]) => {
-        this.devices.set(data);
-        this.filteredDevices.set(data);
-      },
-      error: (err: any) => console.error('Failed to load devices', err)
+      next: (data: Device[]) => { this.devices.set(data); this.loading.set(false); },
+      error: () => { this.toast.error('Failed to load devices.'); this.loading.set(false); }
     });
   }
 
-  filterByStatus(status: 'all' | 'active' | 'expired') {
-    this.selectedStatus.set(status);
-    this.applyFilters();
-  }
+  openPanel(d: Device)  { this.panelDevice.set(d); this.panelOpen.set(true); }
+  closePanel()          { this.panelOpen.set(false); setTimeout(() => this.panelDevice.set(null), 300); }
 
-  searchDevices(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase();
-    this.searchTerm.set(term);
-    this.applyFilters();
-  }
-
-  applyFilters() {
-    let filtered = this.devices();
-    if (this.selectedStatus() !== 'all') {
-      filtered = filtered.filter(d => (d.status ?? '').toLowerCase() === this.selectedStatus());
-    }
-    if (this.searchTerm()) {
-      filtered = filtered.filter(d =>
-        (d.model ?? '').toLowerCase().includes(this.searchTerm()) ||
-        (d.numDevice ?? '').toLowerCase().includes(this.searchTerm()) ||
-        (d.imei ?? '').toLowerCase().includes(this.searchTerm())
-      );
-    }
-    this.filteredDevices.set(filtered);
+  statusClass(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'actif')  return 'pill--actif';
+    if (s === 'expiré') return 'pill--expired';
+    return 'pill--inactive';
   }
 
   getDeviceIcon(model: string): string {
-    if ((model ?? '').includes('BOX')) return '📦';
-    if ((model ?? '').includes('MINI')) return '📱';
-    if ((model ?? '').includes('PRO')) return '💼';
-    if ((model ?? '').includes('LITE')) return '⚡';
+    const m = (model ?? '').toUpperCase();
+    if (m.includes('BOX'))  return '📦';
+    if (m.includes('MINI')) return '📱';
+    if (m.includes('PRO'))  return '💼';
+    if (m.includes('LITE')) return '⚡';
     return '📡';
   }
 
-  getStatusLabel(status: string): string {
-    const s = (status ?? '').toLowerCase();
-    return s === 'active'
-      ? this.i18n.t('dev_status_active') || 'Actif'
-      : this.i18n.t('dev_status_expired') || 'Expiré';
+  formatDate(d: string | null | undefined): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
-
-  navigateToDeviceDetails(deviceId: number) {
-    this.router.navigate(['/client-dashboard/devices', deviceId]);
-  }
-
-  navigateTo(path: string) { this.router.navigate([path]); }
 }

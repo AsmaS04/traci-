@@ -27,12 +27,20 @@
           </a>
         </div>
       } @else {
+
+        <!-- Error banner -->
         @if (error) {
-          <div class="error-message">{{ error }}</div>
+          <div class="error-message">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ error }}
+          </div>
         }
 
+        <!-- Email field -->
         <label>{{ ts.t('ra_email_label') }}</label>
-        <div class="input-group">
+        <div class="input-group" [class.input-group--error]="emailValid === false" [class.input-group--valid]="emailValid === true">
           <span class="input-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="20" height="16" x="2" y="4" rx="2"/>
@@ -43,39 +51,53 @@
             type="email"
             [(ngModel)]="email"
             [placeholder]="ts.t('ra_email_placeholder')"
+            (input)="onEmailInput()"
+            (blur)="onEmailBlur()"
           />
+          <!-- Checking spinner -->
+          @if (emailChecking) {
+            <span class="email-check-spinner"></span>
+          }
+          <!-- Valid tick -->
+          @if (emailValid === true && !emailChecking) {
+            <span class="email-check-icon email-check-icon--ok">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+          }
+          <!-- Invalid cross -->
+          @if (emailValid === false && !emailChecking) {
+            <span class="email-check-icon email-check-icon--err">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </span>
+          }
         </div>
 
+        <!-- Inline hint under email -->
+        @if (emailValid === false && !emailChecking) {
+          <p class="field-hint field-hint--error">
+            This email is not registered as a {{ role === 'CLIENT' ? 'client' : 'reseller' }}. Contact your manager.
+          </p>
+        }
+        @if (emailValid === true && !emailChecking) {
+          <p class="field-hint field-hint--ok">Email found ✓</p>
+        }
+
+        <!-- Role selector -->
         <label>{{ ts.t('ra_role_label') }}</label>
         <div class="role-selector">
-          <button
-            class="role-btn"
-            [class.active]="role === 'CLIENT'"
-            (click)="role = 'CLIENT'"
-          >
-            {{ ts.t('ra_role_client') }}
-          </button>
-          <button
-            class="role-btn"
-            [class.active]="role === 'RESELLER'"
-            (click)="role = 'RESELLER'"
-          >
-            {{ ts.t('ra_role_reseller') }}
-          </button>
+          <button class="role-btn" [class.active]="role === 'CLIENT'"   (click)="role = 'CLIENT';   onEmailInput()">{{ ts.t('ra_role_client') }}</button>
+          <button class="role-btn" [class.active]="role === 'RESELLER'" (click)="role = 'RESELLER'; onEmailInput()">{{ ts.t('ra_role_reseller') }}</button>
         </div>
 
-        <button
-          class="login-btn"
-          (click)="onSubmit()"
-          [disabled]="loading || !email"
-        >
-          {{ loading ? ts.t('ra_loading') : ts.t('ra_submit') }}
+        <!-- Submit -->
+        <button class="login-btn" (click)="onSubmit()" [disabled]="!canSubmit">
+          @if (emailChecking) { <span class="btn-spinner"></span> Checking… }
+          @else if (loading)  { <span class="btn-spinner"></span> {{ ts.t('ra_loading') }} }
+          @else               { {{ ts.t('ra_submit') }} }
         </button>
 
         <p class="switch-link">
-          <a [routerLink]="role === 'CLIENT' ? '/client' : '/bo-admin-access'">
-            {{ ts.t('ra_back') }}
-          </a>
+          <a [routerLink]="role === 'CLIENT' ? '/client' : '/bo-admin-access'">{{ ts.t('ra_back') }}</a>
         </p>
       }
     </div>

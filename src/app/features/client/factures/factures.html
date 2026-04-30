@@ -1,213 +1,121 @@
-<!-- Factures Client - TRACI (using payments from backend) -->
-<div class="factures-page">
+@if (loading()) {
+  <div class="page">
+    <div class="page-header">
+      <div class="sk" style="height:10px;width:80px;border-radius:5px;margin-bottom:0.5rem"></div>
+      <div class="sk" style="height:32px;width:180px;border-radius:8px"></div>
+    </div>
+    <div class="kpi-strip">
+      @for (i of [1,2,3,4]; track i) {
+        <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1.2rem 1.3rem">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem">
+            <div class="sk" style="height:9px;width:65px;border-radius:5px"></div>
+            <div class="sk" style="width:36px;height:36px;border-radius:10px"></div>
+          </div>
+          <div class="sk" style="height:36px;width:60px;border-radius:7px"></div>
+        </div>
+      }
+    </div>
+    <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1rem 1.3rem;margin-bottom:1.3rem;display:flex;gap:0.6rem">
+      @for (i of [1,2,3,4]; track i) { <div class="sk" style="height:32px;width:80px;border-radius:8px"></div> }
+    </div>
+    <div class="empty-state sk" style="height:280px;border:none"></div>
+  </div>
+}
 
-  <!-- Header -->
-  <div class="page-header animate-fade-in">
+@if (!loading()) {
+<div class="page">
+  <div class="page-header">
     <p class="page-eyebrow">{{ i18n.t('topbar_panel') }}</p>
-    <h1 class="page-title">{{ i18n.t('inv_title') }}</h1>
-    <p class="page-subtitle">{{ i18n.t('inv_subtitle') }}</p>
+    <h1 class="page-title">{{ i18n.t('inv_title') || 'My Invoices' }}</h1>
+    <p class="page-sub">{{ i18n.t('inv_subtitle') || 'View and download your invoices' }}</p>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-row">
-    <div class="stat-card" style="animation-delay: 0s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('inv_stat_total') }}</p>
-        <div class="stat-icon blue">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        </div>
-      </div>
-      <p class="stat-value primary">{{ facturesStats().total }}</p>
-    </div>
-
-    <div class="stat-card" style="animation-delay: 0.1s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('inv_stat_amount') }}</p>
-        <div class="stat-icon teal">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </div>
-      </div>
-      <p class="stat-value gradient">{{ facturesStats().montantTotal }} TND</p>
-    </div>
-
-    <div class="stat-card" style="animation-delay: 0.2s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('inv_stat_paid') }}</p>
-        <div class="stat-icon green">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-      </div>
-      <p class="stat-value primary">{{ facturesStats().payees }}</p>
-    </div>
-
-    <div class="stat-card" style="animation-delay: 0.3s">
-      <div class="stat-card__header">
-        <p class="stat-label">{{ i18n.t('inv_stat_pending') }}</p>
-        <div class="stat-icon orange">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-      </div>
-      <p class="stat-value primary">{{ facturesStats().enAttente }}</p>
-    </div>
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">{{ i18n.t('inv_stat_total') }}</span><div class="kpi-icon kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><p class="kpi-val">{{ facturesStats().total }}</p></div>
+    <div class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">{{ i18n.t('inv_stat_amount') }}</span><div class="kpi-icon kpi-icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><p class="kpi-val kpi-val--teal">{{ facturesStats().montantTotal }} TND</p></div>
+    <div class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">{{ i18n.t('inv_stat_paid') }}</span><div class="kpi-icon kpi-icon--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div><p class="kpi-val">{{ facturesStats().payees }}</p></div>
+    <div class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">{{ i18n.t('inv_stat_pending') }}</span><div class="kpi-icon kpi-icon--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><p class="kpi-val">{{ facturesStats().enAttente }}</p></div>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
-    <div class="filters-row">
-      <button (click)="setFilter('ALL')" [ngClass]="{'active': isFilterActive('ALL')}" class="filter-btn">
-        {{ i18n.t('inv_filter_all') }}
-      </button>
-      <button (click)="setFilter('PAID')" [ngClass]="{'active-success': isFilterActive('PAID')}" class="filter-btn">
-        {{ i18n.t('inv_filter_paid') }}
-      </button>
-      <button (click)="setFilter('PENDING')" [ngClass]="{'active-warning': isFilterActive('PENDING')}" class="filter-btn">
-        {{ i18n.t('inv_filter_pending') }}
-      </button>
-      <button (click)="setFilter('OVERDUE')" [ngClass]="{'active-danger': isFilterActive('OVERDUE')}" class="filter-btn">
-        {{ i18n.t('inv_filter_overdue') }}
-      </button>
-    </div>
+  <div class="filter-bar">
+    <button class="filter-btn" [class.filter-btn--active]="isFilterActive('ALL')"          (click)="setFilter('ALL')">{{ i18n.t('inv_filter_all') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-green]="isFilterActive('PAID')"   (click)="setFilter('PAID')">{{ i18n.t('inv_filter_paid') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-amber]="isFilterActive('PENDING')"(click)="setFilter('PENDING')">{{ i18n.t('inv_filter_pending') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-red]="isFilterActive('OVERDUE')"  (click)="setFilter('OVERDUE')">{{ i18n.t('inv_filter_overdue') }}</button>
   </div>
 
-  <!-- Payments List -->
-  @if (filteredFactures().length > 0) {
-    <div class="invoices-list">
+  @if (filteredFactures().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      <h3 class="empty-title">{{ i18n.t('inv_no_invoices') }}</h3>
+      <p class="empty-sub">{{ i18n.t('inv_try_filters') }}</p>
+    </div>
+  } @else {
+    <div class="inv-list">
       @for (p of filteredFactures(); track p.idPay) {
-        <div class="invoice-item">
-          <div class="invoice-header">
-            <h3 class="invoice-number">{{ p.payRef }}</h3>
-            <span [ngClass]="getStatutBadgeClass(p.paymentStatus)" class="invoice-badge">
-              {{ getStatutLabel(p.paymentStatus) }}
-            </span>
+        <div class="inv-card">
+          <div class="inv-header">
+            <div class="inv-header-left">
+              <div class="inv-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div>
+                <p class="inv-ref">{{ p.payRef }}</p>
+                <p class="inv-label">{{ p.abonnementLabel || 'Subscription payment' }}</p>
+              </div>
+            </div>
+            <div class="inv-header-right">
+              <p class="inv-amount">{{ p.amount }} TND</p>
+              <span class="badge" [class]="statusBadgeClass(p.paymentStatus)"><span class="badge-dot"></span>{{ statusLabel(p.paymentStatus) }}</span>
+            </div>
           </div>
-
-          <p class="invoice-service">{{ p.abonnementLabel || 'Abonnement' }}</p>
-
-          <div class="invoice-details">
-            <div class="detail-item">
-              <label>{{ i18n.t('inv_issue_date') }}</label>
-              <p class="value">{{ p.createdAt | date: 'dd/MM/yyyy' }}</p>
-            </div>
-            <div class="detail-item">
-              <label>{{ i18n.t('inv_amount_ttc') }}</label>
-              <p class="amount">{{ p.amount }} TND</p>
-            </div>
-            @if (p.transactionId) {
-            <div class="detail-item">
-              <label>{{ i18n.t('inv_transaction_number') || 'Transaction' }}</label>
-              <p class="value">{{ p.transactionId }}</p>
-            </div>
-            }
+          <div class="inv-details">
+            <div class="inv-detail"><span>Date</span><span>{{ formatDate(p.createdAt) }}</span></div>
+            @if (p.transactionId) { <div class="inv-detail"><span>Transaction</span><span>{{ p.transactionId }}</span></div> }
           </div>
-
-          <div class="invoice-actions">
-            <button (click)="openDetails(p)" class="btn-view">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+          <div class="inv-actions">
+            <button class="btn-secondary" (click)="openDetails(p)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               {{ i18n.t('inv_view_details') }}
             </button>
-            <button (click)="telechargerFacture(p)" class="btn-download">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <button class="btn-blue" (click)="telechargerFacture(p)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               {{ i18n.t('inv_download_pdf') }}
             </button>
             @if (p.paymentStatus !== 'completed') {
-              <button (click)="payerFacture(p)" class="btn-pay">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                {{ i18n.t('inv_pay') || 'Payer' }}
+              <button class="btn-green" (click)="payerFacture(p)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                {{ i18n.t('inv_pay') || 'Pay' }}
               </button>
             }
           </div>
         </div>
       }
     </div>
-  } @else {
-    <div class="empty-state">
-      <div class="empty-icon">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <h3 class="empty-title">{{ i18n.t('inv_no_invoices') }}</h3>
-      <p class="empty-subtitle">{{ i18n.t('inv_try_filters') }}</p>
-    </div>
   }
-
-  <!-- Details Modal -->
-  @if (showDetailsModal() && selectedFacture(); as p) {
-    <div class="modal-backdrop" (click)="closeDetails()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <button (click)="closeDetails()" class="modal-close">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <h3 class="modal-title">{{ i18n.t('inv_details_title') || 'Détails du paiement' }}</h3>
-          <p class="modal-subtitle">{{ p.payRef }}</p>
-        </div>
-        <div class="modal-body">
-          <div class="dates-grid">
-            <div class="date-box">
-              <label>Date</label>
-              <p class="value">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</p>
-            </div>
-            <div class="date-box">
-              <label>{{ i18n.t('inv_amount_ttc') }}</label>
-              <p class="value">{{ p.amount }} TND</p>
-            </div>
-            <div class="date-box">
-              <label>Statut</label>
-              <span [ngClass]="getStatutBadgeClass(p.paymentStatus)" class="invoice-badge">
-                {{ getStatutLabel(p.paymentStatus) }}
-              </span>
-            </div>
-            @if (p.transactionId) {
-            <div class="date-box">
-              <label>Transaction ID</label>
-              <p class="value">{{ p.transactionId }}</p>
-            </div>
-            }
-            @if (p.abonnementLabel) {
-            <div class="date-box">
-              <label>Abonnement</label>
-              <p class="value">{{ p.abonnementLabel }}</p>
-            </div>
-            }
-          </div>
-
-          <div class="modal-actions">
-            <button (click)="telechargerFacture(p)" class="btn-download">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {{ i18n.t('inv_download_pdf') }}
-            </button>
-            @if (p.paymentStatus !== 'completed') {
-              <button (click)="payerFacture(p)" class="btn-pay">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                {{ i18n.t('inv_pay_now') || 'Payer maintenant' }}
-              </button>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
-  }
-
 </div>
+}
+
+@if (showDetailsModal() && selectedFacture()) {
+<div class="modal-backdrop" (click)="closeDetails()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div><h2 class="modal-title">Payment Details</h2><p class="modal-subtitle">{{ selectedFacture()!.payRef }}</p></div>
+      <button class="modal-close" (click)="closeDetails()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-item"><p class="detail-label">Reference</p><p class="detail-val">{{ selectedFacture()!.payRef }}</p></div>
+        <div class="detail-item"><p class="detail-label">Amount</p><p class="detail-val" style="color:#0D9488;font-size:1rem">{{ selectedFacture()!.amount }} TND</p></div>
+        <div class="detail-item"><p class="detail-label">Date</p><p class="detail-val">{{ formatDate(selectedFacture()!.createdAt) }}</p></div>
+        <div class="detail-item"><p class="detail-label">Status</p><span class="badge" [class]="statusBadgeClass(selectedFacture()!.paymentStatus)"><span class="badge-dot"></span>{{ statusLabel(selectedFacture()!.paymentStatus) }}</span></div>
+        @if (selectedFacture()!.transactionId) { <div class="detail-item"><p class="detail-label">Transaction ID</p><p class="detail-val">{{ selectedFacture()!.transactionId }}</p></div> }
+        @if (selectedFacture()!.abonnementLabel) { <div class="detail-item"><p class="detail-label">Subscription</p><p class="detail-val">{{ selectedFacture()!.abonnementLabel }}</p></div> }
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeDetails()">Close</button>
+      <button class="btn-blue" (click)="telechargerFacture(selectedFacture()!)">Download PDF</button>
+      @if (selectedFacture()!.paymentStatus !== 'completed') { <button class="btn-green" (click)="payerFacture(selectedFacture()!)">Pay Now</button> }
+    </div>
+  </div>
+</div>
+}

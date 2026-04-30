@@ -18,6 +18,14 @@ export interface AbonnementDTO {
   dureeLabel: string;
 }
 
+export interface AssignDeviceRequest {
+  resellerId: number;
+  clientId:   number;
+  deviceId:   number;
+  dureeMois:  number;
+  prixUnitaire: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AbonnementService {
   private http    = inject(HttpClient);
@@ -29,5 +37,16 @@ export class AbonnementService {
 
   getActiveByClient(clientId: number): Observable<AbonnementDTO> {
     return this.http.get<AbonnementDTO>(`${this.baseUrl}/client/${clientId}/active`);
+  }
+
+  assignDevice(
+    resellerId:   number,
+    clientId:     number,
+    deviceId:     number,
+    dureeMois:    number,
+    prixUnitaire: number
+  ): Observable<AbonnementDTO> {
+    const body: AssignDeviceRequest = { resellerId, clientId, deviceId, dureeMois, prixUnitaire };
+    return this.http.post<AbonnementDTO>(`${this.baseUrl}/assign`, body);
   }
 }
