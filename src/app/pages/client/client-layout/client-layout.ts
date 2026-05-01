@@ -1,74 +1,56 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Component, OnInit, computed, inject } from '@angular/core';
+import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
-import { ThemeService } from '../../../service/theme.service';
 import { AuthService } from '../../../service/Auth.service';
+import { ToastComponent } from '../../../shared/toast/toast.component';
+import { SidebarComponent, SidebarEntry, SidebarUser } from '../../../shared/sidebar/sidebar';
+import { NavbarComponent, NavbarUser } from '../../../shared/navbar/navbar';
 
 @Component({
   selector: 'app-client-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterOutlet, SidebarComponent, NavbarComponent, ToastComponent],
   templateUrl: './client-layout.html',
-  styleUrl: './client-layout.css'
+  styleUrl: './client-layout.css',
 })
 export default class ClientLayoutComponent implements OnInit {
 
-  i18n = inject(TranslationService);
-  theme = inject(ThemeService);
-  router = inject(Router);
-  private authService = inject(AuthService);
+  private readonly i18n        = inject(TranslationService);
+  private readonly authService = inject(AuthService);
+  private readonly router      = inject(Router);
 
-  isSidebarOpen = signal(true);
-  showProfileDropdown = signal(false);
+  isDark = false;
+  onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
 
-  user = {
-    prenom: '',
-    nom: '',
-    email: '',
-    avatar: '?',
-    role: 'Client'
-  };
+  private username = '';
+  private email    = '';
 
-  ngOnInit() {
-    const username = this.authService.getUsername() ?? 'Client';
-    const email = this.authService.getEmail() ?? '';
-    this.user = {
-      prenom: username,
-      nom: '',
-      email: email,
-      avatar: (username[0] ?? 'C').toUpperCase(),
-      role: 'Client'
-    };
-    this.checkMobileView();
-    if (window.innerWidth < 768) {
-      this.isSidebarOpen.set(false);
-    }
+  // ── Sidebar ──────────────────────────────────────────────
+  navItems = computed<SidebarEntry[]>(() => {
+    void this.i18n.lang();
+    return [
+      { label: this.i18n.t('nav_dashboard'),     route: '/client-dashboard/dashboard',   icon: 'dashboard', exactMatch: true },
+      { label: this.i18n.t('nav_subscriptions'), route: '/client-dashboard/abonnements', icon: 'file' },
+      { label: this.i18n.t('nav_devices'),       route: '/client-dashboard/devices',     icon: 'cpu' },
+      { label: this.i18n.t('nav_invoices'),      route: '/client-dashboard/factures',    icon: 'receipt' },
+      { divider: true },
+      { label: this.i18n.t('nav_profile'),       route: '/client-dashboard/profil',      icon: 'user' },
+    ];
+  });
+
+  get sidebarUser(): SidebarUser {
+    return { name: this.username || 'Client', email: this.email, status: 'online' };
   }
 
-  toggleSidebar() { this.isSidebarOpen.set(!this.isSidebarOpen()); }
-
-  checkMobileView() {
-    window.addEventListener('resize', () => {
-      if (window.innerWidth < 768) this.isSidebarOpen.set(false);
-      else this.isSidebarOpen.set(true);
-    });
+  get navbarUser(): NavbarUser {
+    return { name: this.username || 'Client', email: this.email };
   }
 
-  toggleLanguage() {
-    const newLang = this.i18n.lang() === 'fr' ? 'en' : 'fr';
-    this.i18n.loadTranslations(newLang);
+  ngOnInit(): void {
+    this.username = this.authService.getUsername() ?? 'Client';
+    this.email    = this.authService.getEmail()    ?? '';
   }
 
-  toggleTheme() { this.theme.toggleTheme(); }
-  toggleProfileDropdown() { this.showProfileDropdown.set(!this.showProfileDropdown()); }
-  closeProfileDropdown() { this.showProfileDropdown.set(false); }
-
-  logout() {
-    this.authService.logout();
-  }
-
-  async setLanguage(lang: 'en' | 'fr') {
-    if (this.i18n.lang() !== lang) await this.i18n.toggle();
-  }
+  goToProfile(): void { this.router.navigate(['/client-dashboard/profil']); }
+  logout():      void { this.authService.logout(); }
 }

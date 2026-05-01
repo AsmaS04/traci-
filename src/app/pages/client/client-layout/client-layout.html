@@ -1,111 +1,18 @@
 <div class="shell">
-
-  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
-  <aside class="sidebar">
-
-    <div class="sidebar-logo">
-      <img src="assets/image/Traci White Bg.png" alt="Traci" class="logo-img"/>
-    </div>
-
-    <nav class="sidebar-nav">
-      <p class="nav-section-label">{{ i18n.t('nav_main') }}</p>
-
-      <a routerLink="/client-dashboard/dashboard" routerLinkActive="nav-item-active" class="nav-item">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        </span>
-        <span class="nav-label">{{ i18n.t('nav_dashboard') }}</span>
-      </a>
-
-      <a routerLink="/client-dashboard/abonnements" routerLinkActive="nav-item-active" class="nav-item">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </span>
-        <span class="nav-label">{{ i18n.t('nav_subscriptions') }}</span>
-      </a>
-
-      <a routerLink="/client-dashboard/devices" routerLinkActive="nav-item-active" class="nav-item">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-        </span>
-        <span class="nav-label">{{ i18n.t('nav_devices') }}</span>
-      </a>
-
-      <a routerLink="/client-dashboard/factures" routerLinkActive="nav-item-active" class="nav-item">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </span>
-        <span class="nav-label">{{ i18n.t('nav_invoices') }}</span>
-      </a>
-
-      <a routerLink="/client-dashboard/profil" routerLinkActive="nav-item-active" class="nav-item">
-        <span class="nav-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </span>
-        <span class="nav-label">{{ i18n.t('nav_profile') }}</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <div class="user-card">
-        <div class="user-avatar">{{ user.avatar }}</div>
-        <div class="user-info">
-          <p class="user-name">{{ user.prenom }} {{ user.nom }}</p>
-          <p class="user-role">Client</p>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ══ RIGHT SIDE ════════════════════════════════════════════ -->
+  <app-sidebar [items]="navItems()" [user]="sidebarUser" />
   <div class="right-side">
-
-    <header class="topbar">
-      <span class="topbar-brand">{{ i18n.t('topbar_panel1') }}</span>
-
-      <div class="topbar-right">
-        <button class="topbar-btn lang-btn" (click)="toggleLanguage()">
-          <span class="lang-current">{{ i18n.lang() === 'fr' ? 'FR' : 'EN' }}</span>
-          <span class="lang-sep">|</span>
-          <span class="lang-other">{{ i18n.lang() === 'fr' ? 'EN' : 'FR' }}</span>
-        </button>
-
-        <button class="topbar-btn" (click)="toggleTheme()">
-          @if (theme.currentTheme() === 'dark') {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          } @else {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          }
-        </button>
-
-        <div class="avatar-wrap" (click)="toggleProfileDropdown()">
-          <div class="topbar-avatar">
-            <div class="topbar-avatar__img">{{ user.avatar }}</div>
-            <span class="topbar-avatar__name">{{ user.prenom }}</span>
-            <svg class="topbar-avatar__chevron" [class.rotated]="showProfileDropdown()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          @if (showProfileDropdown()) {
-            <div class="avatar-dropdown" (click)="$event.stopPropagation()">
-              <div class="avatar-dropdown__header">
-                <div class="avatar-dropdown__avatar">{{ user.avatar }}</div>
-                <div><p class="avatar-dropdown__name">{{ user.prenom }} {{ user.nom }}</p><p class="avatar-dropdown__email">{{ user.email }}</p></div>
-              </div>
-              <div class="avatar-dropdown__divider"></div>
-              <a routerLink="/client-dashboard/profil" class="avatar-menu-item" (click)="closeProfileDropdown()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                {{ i18n.t('nav_profile') }}
-              </a>
-              <div class="avatar-dropdown__divider"></div>
-              <button class="avatar-menu-item avatar-menu-item--danger" (click)="logout()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                {{ i18n.t('nav_logout') }}
-              </button>
-            </div>
-          }
-        </div>
-      </div>
-    </header>
-
-    <div class="main-content"><router-outlet></router-outlet></div>
+    <app-navbar
+      brandKey="topbar_panel1"
+      [showNotifications]="true"
+      [isDark]="isDark"
+      [navbarUser]="navbarUser"
+      notifPortal="client"
+      (darkToggle)="onDarkToggle()"
+      (profileClick)="goToProfile()"
+      (logoutClick)="logout()" />
+    <main class="main-content">
+      <router-outlet />
+    </main>
   </div>
 </div>
+<app-toast />

@@ -1,0 +1,104 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed()">
+
+  <!-- ═══════════════════════════════════════
+       HEADER — Logo (both states, no T mark)
+  ════════════════════════════════════════ -->
+  <div class="sidebar-header">
+    <img class="logo-img logo-light" src="assets/image/Traci White Bg.png" alt="TRACI" />
+    <img class="logo-img logo-dark"  src="assets/image/TRACI.png"          alt="TRACI" />
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       NAV ITEMS
+  ════════════════════════════════════════ -->
+  <nav class="sidebar-nav">
+    @for (entry of items; track $index) {
+
+      @if (isDivider(entry)) {
+        <div class="nav-divider"></div>
+
+      } @else if (isNavItem(entry)) {
+
+        @if (entry.children?.length) {
+          <div class="nav-group">
+            <button
+              class="nav-item nav-accordion"
+              [class.open]="isSubmenuOpen(entry.label)"
+              (click)="toggleSubmenu(entry.label)">
+              <span class="nav-ic" [innerHTML]="icon(entry.icon)"></span>
+              <span class="nav-label">{{ entry.label }}</span>
+              <span class="nav-chevron"
+                [innerHTML]="icon(isSubmenuOpen(entry.label) ? 'chevronDown' : 'chevronRight')">
+              </span>
+            </button>
+            @if (isSubmenuOpen(entry.label) && !isCollapsed()) {
+              <div class="submenu">
+                @for (child of entry.children; track child.route) {
+                  <a class="submenu-item" [routerLink]="child.route" routerLinkActive="sub-active">
+                    <span class="sub-dot"></span>
+                    <span class="sub-label">{{ child.label }}</span>
+                    @if (child.badge) { <span class="sub-badge">{{ child.badge }}</span> }
+                  </a>
+                }
+              </div>
+            }
+          </div>
+
+        } @else if (entry.href) {
+          <a class="nav-item" [href]="entry.href" target="_blank" rel="noopener noreferrer">
+            <span class="nav-ic" [innerHTML]="icon(entry.icon)"></span>
+            <span class="nav-label">{{ entry.label }}</span>
+            <span class="nav-external" [innerHTML]="icon('external')"></span>
+          </a>
+
+        } @else {
+          <a class="nav-item"
+             [routerLink]="entry.route"
+             routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: !!entry.exactMatch }">
+            <span class="nav-ic" [innerHTML]="icon(entry.icon)"></span>
+            <span class="nav-label">{{ entry.label }}</span>
+            @if (entry.badge && entry.badgeColor) {
+              <span class="nav-badge badge-dot" [class]="'badge-' + entry.badgeColor">
+                <span class="dot-ic"></span>{{ entry.badge }}
+              </span>
+            } @else if (entry.badge) {
+              <span class="nav-badge">{{ entry.badge }}</span>
+            }
+          </a>
+        }
+      }
+    }
+  </nav>
+
+  <!-- ═══════════════════════════════════════
+       TOGGLE
+  ════════════════════════════════════════ -->
+  <button class="toggle-btn" (click)="toggle()"
+    [title]="isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+    <span class="toggle-ic" [innerHTML]="icon(isCollapsed() ? 'chevronRight' : 'chevronLeft')"></span>
+    <span class="toggle-label">Collapse</span>
+  </button>
+
+  <!-- ═══════════════════════════════════════
+       FOOTER — User avatar
+  ════════════════════════════════════════ -->
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar-wrap">
+        @if (user.avatarUrl) {
+          <img class="avatar-img" [src]="user.avatarUrl" [alt]="user.name" />
+        } @else {
+          <div class="avatar-initials">{{ initials() }}</div>
+        }
+        @if (user.status === 'online') { <span class="status-dot"></span> }
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-email">{{ user.email }}</span>
+      </div>
+      <button class="user-more" [innerHTML]="icon('chevronRight')"></button>
+    </div>
+  </div>
+
+</aside>

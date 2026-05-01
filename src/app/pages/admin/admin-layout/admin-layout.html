@@ -1,122 +1,20 @@
 <div class="shell">
-
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <img src="assets/image/traci-logo-dark.png" alt="Traci" class="logo-img"/>
-    </div>
-    <nav class="sidebar-nav">
-      <p class="nav-section-label">{{ i18n.t('nav_main') }}</p>
-      <a routerLink="/admin/dashboard"    routerLinkActive="nav-item-active" class="nav-item"><span class="nav-emoji">🏠</span><span class="nav-label">{{ i18n.t('nav_dashboard') }}</span></a>
-      <a routerLink="/admin/resellers"    routerLinkActive="nav-item-active" class="nav-item"><span class="nav-emoji">🏢</span><span class="nav-label">{{ i18n.t('nav_resellers') }}</span></a>
-      <a routerLink="/admin/clients"      routerLinkActive="nav-item-active" class="nav-item"><span class="nav-emoji">👥</span><span class="nav-label">{{ i18n.t('nav_clients') }}</span></a>
-      <a routerLink="/admin/devices"      routerLinkActive="nav-item-active" class="nav-item"><span class="nav-emoji">📡</span><span class="nav-label">{{ i18n.t('nav_devices') }}</span></a>
-      <a routerLink="/admin/transactions" routerLinkActive="nav-item-active" class="nav-item"><span class="nav-emoji">💳</span><span class="nav-label">{{ i18n.t('nav_transactions') }}</span></a>
-      <a routerLink="/admin/profil"       routerLinkActive="nav-item-active" class="nav-item"><span class="nav-emoji">👤</span><span class="nav-label">{{ i18n.t('nav_profile') }}</span></a>
-    </nav>
-    <div class="sidebar-bottom">
-      <div class="user-card">
-        <div class="user-avatar">Ad</div>
-        <div class="user-info">
-          <p class="user-name">Admin</p>
-          <p class="user-role">{{ i18n.t('nav_superadmin') }}</p>
-        </div>
-      </div>
-    </div>
-  </aside>
-
+  <app-sidebar [items]="navItems()" [user]="sidebarUser" />
   <div class="right-side">
-    <header class="topbar">
-      <span class="topbar-brand">{{ i18n.t('topbar_panel') }}</span>
-
-      <div class="global-search">
-        <div class="search-box">
-          <svg class="search-box__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-box__input" type="text" [(ngModel)]="searchQuery" (input)="onSearch()" (blur)="closeSearch()" [placeholder]="i18n.t('adm_search_placeholder')"/>
-          @if (!searchQuery) { <span class="search-box__kbd">⌘K</span> }
-          @if (searchQuery)  { <button class="search-box__clear" (click)="searchQuery=''; searchOpen=false">✕</button> }
-        </div>
-        @if (searchOpen && searchResults.length > 0) {
-          <div class="search-results">
-            @for (r of searchResults; track $index) {
-              <div class="search-result" (mousedown)="goToResult(r)">
-                <div class="sr-icon" [class.sr-icon--client]="r.type==='client'" [class.sr-icon--reseller]="r.type==='reseller'" [class.sr-icon--device]="r.type==='device'">
-                  @if (r.type==='client')   { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> }
-                  @if (r.type==='reseller') { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> }
-                  @if (r.type==='device')   { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg> }
-                </div>
-                <div class="sr-body"><p class="sr-title">{{ r.title }}</p><p class="sr-sub">{{ r.subtitle }}</p></div>
-                <span class="sr-status" [class.sr-status--active]="r.active" [class.sr-status--inactive]="!r.active">{{ r.status }}</span>
-              </div>
-            }
-          </div>
-        }
-        @if (searchOpen && searchQuery && searchResults.length === 0) {
-          <div class="search-results search-results--empty"><p>{{ i18n.t('adm_search_empty') }} "<strong>{{ searchQuery }}</strong>"</p></div>
-        }
-      </div>
-
-      <div class="topbar-right">
-        <button class="topbar-btn lang-btn" (click)="toggleLang()">
-          <span class="lang-current">{{ lang === 'en' ? 'FR' : 'EN' }}</span>
-          <span class="lang-sep">|</span>
-          <span class="lang-other">{{ lang === 'en' ? 'EN' : 'FR' }}</span>
-        </button>
-        <button class="topbar-btn" (click)="toggleDark()">
-          @if (!darkMode) { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> }
-          @if (darkMode)  { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> }
-        </button>
-        <div class="notif-wrap">
-          <button class="topbar-btn" (click)="toggleNotif()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            @if (notifCount > 0) { <span class="notif-badge"></span> }
-          </button>
-          @if (notifOpen) {
-            <div class="notif-dropdown">
-              <div class="notif-header"><p class="notif-title">{{ i18n.t('notif_title') }}</p><button class="notif-close" (click)="closeNotif()">✕</button></div>
-              <div class="notif-list">
-                @for (n of notifications; track $index) {
-                  <div class="notif-item">
-                    <div class="notif-item-icon notif-icon--{{ n.icon }}">
-                      @if (n.icon==='client')   { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> }
-                      @if (n.icon==='device')   { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg> }
-                      @if (n.icon==='reseller') { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> }
-                    </div>
-                    <div class="notif-item-body"><p class="notif-item-text">{{ i18n.t(n.textKey) }}</p><p class="notif-item-sub">{{ n.sub }}</p></div>
-                    <span class="notif-item-time">{{ n.time }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-        <div class="avatar-wrap" (click)="toggleAvatar()">
-          <div class="topbar-avatar">
-            <div class="topbar-avatar__img">Ad</div>
-            <span class="topbar-avatar__name">Admin</span>
-            <svg class="topbar-avatar__chevron" [class.rotated]="avatarOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          @if (avatarOpen) {
-            <div class="avatar-dropdown" (click)="$event.stopPropagation()">
-              <div class="avatar-dropdown__header">
-                <div class="avatar-dropdown__avatar">Ad</div>
-                <div><p class="avatar-dropdown__name">Admin User</p><p class="avatar-dropdown__email">admin&#64;traci.com</p></div>
-              </div>
-              <div class="avatar-dropdown__divider"></div>
-              <button class="avatar-menu-item" (click)="goToProfile()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                {{ i18n.t('adm_menu_edit_profile') }}
-              </button>
-              <div class="avatar-dropdown__divider"></div>
-              <button class="avatar-menu-item avatar-menu-item--danger" (click)="logout()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                {{ i18n.t('adm_menu_signout') }}
-              </button>
-            </div>
-          }
-        </div>
-      </div>
-    </header>
-    <main class="main-content"><router-outlet /></main>
+    <app-navbar
+      [showSearch]="true"
+      [searchResults]="searchResults"
+      [isDark]="isDark"
+      [navbarUser]="navbarUser"
+      notifPortal="admin"
+      (search)="onSearch($event)"
+      (searchNavigate)="onSearchNavigate($event)"
+      (darkToggle)="onDarkToggle()"
+      (profileClick)="goToProfile()"
+      (logoutClick)="logout()" />
+    <main class="main-content">
+      <router-outlet />
+    </main>
   </div>
-  <app-toast></app-toast>
 </div>
+<app-toast />

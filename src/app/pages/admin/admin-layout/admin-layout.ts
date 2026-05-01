@@ -1,128 +1,127 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { Component, computed, inject } from '@angular/core';
+import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
-import { NotificationWebsocketService, AppNotification } from '../../../service/notification-websocket.service';
 import { ToastComponent } from '../../../shared/toast/toast.component';
-import { Subscription } from 'rxjs';
-
-interface SearchResult {
-  type: 'client' | 'reseller' | 'device';
-  id: number;
-  title: string;
-  subtitle: string;
-  status: string;
-  active: boolean;
-  route: string;
-}
-
-interface UiNotification {
-  icon: 'client' | 'reseller' | 'device';
-  textKey: string;
-  sub: string;
-  time: string;
-}
+import { SidebarComponent, SidebarEntry, SidebarUser } from '../../../shared/sidebar/sidebar';
+import { NavbarComponent, NavbarSearchItem, NavbarUser } from '../../../shared/navbar/navbar';
+// ── Inject your real services here ────────────────────────────────────────────
+// Replace these with whatever services expose getAll / search in your project.
+// import { ClientService }  from '../../../service/client.service';
+// import { ResellerService } from '../../../service/Reseller.service';
+// import { DeviceService }  from '../../../service/device.service';
+// ──────────────────────────────────────────────────────────────────────────────
+import { forkJoin, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, FormsModule, ToastComponent],
+  imports: [RouterOutlet, SidebarComponent, NavbarComponent, ToastComponent],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
 })
-export class AdminLayout implements OnInit, OnDestroy {
+export class AdminLayout {
 
-  collapsed  = false;
-  darkMode   = false;
-  notifOpen  = false;
-  notifCount = 0;
-  avatarOpen = false;
+  private readonly i18n   = inject(TranslationService);
+  private readonly router = inject(Router);
 
-  searchQuery   = '';
-  searchOpen    = false;
-  searchResults: SearchResult[] = [];
+  // Uncomment and inject your services when ready:
+  // private readonly clientService  = inject(ClientService);
+  // private readonly resellerService = inject(ResellerService);
+  // private readonly deviceService  = inject(DeviceService);
 
-  notifications: UiNotification[] = [];
+  isDark = false;
+  onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
 
-  private notifSub!: Subscription;
+  // ── Sidebar ──────────────────────────────────────────────
+  navItems = computed<SidebarEntry[]>(() => {
+    void this.i18n.lang();
+    return [
+      { label: this.i18n.t('nav_dashboard'),    route: '/admin/dashboard',    icon: 'dashboard', exactMatch: true },
+      { label: this.i18n.t('nav_resellers'),    route: '/admin/resellers',    icon: 'building' },
+      { label: this.i18n.t('nav_clients'),      route: '/admin/clients',      icon: 'users' },
+      { label: this.i18n.t('nav_devices'),      route: '/admin/devices',      icon: 'cpu' },
+      { label: this.i18n.t('nav_transactions'), route: '/admin/transactions', icon: 'card' },
+      { divider: true },
+      { label: this.i18n.t('nav_profile'),      route: '/admin/profil',       icon: 'user' },
+    ];
+  });
 
-  constructor(
-    public i18n: TranslationService,
-    private router: Router,
-    private notifWs: NotificationWebsocketService
-  ) {}
+  sidebarUser: SidebarUser = { name: 'Admin', email: 'admin@traci.com', status: 'online' };
+  navbarUser:  NavbarUser  = { name: 'Admin', email: 'admin@traci.com' };
 
-  ngOnInit() {
-    this.notifWs.connect();
-    this.notifSub = this.notifWs.notification$.subscribe((n: AppNotification) => {
-      const type = n.type as string;
-      const ui: UiNotification = {
-        icon:    type.includes('CLIENT') ? 'client' : type.includes('DEVICE') ? 'device' : 'reseller',
-        textKey: type === 'NEW_CLIENT' ? 'act_client_added' : 'act_payment_received',
-        sub:     n.detail ?? n.message ?? n.label ?? '',
-        time:    'just now',
-      };
-      this.notifications.unshift(ui);
-      this.notifCount++;
-    });
+  // ── Live search ───────────────────────────────────────────
+  searchResults: NavbarSearchItem[] = [];
+  private searchQuery$ = new Subject<string>();
+
+  constructor() {
+    // Debounce so we don't fire on every keystroke
+    this.searchQuery$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(q => this.fetchSearchResults(q)),
+    ).subscribe(results => { this.searchResults = results; });
   }
 
-  ngOnDestroy() {
-    this.notifSub?.unsubscribe();
-    this.notifWs.disconnect();
+  onSearch(query: string): void {
+    if (!query.trim()) { this.searchResults = []; return; }
+    this.searchQuery$.next(query.trim().toLowerCase());
   }
 
-  private readonly allItems: SearchResult[] = [
-    { type:'client',   id:1,    title:'Société Elyes',   subtitle:'TechVision SARL · Tunis',  status:'Active',  active:true,  route:'/admin/clients'   },
-    { type:'client',   id:2,    title:'Transport Mrad',  subtitle:'NetPlus Solutions · Sfax', status:'Active',  active:true,  route:'/admin/clients'   },
-    { type:'reseller', id:1,    title:'TechVision SARL', subtitle:'Khalil Mansour · Tunis',   status:'Active',  active:true,  route:'/admin/resellers' },
-    { type:'device',   id:4821, title:'Device #4821',    subtitle:'Alpha Logistics · Tunis',  status:'Offline', active:false, route:'/admin/clients'   },
-  ];
-
-  onSearch(): void {
-    const q = this.searchQuery.trim().toLowerCase();
-    if (!q) { this.searchResults = []; this.searchOpen = false; return; }
-    this.searchResults = this.allItems.filter(item =>
-      item.title.toLowerCase().includes(q) ||
-      item.subtitle.toLowerCase().includes(q) ||
-      String(item.id).includes(q)
-    ).slice(0, 6);
-    this.searchOpen = true;
+  onSearchNavigate(item: NavbarSearchItem): void {
+    this.router.navigate([item.route]);
   }
 
-  goToResult(r: SearchResult): void {
-    this.searchQuery = ''; this.searchOpen = false; this.searchResults = [];
-    this.router.navigate([r.route]);
+  /**
+   * Replace the body of this method with real service calls.
+   *
+   * Example when your services are ready:
+   *
+   *   return forkJoin([
+   *     this.clientService.getAll().pipe(catchError(() => of([]))),
+   *     this.resellerService.getAll().pipe(catchError(() => of([]))),
+   *     this.deviceService.getAll().pipe(catchError(() => of([]))),
+   *   ]).pipe(
+   *     map(([clients, resellers, devices]) => [
+   *       ...clients
+   *         .filter(c => c.username.toLowerCase().includes(q) || c.email.toLowerCase().includes(q))
+   *         .slice(0, 3)
+   *         .map(c => ({ type: 'client' as const, id: c.id, title: c.username,
+   *                      subtitle: c.email, status: c.active ? 'Active' : 'Inactive',
+   *                      active: c.active, route: '/admin/clients' })),
+   *       ...resellers
+   *         .filter(r => r.username.toLowerCase().includes(q))
+   *         .slice(0, 2)
+   *         .map(r => ({ type: 'reseller' as const, id: r.idRev, title: r.username,
+   *                      subtitle: r.nomEntreprise, status: 'Active',
+   *                      active: true, route: '/admin/resellers' })),
+   *       ...devices
+   *         .filter(d => String(d.id).includes(q) || d.imei?.includes(q))
+   *         .slice(0, 2)
+   *         .map(d => ({ type: 'device' as const, id: d.id, title: `Device #${d.id}`,
+   *                      subtitle: d.clientName ?? '', status: d.status,
+   *                      active: d.status === 'actif', route: '/admin/devices' })),
+   *     ])
+   *   );
+   */
+  private fetchSearchResults(q: string) {
+    // ── Temporary: remove this block once real services are connected ──
+    const mock: NavbarSearchItem[] = [
+      { type: 'client',   id: 1,    title: 'Société Elyes',   subtitle: 'TechVision SARL · Tunis',  status: 'Active',  active: true,  route: '/admin/clients'   },
+      { type: 'client',   id: 2,    title: 'Transport Mrad',  subtitle: 'NetPlus Solutions · Sfax', status: 'Active',  active: true,  route: '/admin/clients'   },
+      { type: 'reseller', id: 1,    title: 'TechVision SARL', subtitle: 'Khalil Mansour · Tunis',   status: 'Active',  active: true,  route: '/admin/resellers' },
+      { type: 'device',   id: 4821, title: 'Device #4821',    subtitle: 'Alpha Logistics · Tunis',  status: 'Offline', active: false, route: '/admin/devices'   },
+    ];
+    return of(
+      mock.filter(i =>
+        i.title.toLowerCase().includes(q) ||
+        i.subtitle.toLowerCase().includes(q) ||
+        String(i.id).includes(q)
+      ).slice(0, 6)
+    );
+    // ── End temporary block ────────────────────────────────
   }
 
-  closeSearch(): void  { setTimeout(() => { this.searchOpen = false; }, 180); }
-  toggleSidebar(): void { this.collapsed = !this.collapsed; }
-  toggleDark(): void {
-    this.darkMode = !this.darkMode;
-    document.documentElement.classList.toggle('dark', this.darkMode);
-  }
-  toggleNotif(): void  { this.notifOpen = !this.notifOpen; if (this.notifOpen) this.notifCount = 0; }
-  closeNotif(): void   { this.notifOpen = false; }
-  toggleAvatar(): void { this.avatarOpen = !this.avatarOpen; this.notifOpen = false; }
-  closeAvatar(): void  { this.avatarOpen = false; }
-  goToProfile(): void  { this.avatarOpen = false; this.router.navigate(['/admin/profil']); }
-  logout(): void       { this.avatarOpen = false; this.router.navigate(['/bo-admin-access']); }
-  async toggleLang(): Promise<void> { await this.i18n.toggle(); }
-  get lang(): string   { return this.i18n.lang(); }
-
-  navItems = [
-    { labelKey:'nav_dashboard',    route:'/admin/dashboard',
-      icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>` },
-    { labelKey:'nav_resellers',    route:'/admin/resellers',
-      icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>` },
-    { labelKey:'nav_clients',      route:'/admin/clients',
-      icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` },
-    { labelKey:'nav_devices',      route:'/admin/devices',
-      icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>` },
-    { labelKey:'nav_transactions', route:'/admin/transactions',
-      icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>` },
-    { labelKey:'nav_profile',      route:'/admin/profil',
-      icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>` },
-  ];
+  goToProfile(): void { this.router.navigate(['/admin/profil']); }
+  logout():      void { this.router.navigate(['/bo-admin-access']); }
 }
