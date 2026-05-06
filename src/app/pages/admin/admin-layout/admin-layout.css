@@ -2,6 +2,7 @@
 
 :host {
   --bg: #F3F4F6;
+  --orange: #0D9488;
   display: block;
   font-family: 'Manrope', sans-serif;
 }

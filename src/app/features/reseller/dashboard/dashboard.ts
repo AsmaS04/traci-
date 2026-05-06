@@ -29,13 +29,13 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
 
   readonly circumference = 2 * Math.PI * 42;
   private clientChart: ApexCharts | null = null;
+  private emailCheckTimeout: any = null;
 
-  ngOnInit() {
-    this.loadDashboard();
-  }
+  ngOnInit() { this.loadDashboard(); }
 
   ngOnDestroy() {
     if (this.clientChart) this.clientChart.destroy();
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
 
   loadDashboard() {
@@ -123,11 +123,7 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
     this.clientChart = new ApexCharts(el, {
       series: [active, inactive],
       colors: ['#0D9488', '#DC2626'],
-      chart: {
-        type: 'donut',
-        height: 200,
-        fontFamily: 'Manrope, sans-serif',
-      },
+      chart: { type: 'donut', height: 200, fontFamily: 'Manrope, sans-serif' },
       labels: ['Active', 'Expired'],
       plotOptions: {
         pie: {
@@ -136,21 +132,11 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
             labels: {
               show: true,
               total: {
-                show: true,
-                showAlways: true,
-                label: 'Clients',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#94a3b8',
+                show: true, showAlways: true, label: 'Clients',
+                fontSize: '12px', fontWeight: 600, color: '#94a3b8',
                 formatter: () => total.toString(),
               },
-              value: {
-                show: true,
-                fontSize: '24px',
-                fontWeight: 800,
-                color: '#0f172a',
-                offsetY: -10,
-              }
+              value: { show: true, fontSize: '24px', fontWeight: 800, color: '#0f172a', offsetY: -10 }
             }
           }
         }
@@ -158,11 +144,8 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
       dataLabels: { enabled: false },
       stroke: { colors: ['transparent'] },
       legend: {
-        position: 'bottom',
-        fontSize: '12px',
-        fontWeight: 600,
-        labels: { colors: '#475569' },
-        markers: { size: 5 },
+        position: 'bottom', fontSize: '12px', fontWeight: 600,
+        labels: { colors: '#475569' }, markers: { size: 5 },
       },
       tooltip: {
         y: {
@@ -177,21 +160,53 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Add Client modal ──────────────────────────────────────
-  showAddModal = false;
-  addForm: any = {};
+  showAddModal     = false;
+  addForm: any     = {};
+  addEmailExists   = false;
 
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
-  get addEmailError(): string { return (this.addForm.email ?? '') && !this.isValidEmail(this.addForm.email) ? 'msg_error_invalid_email' : ''; }
-  get addPhoneError(): string { return (this.addForm.phone ?? '') && !this.isValidPhone(this.addForm.phone) ? 'msg_error_invalid_phone' : ''; }
+
+  get addEmailError(): string {
+    const email = this.addForm.email ?? '';
+    if (!email) return '';
+    if (!this.isValidEmail(email)) return 'msg_error_invalid_email';
+    if (this.addEmailExists) return 'msg_error_email_taken';
+    return '';
+  }
+
+  get addPhoneError(): string {
+    return (this.addForm.phone ?? '') && !this.isValidPhone(this.addForm.phone) ? 'msg_error_invalid_phone' : '';
+  }
+
+  onAddEmailChange() {
+    this.addEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+    const email = this.addForm.email ?? '';
+    if (!this.isValidEmail(email)) return;
+
+    this.emailCheckTimeout = setTimeout(() => {
+      this.clientService.checkClientEmail(email).subscribe({
+        next: (res) => { this.addEmailExists = res.exists; },
+        error: () => { this.addEmailExists = false; }
+      });
+    }, 400);
+  }
 
   openAddClient() {
-    this.addForm = { firstName: '', lastName: '', email: '', phone: '', region:"" };
-    this.showAddModal = true;
+    this.addForm       = { firstName: '', lastName: '', email: '', phone: '', region: '' };
+    this.addEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+    this.showAddModal  = true;
   }
 
   saveNewClient() {
-    if (!this.isValidEmail(this.addForm.email) || !this.isValidPhone(this.addForm.phone)) return;
+    if (
+      !this.isValidEmail(this.addForm.email) ||
+      !this.isValidPhone(this.addForm.phone) ||
+      this.addEmailExists
+    ) return;
+
     this.clientService.createMyClient({
       firstName: this.addForm.firstName,
       lastName:  this.addForm.lastName,
@@ -208,5 +223,9 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  closeAddModal() { this.showAddModal = false; }
+  closeAddModal() {
+    this.showAddModal  = false;
+    this.addEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+  }
 }

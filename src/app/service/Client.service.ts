@@ -55,10 +55,6 @@ export class ClientService {
     return this.http.put<Client>(`${this.adminUrl}/${id}`, client);
   }
 
-  delete(id: number) {
-    return this.http.delete<void>(`${this.adminUrl}/${id}`);
-  }
-
   // ── Reseller scope ──────────────────────────────────
   getMyClients() {
     return this.http.get<Client[]>(this.resellerUrl);
@@ -79,6 +75,13 @@ export class ClientService {
   getMyClientDevices(id: number) {
     return this.http.get<Device[]>(`${this.resellerUrl}/${id}/devices`);
   }
+
+  checkClientEmail(email: string) {
+  return this.http.get<{ exists: boolean }>(
+    'http://localhost:8080/api/clients/check-email',
+    { params: { email } }
+  );
+}
 
   // ── Client portal scope ─────────────────────────────
   getMyProfile() {

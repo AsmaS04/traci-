@@ -8,5 +8,6 @@ export interface Reseller {
   phone: string;
   clientCount: number | null;
   createdAt: string;
-  avatarUrl?: string;  
+  avatarUrl?: string;
+  location?: string;
 }

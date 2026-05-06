@@ -30,10 +30,12 @@ export class ResellerService {
     return this.http.put<Reseller>(`${this.adminUrl}/${id}`, reseller);
   }
 
-  delete(id: number) {
-    return this.http.delete<void>(`${this.adminUrl}/${id}`);
-  }
-
+ checkEmail(email: string) {
+  return this.http.get<{ exists: boolean }>(
+    `http://localhost:8080/api/resellers/check-email`,
+    { params: { email } }
+  );
+}
   // ── Reseller portal scope ───────────────────────────
   getMyProfile() {
     return this.http.get<Reseller>(`${this.portalUrl}/profile`);

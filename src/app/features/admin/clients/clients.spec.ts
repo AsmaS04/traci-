@@ -34,9 +34,7 @@ describe('Clients', () => {
     expect(component.view).toBe('table');
     expect(component.selected).toBeNull();
     expect(component.showModal).toBeFalse();
-    expect(component.showDeleteModal).toBeFalse();
     expect(component.modalMode).toBe('add');
-    expect(component.toDelete).toBeNull();
     expect(component.formData).toEqual({});
     expect(component.searchQuery).toBe('');
     expect(component.filterActive).toBe('all');
@@ -235,50 +233,6 @@ describe('Clients', () => {
     });
   });
 
-  describe('askDelete', () => {
-    it('should set client to delete and show delete modal', () => {
-      const client = component.clients[0];
-      const event = new Event('click');
-      spyOn(event, 'stopPropagation');
-      component.askDelete(client, event);
-      expect(component.toDelete).toBe(client);
-      expect(component.showDeleteModal).toBeTrue();
-      expect(event.stopPropagation).toHaveBeenCalled();
-    });
-  });
-
-  describe('confirmDelete', () => {
-    it('should delete client and close modal', () => {
-      const client = component.clients[0];
-      component.toDelete = client;
-      component.selected = client;
-      const initialLength = component.clients.length;
-      component.confirmDelete();
-      expect(component.clients.length).toBe(initialLength - 1);
-      expect(component.clients.find(c => c.id === client.id)).toBeUndefined();
-      expect(component.selected).toBeNull();
-      expect(component.toDelete).toBeNull();
-      expect(component.showDeleteModal).toBeFalse();
-    });
-
-    it('should do nothing if no client to delete', () => {
-      component.toDelete = null;
-      const initialLength = component.clients.length;
-      component.confirmDelete();
-      expect(component.clients.length).toBe(initialLength);
-    });
-  });
-
-  describe('cancelDelete', () => {
-    it('should cancel delete and close modal', () => {
-      component.toDelete = component.clients[0];
-      component.showDeleteModal = true;
-      component.cancelDelete();
-      expect(component.toDelete).toBeNull();
-      expect(component.showDeleteModal).toBeFalse();
-    });
-  });
-
   describe('formatDate', () => {
     it('should format date correctly', () => {
       const date = '2023-03-10';
@@ -390,25 +344,6 @@ describe('Clients', () => {
   closeModal(): void {
     this.showModal = false;
     this.formData = {};
-  }
-
-  askDelete(c: Client, e: Event): void {
-    e.stopPropagation();
-    this.toDelete = c;
-    this.showDeleteModal = true;
-  }
-
-  confirmDelete(): void {
-    if (!this.toDelete) return;
-    this.clients = this.clients.filter(c => c.id !== this.toDelete!.id);
-    if (this.selected?.id === this.toDelete.id) this.backToTable();
-    this.toDelete = null;
-    this.showDeleteModal = false;
-  }
-
-  cancelDelete(): void {
-    this.toDelete = null;
-    this.showDeleteModal = false;
   }
 
   formatDate(d: string): string {

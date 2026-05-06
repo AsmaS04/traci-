@@ -4,7 +4,9 @@
       "Bash(npx ng:*)",
       "Bash(npm start:*)",
       "Bash(npm run:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find \"D:\\\\PFE\\\\accent-back\\\\traci_back\\\\src\\\\main\\\\java\\\\pfe\\\\traci_back\" -type f -name \"*.java\" | grep -i \"delete\\\\|config\\\\|service\\\\|controller\" | head -50)",
+      "Read(//d/PFE/accent-back/traci_back/src/main/java/pfe/traci_back/**)"
     ]
   }
 }

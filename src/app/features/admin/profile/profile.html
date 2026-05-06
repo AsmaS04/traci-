@@ -6,15 +6,12 @@
     <div class="header-content">
       <div class="avatar-section">
         <div class="avatar-wrap">
-          <!-- Show avatar photo if uploaded, otherwise show initials -->
           @if (avatarPreview) {
             <img class="avatar avatar--photo" [src]="avatarPreview" alt="Admin avatar"/>
           } @else {
             <div class="avatar">{{ initials }}</div>
           }
-
-          <!-- Upload button overlay -->
-          <label class="avatar-upload-btn" title="{{ i18n.t('adm_upload_photo_hint') }}">
+          <label class="avatar-upload-btn" [title]="i18n.t('adm_upload_photo_hint')">
             <input type="file" accept="image/*" class="avatar-file-input" (change)="onAvatarChange($event)"/>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -22,34 +19,31 @@
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
           </label>
-
           <span class="avatar-status"></span>
         </div>
-
-        <!-- Upload hint or error -->
         @if (uploadError) {
           <p class="avatar-upload-error">{{ i18n.t(uploadError) }}</p>
         } @else {
           <p class="avatar-upload-hint">{{ i18n.t('adm_upload_photo_hint') }}</p>
         }
-
-        <!-- Remove photo button -->
         @if (avatarPreview) {
           <button class="avatar-remove-btn" (click)="removeAvatar()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
             </svg>
             {{ i18n.t('adm_remove_photo') }}
           </button>
         }
       </div>
+
       <div class="header-info">
         <div class="header-name-row">
-          <h1 class="header-name">Asma Souissi</h1>
+          <h1 class="header-name">{{ profile.firstName }} {{ profile.lastName }}</h1>
           <span class="role-badge">{{ i18n.t('nav_superadmin') }}</span>
         </div>
         <div class="header-meta">
-          <span class="meta-item">{{ i18n.t('profile_email') }}: asma&#64;traci.com</span>
+          <span class="meta-item">{{ i18n.t('profile_email') }}: {{ profile.email }}</span>
           <span class="meta-item">{{ i18n.t('profile_last_connection') }}: 12 Mar 2026</span>
           <span class="meta-item">{{ i18n.t('profile_member_since') }} Jan 2024</span>
         </div>
@@ -61,29 +55,20 @@
           <div class="hstat"><p class="hstat-val">8,750</p><p class="hstat-label">{{ i18n.t('stat_devices') }}</p></div>
         </div>
       </div>
-      <div class="header-actions">
-        <button class="btn-edit">{{ i18n.t('adm_edit_profile') }}</button>
-      </div>
+
     </div>
   </div>
 
   <!-- ══ MAIN BODY ════════════════════════════════════════════ -->
   <div class="profile-body">
 
-    <!-- Left tab sidebar -->
+    <!-- ── Left tab sidebar ──────────────────────────────── -->
     <div class="tab-sidebar">
       <button class="tab-btn" [class.tab-btn--active]="activeTab==='profile'" (click)="switchTab('profile')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
-        <span>Profile</span>
-      </button>
-
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='security'" (click)="switchTab('security')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-        <span>Security</span>
+        <span>{{ i18n.t('adm_tab_profile') }}</span>
       </button>
 
       <button class="tab-btn" [class.tab-btn--active]="activeTab==='notifications'" (click)="switchTab('notifications')">
@@ -91,7 +76,7 @@
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-        <span>Notifications</span>
+        <span>{{ i18n.t('adm_tab_notifications') }}</span>
         <span class="tab-badge">4</span>
       </button>
 
@@ -99,11 +84,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
-        <span>Activity</span>
+        <span>{{ i18n.t('adm_tab_activity') }}</span>
       </button>
+    </div>
+    <!-- ── END tab-sidebar ───────────────────────────────── -->
 
-
-    <!-- Content panels -->
+    <!-- ── Tab content ───────────────────────────────────── -->
     <div class="tab-content">
 
       <!-- ── PROFILE TAB ─────────────────────────────────── -->
@@ -146,96 +132,10 @@
               <textarea rows="3" [(ngModel)]="profile.bio"></textarea>
             </div>
           </div>
+
           <div class="form-actions">
-            <button class="btn-cancel">{{ i18n.t('btn_cancel') }}</button>
+            <button class="btn-cancel" (click)="cancelEditing()">{{ i18n.t('btn_cancel') }}</button>
             <button class="btn-save" (click)="saveProfile()">{{ i18n.t('btn_save_changes') }}</button>
-          </div>
-        </div>
-      </div>
-      }
-
-      <!-- ── SECURITY TAB ────────────────────────────────── -->
-      @if (activeTab==='security') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_security') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_security_sub') }}</p>
-        </div>
-
-        <div class="section-card">
-          <p class="section-title">{{ i18n.t('adm_change_password') }}</p>
-          <div class="form-grid form-grid--3">
-            <div class="form-group">
-              <label>{{ i18n.t('adm_current_password') }}</label>
-              <input type="password" [(ngModel)]="security.currentPassword" placeholder="••••••••"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('adm_new_password') }}</label>
-              <input type="password" [(ngModel)]="security.newPassword" placeholder="••••••••"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('adm_confirm_password') }}</label>
-              <input type="password" [(ngModel)]="security.confirmPassword" placeholder="••••••••"/>
-            </div>
-          </div>
-          <div class="pwd-strength">
-            <div class="pwd-bar">
-              <div class="pwd-bar__fill"
-                [class.pwd-bar--strong]="passwordStrength==='strong'"
-                [class.pwd-bar--medium]="passwordStrength==='medium'"
-                [class.pwd-bar--weak]="passwordStrength==='weak'">
-              </div>
-            </div>
-            <span class="pwd-label" [class.pwd-label--strong]="passwordStrength==='strong'">
-              {{ passwordStrength | titlecase }}
-            </span>
-          </div>
-          <div class="form-actions" style="margin-top:1rem">
-            <button class="btn-save" (click)="updatePassword()">{{ i18n.t('adm_update_password') }}</button>
-          </div>
-        </div>
-
-        <div class="section-card" style="margin-top:1.2rem">
-          <p class="section-title">{{ i18n.t('adm_active_sessions') }}</p>
-          <div class="session-list">
-            @for (s of sessions; track $index; let i = $index) {
-            <div class="session-item" [class.session-item--current]="s.current">
-              <div class="session-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="3" width="20" height="14" rx="2"/>
-                  <line x1="8" y1="21" x2="16" y2="21"/>
-                  <line x1="12" y1="17" x2="12" y2="21"/>
-                </svg>
-              </div>
-              <div class="session-info">
-                <p class="session-name">
-                  {{ s.device }}
-                  @if (s.current) { <span class="current-badge">{{ i18n.t('adm_session_current') }}</span> }
-                </p>
-                <p class="session-meta">{{ s.location }} · Active {{ s.lastActive }}</p>
-              </div>
-              @if (!s.current) {
-              <button class="session-revoke" (click)="revokeSession(i)">{{ i18n.t('adm_session_revoke') }}</button>
-              }
-            </div>
-            }
-          </div>
-        </div>
-
-        <div class="section-card" style="margin-top:1.2rem">
-          <div class="tfa-row">
-            <div>
-              <p class="section-title" style="margin-bottom:0.2rem">{{ i18n.t('adm_tfa_title') }}</p>
-              <p class="panel-sub" style="margin-bottom:0">{{ i18n.t('adm_tfa_sub') }}</p>
-            </div>
-            <div class="toggle-wrap">
-              <span class="toggle-label"
-                [class.toggle-label--on]="twoFaEnabled"
-                [class.toggle-label--off]="!twoFaEnabled">
-                {{ twoFaEnabled ? 'Enabled' : 'Disabled' }}
-              </span>
-              <button class="toggle" [class.toggle--on]="twoFaEnabled" (click)="twoFaEnabled=!twoFaEnabled"></button>
-            </div>
           </div>
         </div>
       </div>
@@ -275,19 +175,19 @@
         <div class="today-summary">
           <div class="today-stat">
             <span class="today-val">{{ todayStats.clients }}</span>
-            <span class="today-label">Clients created</span>
+            <span class="today-label">{{ i18n.t('adm_today_clients') }}</span>
           </div>
           <div class="today-stat">
             <span class="today-val">{{ todayStats.resellers }}</span>
-            <span class="today-label">Reseller updated</span>
+            <span class="today-label">{{ i18n.t('adm_today_resellers') }}</span>
           </div>
           <div class="today-stat">
             <span class="today-val">{{ todayStats.alerts }}</span>
-            <span class="today-label">Alerts viewed</span>
+            <span class="today-label">{{ i18n.t('adm_today_alerts') }}</span>
           </div>
           <div class="today-stat">
             <span class="today-val">{{ todayStats.devices }}</span>
-            <span class="today-label">Devices modified</span>
+            <span class="today-label">{{ i18n.t('adm_today_devices') }}</span>
           </div>
         </div>
         <div class="section-card">
@@ -311,5 +211,11 @@
         </div>
       </div>
       }
-     
-        
+
+    </div>
+    <!-- ── END tab-content ───────────────────────────────── -->
+
+  </div>
+  <!-- ── END profile-body ──────────────────────────────── -->
+
+</div>

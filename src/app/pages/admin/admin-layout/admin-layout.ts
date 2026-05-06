@@ -1,17 +1,14 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { ClientService } from '../../../service/Client.service';
+import { ResellerService } from '../../../service/Reseller.service';
+import { DeviceService } from '../../../service/Device.service';
 import { ToastComponent } from '../../../shared/toast/toast.component';
 import { SidebarComponent, SidebarEntry, SidebarUser } from '../../../shared/sidebar/sidebar';
 import { NavbarComponent, NavbarSearchItem, NavbarUser } from '../../../shared/navbar/navbar';
-// ── Inject your real services here ────────────────────────────────────────────
-// Replace these with whatever services expose getAll / search in your project.
-// import { ClientService }  from '../../../service/client.service';
-// import { ResellerService } from '../../../service/Reseller.service';
-// import { DeviceService }  from '../../../service/device.service';
-// ──────────────────────────────────────────────────────────────────────────────
 import { forkJoin, of } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, Subject, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-admin-layout',
@@ -22,18 +19,15 @@ import { catchError, debounceTime, distinctUntilChanged, Subject, switchMap } fr
 })
 export class AdminLayout {
 
-  private readonly i18n   = inject(TranslationService);
-  private readonly router = inject(Router);
-
-  // Uncomment and inject your services when ready:
-  // private readonly clientService  = inject(ClientService);
-  // private readonly resellerService = inject(ResellerService);
-  // private readonly deviceService  = inject(DeviceService);
+  private readonly i18n            = inject(TranslationService);
+  private readonly router          = inject(Router);
+  private readonly clientService   = inject(ClientService);
+  private readonly resellerService = inject(ResellerService);
+  private readonly deviceService   = inject(DeviceService);
 
   isDark = false;
   onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
 
-  // ── Sidebar ──────────────────────────────────────────────
   navItems = computed<SidebarEntry[]>(() => {
     void this.i18n.lang();
     return [
@@ -50,12 +44,10 @@ export class AdminLayout {
   sidebarUser: SidebarUser = { name: 'Admin', email: 'admin@traci.com', status: 'online' };
   navbarUser:  NavbarUser  = { name: 'Admin', email: 'admin@traci.com' };
 
-  // ── Live search ───────────────────────────────────────────
   searchResults: NavbarSearchItem[] = [];
   private searchQuery$ = new Subject<string>();
 
   constructor() {
-    // Debounce so we don't fire on every keystroke
     this.searchQuery$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -69,57 +61,74 @@ export class AdminLayout {
   }
 
   onSearchNavigate(item: NavbarSearchItem): void {
-    this.router.navigate([item.route]);
+    this.router.navigate([item.route.split('?')[0]], {
+      queryParams: item.route.includes('?id=')
+        ? { id: item.route.split('?id=')[1] }
+        : {}
+    });
   }
 
-  /**
-   * Replace the body of this method with real service calls.
-   *
-   * Example when your services are ready:
-   *
-   *   return forkJoin([
-   *     this.clientService.getAll().pipe(catchError(() => of([]))),
-   *     this.resellerService.getAll().pipe(catchError(() => of([]))),
-   *     this.deviceService.getAll().pipe(catchError(() => of([]))),
-   *   ]).pipe(
-   *     map(([clients, resellers, devices]) => [
-   *       ...clients
-   *         .filter(c => c.username.toLowerCase().includes(q) || c.email.toLowerCase().includes(q))
-   *         .slice(0, 3)
-   *         .map(c => ({ type: 'client' as const, id: c.id, title: c.username,
-   *                      subtitle: c.email, status: c.active ? 'Active' : 'Inactive',
-   *                      active: c.active, route: '/admin/clients' })),
-   *       ...resellers
-   *         .filter(r => r.username.toLowerCase().includes(q))
-   *         .slice(0, 2)
-   *         .map(r => ({ type: 'reseller' as const, id: r.idRev, title: r.username,
-   *                      subtitle: r.nomEntreprise, status: 'Active',
-   *                      active: true, route: '/admin/resellers' })),
-   *       ...devices
-   *         .filter(d => String(d.id).includes(q) || d.imei?.includes(q))
-   *         .slice(0, 2)
-   *         .map(d => ({ type: 'device' as const, id: d.id, title: `Device #${d.id}`,
-   *                      subtitle: d.clientName ?? '', status: d.status,
-   *                      active: d.status === 'actif', route: '/admin/devices' })),
-   *     ])
-   *   );
-   */
   private fetchSearchResults(q: string) {
-    // ── Temporary: remove this block once real services are connected ──
-    const mock: NavbarSearchItem[] = [
-      { type: 'client',   id: 1,    title: 'Société Elyes',   subtitle: 'TechVision SARL · Tunis',  status: 'Active',  active: true,  route: '/admin/clients'   },
-      { type: 'client',   id: 2,    title: 'Transport Mrad',  subtitle: 'NetPlus Solutions · Sfax', status: 'Active',  active: true,  route: '/admin/clients'   },
-      { type: 'reseller', id: 1,    title: 'TechVision SARL', subtitle: 'Khalil Mansour · Tunis',   status: 'Active',  active: true,  route: '/admin/resellers' },
-      { type: 'device',   id: 4821, title: 'Device #4821',    subtitle: 'Alpha Logistics · Tunis',  status: 'Offline', active: false, route: '/admin/devices'   },
-    ];
-    return of(
-      mock.filter(i =>
-        i.title.toLowerCase().includes(q) ||
-        i.subtitle.toLowerCase().includes(q) ||
-        String(i.id).includes(q)
-      ).slice(0, 6)
+    return forkJoin([
+      this.clientService.getAll().pipe(catchError(() => of([]))),
+      this.resellerService.getAll().pipe(catchError(() => of([]))),
+      this.deviceService.getAll().pipe(catchError(() => of([]))),
+    ]).pipe(
+      map(([clients, resellers, devices]) => {
+        const clientResults: NavbarSearchItem[] = clients
+          .filter((c: any) =>
+            `${c.firstName ?? ''} ${c.lastName ?? ''}`.toLowerCase().includes(q) ||
+            (c.email ?? '').toLowerCase().includes(q) ||
+            (c.location ?? '').toLowerCase().includes(q)
+          )
+          .slice(0, 4)
+          .map((c: any) => ({
+            type:     'client' as const,
+            id:       c.idClient,
+            title:    `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email,
+            subtitle: c.email,
+            status:   (c.graceDaysLeft ?? 0) > 0 ? 'Active' : 'Inactive',
+            active:   (c.graceDaysLeft ?? 0) > 0,
+            route:    `/admin/clients?id=${c.idClient}`,
+          }));
+
+        const resellerResults: NavbarSearchItem[] = resellers
+          .filter((r: any) =>
+            (r.username ?? '').toLowerCase().includes(q) ||
+            (r.nomEntreprise ?? '').toLowerCase().includes(q) ||
+            (r.email ?? '').toLowerCase().includes(q)
+          )
+          .slice(0, 3)
+          .map((r: any) => ({
+            type:     'reseller' as const,
+            id:       r.idRev,
+            title:    r.nomEntreprise || r.username,
+            subtitle: r.username,
+            status:   'Active',
+            active:   true,
+            route:    `/admin/resellers?id=${r.idRev}`,
+          }));
+
+        const deviceResults: NavbarSearchItem[] = devices
+          .filter((d: any) =>
+            String(d.idDevice ?? '').includes(q) ||
+            (d.serialNumber ?? '').toLowerCase().includes(q) ||
+            (d.model ?? '').toLowerCase().includes(q)
+          )
+          .slice(0, 3)
+          .map((d: any) => ({
+            type:     'device' as const,
+            id:       d.idDevice,
+            title:    `Device #${d.idDevice}`,
+            subtitle: d.serialNumber ?? d.model ?? '',
+            status:   d.status ?? 'Unknown',
+            active:   (d.status ?? '').toLowerCase() === 'actif',
+            route:    `/admin/devices`,
+          }));
+
+        return [...clientResults, ...resellerResults, ...deviceResults].slice(0, 8);
+      })
     );
-    // ── End temporary block ────────────────────────────────
   }
 
   goToProfile(): void { this.router.navigate(['/admin/profil']); }

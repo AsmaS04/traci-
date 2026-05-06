@@ -347,5 +347,19 @@
   "ra_success": "Si cet email existe, la demande a été envoyée.",
   "ra_success_sub": "Votre responsable vous contactera prochainement.",
   "ra_back": "← Retour à la connexion",
-  "ra_error_email": "Veuillez entrer un email valide"
+  "ra_error_email": "Veuillez entrer un email valide",
+  "msg_error_invalid_phone": "Le téléphone doit contenir exactement 8 chiffres",
+"msg_error_email_taken": "Cet email est déjà utilisé",
+"nav_superadmin": "Super Administrateur",
+"stat_resellers": "Revendeurs",
+"stat_clients": "Clients",
+"stat_devices": "Appareils",
+"adm_upload_photo_hint": "Cliquez sur l'avatar pour changer la photo",
+"adm_remove_photo": "Supprimer la photo",
+"adm_upload_type_error": "Seules les images sont autorisées",
+"adm_upload_size_error": "L'image doit faire moins de 2MB",
+"act_reseller_reg": "Revendeur enregistré :",
+"act_client_added": "Client ajouté :",
+"act_device_off": "Appareil hors ligne :",
+"act_reseller_upd": "Revendeur mis à jour :"
 }

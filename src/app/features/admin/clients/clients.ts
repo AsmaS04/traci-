@@ -31,9 +31,7 @@ export class Clients implements OnInit {
   devicesLoading = false;
 
   showModal       = false;
-  showDeleteModal = false;
   modalMode: 'add' | 'edit' = 'edit';
-  toDelete: Client | null = null;
   formData: Partial<Client> = {};
   searchQuery = '';
   filterActive: 'all' | 'active' | 'inactive' = 'all';
@@ -148,27 +146,6 @@ export class Clients implements OnInit {
   }
 
   closeModal(): void { this.showModal = false; this.formData = {}; }
-
-  askDelete(c: Client, e: Event): void {
-    e.stopPropagation();
-    this.toDelete = c;
-    this.showDeleteModal = true;
-  }
-
-  confirmDelete(): void {
-    if (!this.toDelete) return;
-    this.clientService.delete(this.toDelete.idClient).subscribe({
-      next: () => {
-        if (this.selected?.idClient === this.toDelete!.idClient) this.backToTable();
-        this.loadClients();
-        this.toDelete = null;
-        this.showDeleteModal = false;
-      },
-      error: (err) => console.error('Failed to delete client', err)
-    });
-  }
-
-  cancelDelete(): void { this.toDelete = null; this.showDeleteModal = false; }
 
   formatDate(d: string | null | undefined): string {
     if (!d) return '—';

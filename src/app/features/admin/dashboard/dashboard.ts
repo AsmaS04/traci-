@@ -44,6 +44,7 @@ export class Dashboard implements OnInit, OnDestroy {
   private areaChart: ApexCharts | null = null;
   private refreshInterval: any = null;
   private notifSub!: Subscription;
+  private emailCheckTimeout: any = null;
 
   constructor(
     private router: Router,
@@ -74,8 +75,9 @@ export class Dashboard implements OnInit, OnDestroy {
   topResellers: TopReseller[] = [];
   systemEvents: SystemEvent[] = [];
 
-  showAddReseller = false;
-  resellerForm: any = {};
+  showAddReseller    = false;
+  resellerForm: any  = {};
+  resellerEmailExists = false;
 
   ngOnInit() {
     this.loadAll();
@@ -102,6 +104,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.refreshInterval) clearInterval(this.refreshInterval);
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
     if (this.donutChart) this.donutChart.destroy();
     if (this.areaChart)  this.areaChart.destroy();
     this.notifSub?.unsubscribe();
@@ -193,6 +196,66 @@ export class Dashboard implements OnInit, OnDestroy {
     return t === 'reseller' ? 'ev--teal' : t === 'client' ? 'ev--blue' : t === 'device' ? 'ev--amber' : 'ev--purple';
   }
 
+  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
+
+  get resellerEmailError(): string {
+    const email = this.resellerForm.email ?? '';
+    if (!email) return '';
+    if (!this.isValidEmail(email)) return 'msg_error_invalid_email';
+    if (this.resellerEmailExists) return 'msg_error_email_taken';
+    return '';
+  }
+
+  get resellerPhoneError(): string {
+    return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone) ? 'msg_error_invalid_phone' : '';
+  }
+
+  onResellerEmailChange() {
+    this.resellerEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+    const email = this.resellerForm.email ?? '';
+    if (!this.isValidEmail(email)) return;
+
+    this.emailCheckTimeout = setTimeout(() => {
+      this.resellerService.checkEmail(email).subscribe({
+        next: (res) => { this.resellerEmailExists = res.exists; },
+        error: () => { this.resellerEmailExists = false; }
+      });
+    }, 400);
+  }
+
+  openAddReseller() {
+    this.resellerForm       = { username: '', nomEntreprise: '', email: '', phone: '' , location: ''};
+    this.resellerEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+    this.showAddReseller = true;
+  }
+
+  closeAddReseller() {
+    this.showAddReseller = false;
+    this.resellerEmailExists = false;
+  }
+
+  saveReseller() {
+    if (
+      !this.isValidEmail(this.resellerForm.email) ||
+      !this.isValidPhone(this.resellerForm.phone) ||
+      this.resellerEmailExists
+    ) return;
+
+    this.resellerService.create({
+      username:      this.resellerForm.username,
+      nomEntreprise: this.resellerForm.nomEntreprise,
+      email:         this.resellerForm.email,
+      phone:         this.resellerForm.phone,
+      location:      this.resellerForm.location,
+    }).subscribe({
+      next: () => { this.loadAll(); this.showAddReseller = false; },
+      error: (err) => console.error('Failed to create reseller', err)
+    });
+  }
+
   private renderDonutChart() {
     this.adminService.getDeviceStatus().subscribe({
       next: (data) => {
@@ -266,25 +329,10 @@ export class Dashboard implements OnInit, OnDestroy {
       error: (err) => console.error('Failed to load growth data', err)
     });
   }
-
-  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
-  isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
-  get resellerEmailError(): string { return (this.resellerForm.email ?? '') && !this.isValidEmail(this.resellerForm.email) ? 'msg_error_invalid_email' : ''; }
-  get resellerPhoneError(): string { return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone) ? 'msg_error_invalid_phone' : ''; }
-
-  openAddReseller() { this.resellerForm = { username: '', nomEntreprise: '', email: '', phone: '' }; this.showAddReseller = true; }
-  closeAddReseller() { this.showAddReseller = false; }
-
-  saveReseller() {
-    if (!this.isValidEmail(this.resellerForm.email) || !this.isValidPhone(this.resellerForm.phone)) return;
-    this.resellerService.create({
-      username:      this.resellerForm.username,
-      nomEntreprise: this.resellerForm.nomEntreprise,
-      email:         this.resellerForm.email,
-      phone:         this.resellerForm.phone,
-    }).subscribe({
-      next: () => { this.loadAll(); this.showAddReseller = false; },
-      error: (err) => console.error('Failed to create reseller', err)
-    });
-  }
+  readonly governorates = [
+  'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
+  'Kairouan','Kasserine','Kébili','Kef','Mahdia','Manouba','Médenine',
+  'Monastir','Nabeul','Sfax','Sidi Bouzid','Siliana','Sousse',
+  'Tataouine','Tozeur','Tunis','Zaghouan'
+];
 }

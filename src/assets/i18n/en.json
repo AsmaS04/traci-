@@ -347,5 +347,19 @@
   "ra_success": "If this email exists, the request has been sent.",
   "ra_success_sub": "Your manager will contact you shortly.",
   "ra_back": "← Back to login",
-  "ra_error_email": "Please enter a valid email"
+  "ra_error_email": "Please enter a valid email",
+  "msg_error_email_taken": "This email is already registered",
+  "nav_superadmin": "Super Admin",
+"stat_resellers": "Resellers",
+"stat_clients": "Clients",
+"stat_devices": "Devices",
+"adm_upload_photo_hint": "Click avatar to change photo",
+"adm_remove_photo": "Remove photo",
+"adm_upload_type_error": "Only image files are allowed",
+"adm_upload_size_error": "Image must be under 2MB",
+"act_reseller_reg": "Reseller registered:",
+"act_client_added": "Client added:",
+"act_device_off": "Device offline:",
+"act_reseller_upd": "Reseller updated:"
+
 }

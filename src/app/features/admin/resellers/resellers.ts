@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Reseller } from '../../../models/reseller.model';
 import { Client } from '../../../models/client.model';
 import { TranslationService } from '../../../service/translation.service';
@@ -14,22 +15,23 @@ import { ClientService } from '../../../service/Client.service';
   templateUrl: './resellers.html',
   styleUrl: './resellers.css',
 })
-export class Resellers implements OnInit {
+export class Resellers implements OnInit, OnDestroy {
 
   constructor(
     public i18n: TranslationService,
     private resellerService: ResellerService,
-    private clientService: ClientService
+    private clientService: ClientService,
+    private route: ActivatedRoute
   ) {}
+
+  private emailCheckTimeout: any = null;
 
   view: 'table' | 'detail' = 'table';
   selected: Reseller | null = null;
   selectedClients: Client[] = [];
 
   showModal       = false;
-  showDeleteModal = false;
   modalMode: 'add' | 'edit' = 'add';
-  toDelete: Reseller | null = null;
   formData: Partial<Reseller> = {};
   searchQuery = '';
   sortField: keyof Reseller = 'idRev';
@@ -37,15 +39,35 @@ export class Resellers implements OnInit {
   loading = true;
 
   resellers: Reseller[] = [];
+  formEmailExists  = false;
+  private originalEmail = '';
 
-  ngOnInit() { this.loadResellers(); }
+  readonly governorates = [
+    'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
+    'Kairouan','Kasserine','Kébili','Kef','Mahdia','Manouba','Médenine',
+    'Monastir','Nabeul','Sfax','Sidi Bouzid','Siliana','Sousse',
+    'Tataouine','Tozeur','Tunis','Zaghouan'
+  ];
 
-  private loadResellers() {
+  ngOnInit() {
     this.loading = true;
     this.resellerService.getAll().subscribe({
-      next: (data) => { this.resellers = data; this.loading = false; },
+      next: (data) => {
+        this.resellers = data;
+        this.loading   = false;
+        // Auto-open detail if ?id= param present (from search navigation)
+        const idParam = this.route.snapshot.queryParamMap.get('id');
+        if (idParam) {
+          const target = data.find(r => r.idRev === +idParam);
+          if (target) this.openDetail(target);
+        }
+      },
       error: (err) => { console.error('Failed to load resellers', err); this.loading = false; }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
 
   fmt(n: number) { return new Intl.NumberFormat().format(n); }
@@ -97,22 +119,60 @@ export class Resellers implements OnInit {
 
   backToTable(): void { this.view = 'table'; this.selected = null; this.selectedClients = []; }
 
-  openAdd(): void { this.formData = {}; this.modalMode = 'add'; this.showModal = true; }
+  openAdd(): void {
+    this.formData        = {};
+    this.formEmailExists  = false;
+    this.originalEmail   = '';
+    this.modalMode       = 'add';
+    this.showModal       = true;
+  }
 
   openEdit(r: Reseller, e: Event): void {
     e.stopPropagation();
-    this.formData  = { ...r };
-    this.modalMode = 'edit';
-    this.showModal = true;
+    this.formData        = { ...r };
+    this.originalEmail   = r.email ?? '';
+    this.formEmailExists  = false;
+    this.modalMode       = 'edit';
+    this.showModal       = true;
   }
 
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
-  get formEmailError(): string { return (this.formData.email ?? '') && !this.isValidEmail(this.formData.email ?? '') ? 'msg_error_invalid_email' : ''; }
-  get formPhoneError(): string { return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '') ? 'msg_error_invalid_phone' : ''; }
+
+  get formEmailError(): string {
+    const email = this.formData.email ?? '';
+    if (!email) return '';
+    if (!this.isValidEmail(email)) return 'msg_error_invalid_email';
+    if (this.formEmailExists) return 'msg_error_email_taken';
+    return '';
+  }
+
+  get formPhoneError(): string {
+    return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '') ? 'msg_error_invalid_phone' : '';
+  }
+
+  onEmailChange(): void {
+    this.formEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+    const email = this.formData.email ?? '';
+    if (!this.isValidEmail(email)) return;
+    if (this.modalMode === 'edit' && email.trim().toLowerCase() === this.originalEmail.trim().toLowerCase()) return;
+
+    this.emailCheckTimeout = setTimeout(() => {
+      this.resellerService.checkEmail(email).subscribe({
+        next: (res) => { this.formEmailExists = res.exists; },
+        error: () => { this.formEmailExists = false; }
+      });
+    }, 400);
+  }
 
   saveForm(): void {
-    if (!this.isValidEmail(this.formData.email ?? '') || !this.isValidPhone(this.formData.phone ?? '')) return;
+    if (
+      !this.isValidEmail(this.formData.email ?? '') ||
+      !this.isValidPhone(this.formData.phone ?? '') ||
+      this.formEmailExists
+    ) return;
+
     if (this.modalMode === 'add') {
       this.resellerService.create(this.formData).subscribe({
         next: () => { this.loadResellers(); this.closeModal(); },
@@ -131,24 +191,21 @@ export class Resellers implements OnInit {
     }
   }
 
-  closeModal(): void { this.showModal = false; this.formData = {}; }
-
-  askDelete(r: Reseller, e: Event): void { e.stopPropagation(); this.toDelete = r; this.showDeleteModal = true; }
-
-  confirmDelete(): void {
-    if (!this.toDelete) return;
-    this.resellerService.delete(this.toDelete.idRev).subscribe({
-      next: () => {
-        if (this.selected?.idRev === this.toDelete!.idRev) this.backToTable();
-        this.loadResellers();
-        this.toDelete = null;
-        this.showDeleteModal = false;
-      },
-      error: (err) => console.error('Failed to delete reseller', err)
+  private loadResellers() {
+    this.loading = true;
+    this.resellerService.getAll().subscribe({
+      next: (data) => { this.resellers = data; this.loading = false; },
+      error: (err) => { console.error('Failed to load resellers', err); this.loading = false; }
     });
   }
 
-  cancelDelete(): void { this.toDelete = null; this.showDeleteModal = false; }
+  closeModal(): void {
+    this.showModal       = false;
+    this.formData        = {};
+    this.formEmailExists  = false;
+    this.originalEmail   = '';
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+  }
 
   formatDate(d: string): string {
     if (!d) return '';

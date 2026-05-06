@@ -200,3 +200,19 @@
   .profile-card { flex-direction: column; }
   .toolbar { flex-direction: column; align-items: flex-start; }
 }
+.form-group select {
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-900);
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.82rem;
+  transition: border-color 0.15s;
+  appearance: none;
+  cursor: pointer;
+}
+.form-group select:focus {
+  outline: none;
+  border-color: var(--orange);
+}

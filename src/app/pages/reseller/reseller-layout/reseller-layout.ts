@@ -2,14 +2,14 @@ import { Component, OnInit, computed, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
+import { ClientService } from '../../../service/Client.service';
+import { DeviceService } from '../../../service/Device.service';
 import { ToastComponent } from '../../../shared/toast/toast.component';
 import { SidebarComponent, SidebarEntry, SidebarUser } from '../../../shared/sidebar/sidebar';
 import { NavbarComponent, NavbarSearchItem, NavbarUser } from '../../../shared/navbar/navbar';
 import { Reseller } from '../../../models/reseller.model';
-// import { ClientService } from '../../../service/client.service';
-// import { DeviceService } from '../../../service/device.service';
-import { of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, Subject, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-reseller-layout',
@@ -21,12 +21,10 @@ import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 export default class ResellerLayout implements OnInit {
 
   private readonly resellerService = inject(ResellerService);
+  private readonly clientService   = inject(ClientService);
+  private readonly deviceService   = inject(DeviceService);
   private readonly router          = inject(Router);
   private readonly i18n            = inject(TranslationService);
-
-  // Inject when ready:
-  // private readonly clientService = inject(ClientService);
-  // private readonly deviceService = inject(DeviceService);
 
   isDark = false;
   onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
@@ -36,7 +34,6 @@ export default class ResellerLayout implements OnInit {
     deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0, createdAt: '',
   };
 
-  // ── Sidebar ──────────────────────────────────────────────
   navItems = computed<SidebarEntry[]>(() => {
     void this.i18n.lang();
     return [
@@ -56,7 +53,6 @@ export default class ResellerLayout implements OnInit {
     return { name: this.reseller.username || 'Reseller', email: this.reseller.email };
   }
 
-  // ── Live search ───────────────────────────────────────────
   searchResults: NavbarSearchItem[] = [];
   private searchQuery$ = new Subject<string>();
 
@@ -74,33 +70,58 @@ export default class ResellerLayout implements OnInit {
   }
 
   onSearchNavigate(item: NavbarSearchItem): void {
-    this.router.navigate([item.route]);
+    this.router.navigate([item.route.split('?')[0]], {
+      queryParams: item.route.includes('?id=')
+        ? { id: item.route.split('?id=')[1] }
+        : {}
+    });
   }
 
-  /**
-   * Replace with real service calls when ready. Same pattern as admin:
-   *
-   *   return forkJoin([
-   *     this.clientService.getMyClients().pipe(catchError(() => of([]))),
-   *     this.deviceService.getMyDevices().pipe(catchError(() => of([]))),
-   *   ]).pipe(
-   *     map(([clients, devices]) => [
-   *       ...clients.filter(c => c.username.toLowerCase().includes(q)).slice(0, 4)
-   *         .map(c => ({ type: 'client' as const, id: c.id, title: c.username,
-   *                      subtitle: c.email, status: 'Active', active: true,
-   *                      route: '/reseller-dashboard/clients' })),
-   *       ...devices.filter(d => String(d.id).includes(q)).slice(0, 3)
-   *         .map(d => ({ type: 'device' as const, id: d.id, title: `Device #${d.id}`,
-   *                      subtitle: d.status, status: d.status,
-   *                      active: d.status === 'actif',
-   *                      route: '/reseller-dashboard/devices' })),
-   *     ])
-   *   );
-   */
   private fetchSearchResults(q: string) {
-    // ── Temporary: replace once real services are connected ──
-    return of([] as NavbarSearchItem[]);
-    // ────────────────────────────────────────────────────────
+    if (!this.reseller.idRev) return of([] as NavbarSearchItem[]);
+
+    return forkJoin([
+      this.clientService.getMyClients().pipe(catchError(() => of([]))),
+      this.deviceService.getByReseller(this.reseller.idRev).pipe(catchError(() => of([]))),
+    ]).pipe(
+      map(([clients, devices]) => {
+        const clientResults: NavbarSearchItem[] = clients
+          .filter((c: any) =>
+            `${c.firstName ?? ''} ${c.lastName ?? ''}`.toLowerCase().includes(q) ||
+            (c.email ?? '').toLowerCase().includes(q) ||
+            (c.location ?? '').toLowerCase().includes(q)
+          )
+          .slice(0, 5)
+          .map((c: any) => ({
+            type:     'client' as const,
+            id:       c.idClient,
+            title:    `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email,
+            subtitle: c.email,
+            status:   (c.graceDaysLeft ?? 0) > 0 ? 'Active' : 'Inactive',
+            active:   (c.graceDaysLeft ?? 0) > 0,
+            route:    `/reseller-dashboard/clients?id=${c.idClient}`,
+          }));
+
+        const deviceResults: NavbarSearchItem[] = devices
+          .filter((d: any) =>
+            String(d.idDevice ?? '').includes(q) ||
+            (d.serialNumber ?? '').toLowerCase().includes(q) ||
+            (d.model ?? '').toLowerCase().includes(q)
+          )
+          .slice(0, 3)
+          .map((d: any) => ({
+            type:     'device' as const,
+            id:       d.idDevice,
+            title:    `Device #${d.idDevice}`,
+            subtitle: d.serialNumber ?? d.model ?? '',
+            status:   d.status ?? 'Unknown',
+            active:   (d.status ?? '').toLowerCase() === 'actif',
+            route:    `/reseller-dashboard/devices`,
+          }));
+
+        return [...clientResults, ...deviceResults].slice(0, 8);
+      })
+    );
   }
 
   ngOnInit(): void {

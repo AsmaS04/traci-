@@ -189,6 +189,7 @@
             </span>
           </div>
           <div class="form-actions" style="margin-top:1rem">
+            <button class="btn-cancel" (click)="security = { currentPassword: '', newPassword: '', confirmPassword: '' }">{{ i18n.t('btn_cancel') }}</button>
             <button class="btn-save" (click)="updatePassword()">{{ i18n.t('adm_update_password') }}</button>
           </div>
         </div>

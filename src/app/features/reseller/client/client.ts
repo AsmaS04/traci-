@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslationService } from '../../../service/translation.service';
@@ -10,6 +10,7 @@ import { ToastService } from '../../../service/Toast.service';
 import { Client } from '../../../models/client.model';
 import { Device } from '../../../models/device.model';
 import { Reseller } from '../../../models/reseller.model';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-reseller-clients',
@@ -18,7 +19,7 @@ import { Reseller } from '../../../models/reseller.model';
   templateUrl: './client.html',
   styleUrls: ['./client.css'],
 })
-export default class ResellerClientsComponent implements OnInit {
+export default class ResellerClientsComponent implements OnInit, OnDestroy {
 
   readonly i18n           = inject(TranslationService);
   private clientService   = inject(ClientService);
@@ -26,6 +27,7 @@ export default class ResellerClientsComponent implements OnInit {
   private deviceService   = inject(DeviceService);
   private aboService      = inject(AbonnementService);
   private toastService    = inject(ToastService);
+  private route = inject(ActivatedRoute);
 
   clients: Client[] = [];
   reseller: Reseller = {
@@ -34,15 +36,32 @@ export default class ResellerClientsComponent implements OnInit {
   };
   loading = true;
 
-  ngOnInit() {
-    this.resellerService.getMyProfile().subscribe({
-      next: (r) => { this.reseller = r; },
-      error: () => {}
-    });
-    this.clientService.getMyClients().subscribe({
-      next: (data) => { this.clients = data; this.loading = false; },
-      error: () => { this.loading = false; }
-    });
+  private emailCheckTimeout: any = null;
+  formEmailExists = false;
+  private originalEmail = '';
+
+ ngOnInit() {
+  this.resellerService.getMyProfile().subscribe({
+    next: (r) => { this.reseller = r; },
+    error: () => {}
+  });
+  this.clientService.getMyClients().subscribe({
+    next: (data) => {
+      this.clients = data;
+      this.loading = false;
+      // Auto-open panel if ?id= param present
+      const idParam = this.route.snapshot.queryParamMap.get('id');
+      if (idParam) {
+        const target = data.find(c => c.idClient === +idParam);
+        if (target) this.openPanel(target);
+      }
+    },
+    error: () => { this.loading = false; }
+  });
+}
+
+  ngOnDestroy() {
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
 
   // ── Filters ─────────────────────────────────────────────
@@ -106,34 +125,67 @@ export default class ResellerClientsComponent implements OnInit {
     }
   }
 
-  // ── Add / Edit / Delete ──────────────────────────────────
+  // ── Add / Edit ──────────────────────────────────────────
   showModal  = false;
-  showDelete = false;
   isEdit     = false;
   selected: Client | null = null;
   form: Partial<Client> = {};
 
   openAdd() {
-    this.isEdit = false;
-    this.form   = { firstName: '', lastName: '', email: '', phone: '', location: 'Tunis', region: '' };
-    this.showModal = true;
+    this.isEdit          = false;
+    this.form            = { firstName: '', lastName: '', email: '', phone: '', location: 'Tunis', region: '' };
+    this.formEmailExists  = false;
+    this.originalEmail   = '';
+    this.showModal       = true;
   }
 
   openEdit(c: Client) {
-    this.isEdit = true; this.selected = c;
-    this.form   = { ...c };
-    this.showModal = true; this.closePanel();
+    this.isEdit          = true;
+    this.selected        = c;
+    this.form            = { ...c };
+    this.originalEmail   = c.email ?? '';
+    this.formEmailExists  = false;
+    this.showModal       = true;
+    this.closePanel();
   }
-
-  openDelete(c: Client) { this.selected = c; this.showDelete = true; this.closePanel(); }
 
   isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string) { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
-  get formEmailError() { return (this.form.email ?? '') && !this.isValidEmail(this.form.email ?? '') ? 'msg_error_invalid_email' : ''; }
-  get formPhoneError() { return (this.form.phone ?? '') && !this.isValidPhone(this.form.phone ?? '') ? 'msg_error_invalid_phone' : ''; }
+
+  get formEmailError(): string {
+    const email = this.form.email ?? '';
+    if (!email) return '';
+    if (!this.isValidEmail(email)) return 'msg_error_invalid_email';
+    if (this.formEmailExists) return 'msg_error_email_taken';
+    return '';
+  }
+
+  get formPhoneError(): string {
+    return (this.form.phone ?? '') && !this.isValidPhone(this.form.phone ?? '') ? 'msg_error_invalid_phone' : '';
+  }
+
+  onEmailChange(): void {
+    this.formEmailExists = false;
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+    const email = this.form.email ?? '';
+    if (!this.isValidEmail(email)) return;
+    if (this.isEdit && email.trim().toLowerCase() === this.originalEmail.trim().toLowerCase()) return;
+
+    this.emailCheckTimeout = setTimeout(() => {
+      this.clientService.checkClientEmail(email).subscribe({
+        next: (res) => { this.formEmailExists = res.exists; },
+        error: () => { this.formEmailExists = false; }
+      });
+    }, 400);
+  }
 
   saveClient() {
-    if (!this.isValidEmail(this.form.email ?? '') || !this.isValidPhone(this.form.phone ?? '')) return;
+    if (
+      !this.isValidEmail(this.form.email ?? '') ||
+      !this.isValidPhone(this.form.phone ?? '') ||
+      this.formEmailExists
+    ) return;
+
     if (this.isEdit && this.selected) {
       this.clientService.updateMyClient(this.selected.idClient, this.form).subscribe({
         next: (updated) => {
@@ -155,21 +207,12 @@ export default class ResellerClientsComponent implements OnInit {
     }
   }
 
-  confirmDelete() {
-    if (!this.selected) return;
-    const name = this.fullName(this.selected);
-    this.clientService.delete(this.selected.idClient).subscribe({
-      next: () => {
-        this.clients = this.clients.filter(c => c.idClient !== this.selected!.idClient);
-        this.showDelete = false; this.selected = null;
-        this.toastService.success(`${name} deleted`);
-      },
-      error: () => this.toastService.error('Failed to delete client')
-    });
+  closeModal() {
+    this.showModal       = false;
+    this.formEmailExists  = false;
+    this.originalEmail   = '';
+    if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
-
-  closeModal()  { this.showModal  = false; }
-  closeDelete() { this.showDelete = false; }
 
   deviceStatusClass(status: string) {
     const s = (status ?? '').toLowerCase();
@@ -199,29 +242,24 @@ export default class ResellerClientsComponent implements OnInit {
   // HYBRID ASSIGN MODAL
   // ══════════════════════════════════════════════════════════
   showAssignModal  = false;
-  assignTab: 'pick' | 'count' = 'pick';           // which tab is active
+  assignTab: 'pick' | 'count' = 'pick';
   assignTargetClient: Client | null = null;
 
-  // Shared fields
   assignDuration  = 1;
   assignPrice     = 0;
 
-  // Tab A — Pick devices (multi-select)
-  libreDevices: Device[]        = [];
-  libreLoading                  = false;
+  libreDevices: Device[]         = [];
+  libreLoading                   = false;
   selectedDeviceIds: Set<number> = new Set();
 
-  // Tab B — Assign by count
-  assignCount     = 1;
-  countPreview: Device[] = [];   // first N libre devices shown as preview
+  assignCount    = 1;
+  countPreview: Device[] = [];
 
-  // Progress tracking during bulk assign
   assignInProgress = false;
   assignDone       = 0;
   assignTotal      = 0;
   assignErrors     = 0;
 
-  // ── Open / close ─────────────────────────────────────────
   openAssignModal(c: Client) {
     this.assignTargetClient   = c;
     this.assignTab            = 'pick';
@@ -239,12 +277,11 @@ export default class ResellerClientsComponent implements OnInit {
   }
 
   closeAssignModal() {
-    if (this.assignInProgress) return;   // block close during processing
+    if (this.assignInProgress) return;
     this.showAssignModal = false;
     this.assignTargetClient = null;
   }
 
-  // ── Load libre devices ───────────────────────────────────
   loadLibreDevices() {
     this.libreLoading = true;
     this.deviceService.getLibreByReseller(this.reseller.idRev).subscribe({
@@ -260,7 +297,6 @@ export default class ResellerClientsComponent implements OnInit {
     });
   }
 
-  // ── Tab A helpers ────────────────────────────────────────
   switchAssignTab(t: 'pick' | 'count') {
     this.assignTab = t;
     if (t === 'count') this.updateCountPreview();
@@ -284,12 +320,10 @@ export default class ResellerClientsComponent implements OnInit {
   get allSelected()  { return this.libreDevices.length > 0 && this.selectedDeviceIds.size === this.libreDevices.length; }
   get someSelected() { return this.selectedDeviceIds.size > 0 && !this.allSelected; }
 
-  // ── Tab B helpers ────────────────────────────────────────
   updateCountPreview() {
     this.countPreview = this.libreDevices.slice(0, Math.max(0, this.assignCount));
   }
 
-  // ── Execute bulk assign ──────────────────────────────────
   get devicesToAssign(): Device[] {
     if (this.assignTab === 'pick') {
       return this.libreDevices.filter(d => this.selectedDeviceIds.has(d.idDevice));
@@ -299,10 +333,10 @@ export default class ResellerClientsComponent implements OnInit {
   }
 
   get canAssign(): boolean {
-    if (this.assignInProgress)             return false;
-    if (!this.assignTargetClient)          return false;
-    if (this.assignDuration < 1)           return false;
-    if (this.assignPrice < 0)             return false;
+    if (this.assignInProgress)    return false;
+    if (!this.assignTargetClient) return false;
+    if (this.assignDuration < 1)  return false;
+    if (this.assignPrice < 0)     return false;
     return this.devicesToAssign.length > 0;
   }
 
@@ -336,15 +370,10 @@ export default class ResellerClientsComponent implements OnInit {
     const ok   = this.assignDone - this.assignErrors;
     const fail = this.assignErrors;
 
-    if (fail === 0) {
-      this.toastService.success(`${ok} device${ok > 1 ? 's' : ''} assigned successfully`);
-    } else if (ok === 0) {
-      this.toastService.error(`All ${fail} assignments failed`);
-    } else {
-      this.toastService.warning(`${ok} assigned, ${fail} failed`);
-    }
+    if (fail === 0)      this.toastService.success(`${ok} device${ok > 1 ? 's' : ''} assigned successfully`);
+    else if (ok === 0)   this.toastService.error(`All ${fail} assignments failed`);
+    else                 this.toastService.warning(`${ok} assigned, ${fail} failed`);
 
-    // Refresh panel devices and close
     if (this.panelClient?.idClient === this.assignTargetClient?.idClient) {
       this.panelDevices = [];
       this.switchPanelTab('devices');
@@ -359,5 +388,4 @@ export default class ResellerClientsComponent implements OnInit {
   }
 
   fmt(n: number) { return new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0); }
-
 }
