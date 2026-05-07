@@ -69,8 +69,9 @@ export class Clients implements OnInit {
     });
   }
 
-  isActive(c: Client): boolean { return (c.graceDaysLeft ?? 0) > 0; }
-  fullName(c: Client): string  { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
+  isActive(c: Client): boolean    { return (c.graceDaysLeft ?? 0) > 0; }
+  isSuspended(c: Client): boolean { return c.status === 'SUSPENDED'; }
+  fullName(c: Client): string     { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
 
   get filtered(): Client[] {
     const q = this.searchQuery.toLowerCase().trim();
@@ -146,6 +147,30 @@ export class Clients implements OnInit {
   }
 
   closeModal(): void { this.showModal = false; this.formData = {}; }
+
+  suspendClient(c: Client, e: Event): void {
+    e.stopPropagation();
+    this.clientService.suspend(c.idClient).subscribe({
+      next: (updated) => {
+        const idx = this.clients.findIndex(x => x.idClient === updated.idClient);
+        if (idx !== -1) this.clients[idx] = updated;
+        if (this.selected?.idClient === updated.idClient) this.selected = updated;
+      },
+      error: (err) => console.error('Failed to suspend client', err)
+    });
+  }
+
+  reactivateClient(c: Client, e: Event): void {
+    e.stopPropagation();
+    this.clientService.reactivate(c.idClient).subscribe({
+      next: (updated) => {
+        const idx = this.clients.findIndex(x => x.idClient === updated.idClient);
+        if (idx !== -1) this.clients[idx] = updated;
+        if (this.selected?.idClient === updated.idClient) this.selected = updated;
+      },
+      error: (err) => console.error('Failed to reactivate client', err)
+    });
+  }
 
   formatDate(d: string | null | undefined): string {
     if (!d) return '—';

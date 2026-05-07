@@ -68,7 +68,8 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   search = '';
   filterStatus: 'all' | 'active' | 'inactive' = 'all';
 
-  isActive(c: Client)    { return (c.graceDaysLeft ?? 0) > 0; }
+  isActive(c: Client)     { return (c.graceDaysLeft ?? 0) > 0; }
+  isSuspended(c: Client)  { return c.status === 'SUSPENDED'; }
   fullName(c: Client)    { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
   initials(c: Client)    { return ((c.firstName ?? '?')[0] + (c.lastName ?? '?')[0]).toUpperCase(); }
   get totalCount()       { return this.clients.length; }
@@ -105,6 +106,30 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   }
 
   closePanel() { this.panelOpen = false; }
+
+  suspendPanelClient() {
+    if (!this.panelClient) return;
+    this.clientService.suspendMyClient(this.panelClient.idClient).subscribe({
+      next: (updated) => {
+        this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
+        this.panelClient = updated;
+        this.toastService.success(`${this.fullName(updated)} suspended`);
+      },
+      error: () => this.toastService.error('Failed to suspend client')
+    });
+  }
+
+  reactivatePanelClient() {
+    if (!this.panelClient) return;
+    this.clientService.reactivateMyClient(this.panelClient.idClient).subscribe({
+      next: (updated) => {
+        this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
+        this.panelClient = updated;
+        this.toastService.success(`${this.fullName(updated)} reactivated`);
+      },
+      error: () => this.toastService.error('Failed to reactivate client')
+    });
+  }
 
   switchPanelTab(t: 'profile' | 'devices' | 'operations') {
     this.panelTab = t;

@@ -30,6 +30,18 @@ export class ResellerService {
     return this.http.put<Reseller>(`${this.adminUrl}/${id}`, reseller);
   }
 
+  suspend(id: number) {
+    return this.http.put<Reseller>(`${this.adminUrl}/${id}/suspend`, {});
+  }
+
+  reactivate(id: number) {
+    return this.http.put<Reseller>(`${this.adminUrl}/${id}/reactivate`, {});
+  }
+
+  getReassignSuggestions(id: number) {
+    return this.http.get<{ clients: any[]; resellers: any[] }>(`${this.adminUrl}/${id}/reassign-suggestions`);
+  }
+
  checkEmail(email: string) {
   return this.http.get<{ exists: boolean }>(
     `http://localhost:8080/api/resellers/check-email`,

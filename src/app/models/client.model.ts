@@ -12,4 +12,5 @@ export interface Client {
   resellerName: string | null;
   createdAt: string;
   region: string;
+  status?: string;
 }

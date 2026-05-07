@@ -1,0 +1,99 @@
+Angular Frontend Directory Tree
+================================
+
+D:\PFE\accent-front\src\app\
+├── app.config.ts
+├── app.ts
+├── app.routes.ts
+├── app.html
+├── app.css
+├── app.spec.ts
+├── data/
+│   ├── mock-data.ts
+│   └── mock-devicesClient.data.ts
+├── features/
+│   ├── admin/
+│   │   ├── clients/
+│   │   │   ├── clients.ts
+│   │   │   ├── clients.html
+│   │   │   ├── clients.css
+│   │   │   └── clients.spec.ts
+│   │   ├── resellers/
+│   │   │   ├── resellers.ts
+│   │   │   ├── resellers.html
+│   │   │   ├── resellers.css
+│   │   │   └── resellers.spec.ts
+│   │   ├── dashboard/
+│   │   │   ├── dashboard.ts
+│   │   │   ├── dashboard.html
+│   │   │   ├── dashboard.css
+│   │   │   └── dashboard.spec.ts
+│   │   ├── devices/
+│   │   │   ├── devices.ts
+│   │   │   ├── devices.html
+│   │   │   └── devices.css
+│   │   ├── profile/
+│   │   │   ├── profile.ts
+│   │   │   ├── profile.html
+│   │   │   └── profile.css
+│   │   └── transactions/
+│   │       ├── transaction.ts
+│   │       ├── transaction.html
+│   │       └── transaction.css
+│   ├── client/
+│   │   ├── abonnements/
+│   │   ├── dashboard/
+│   │   ├── devices/
+│   │   ├── factures/
+│   │   ├── payment/
+│   │   └── profil/
+│   └── reseller/
+│       ├── client/ (reseller's clients management)
+│       │   ├── client.ts
+│       │   ├── client.html
+│       │   ├── client.css
+│       │   └── client.spec.ts
+│       ├── dashboard/
+│       ├── devices/
+│       └── profile/
+├── pages/
+│   ├── admin-layout/
+│   ├── client-layout/
+│   ├── reseller-layout/
+│   ├── login-admin/
+│   ├── login-client/
+│   ├── login-reseller/
+│   ├── request_access/
+│   ├── admin.routes.ts
+│   ├── client.routes.ts
+│   └── reseller.routes.ts
+├── service/
+│   ├── Abonnement.service.ts
+│   ├── Admin.service.ts
+│   ├── Auth.service.ts
+│   ├── Client.service.ts
+│   ├── Device.service.ts
+│   ├── Reseller.service.ts
+│   ├── Toast.service.ts
+│   ├── notification-websocket.service.ts
+│   ├── theme.service.ts
+│   └── translation.service.ts
+├── models/
+│   ├── abonnement.model.ts
+│   ├── client.model.ts
+│   ├── device.model.ts
+│   ├── deviceClient.model.ts
+│   ├── facture.model.ts
+│   ├── forfait.model.ts
+│   ├── paiement.model.ts
+│   ├── profil-client.model.ts
+│   └── reseller.model.ts
+├── guards/
+│   └── Auth.guard.ts
+├── interceptor/
+│   └── Auth.interceptor.ts
+└── shared/
+    ├── navbar/
+    ├── sidebar/
+    └── toast/
+        └── toast.component.ts

@@ -100,8 +100,9 @@
         <tbody>
           @for (r of filtered; track r.idRev) {
             <tr (click)="openDetail(r)" class="table-row"
-              [class.row--healthy]="(r.clientCount ?? 0) > 0"
-              [class.row--inactive]="(r.clientCount ?? 0) === 0">
+              [class.row--healthy]="(r.clientCount ?? 0) > 0 && !isSuspended(r)"
+              [class.row--inactive]="(r.clientCount ?? 0) === 0 && !isSuspended(r)"
+              [class.row--suspended]="isSuspended(r)">
               <td class="row-accent"></td>
               <td class="col-id"><span class="id-badge">#{{ r.idRev }}</span></td>
               <td>
@@ -125,9 +126,19 @@
               </td>
               <td>{{ formatDate(r.createdAt) }}</td>
               <td class="col-actions" (click)="$event.stopPropagation()">
-                <button class="action-btn action-btn--edit" (click)="openEdit(r, $event)">
+                <button class="action-btn action-btn--edit" (click)="openEdit(r, $event)" title="Edit">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
+                @if (!isSuspended(r)) {
+                  <button class="action-btn action-btn--suspend" (click)="openSuspendModal(r, $event)" title="Suspend">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                  </button>
+                }
+                @if (isSuspended(r)) {
+                  <button class="action-btn action-btn--reactivate" (click)="openReactivate(r, $event)" title="Reactivate">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  </button>
+                }
               </td>
             </tr>
           }
@@ -228,6 +239,58 @@
     </div>
     }
 
+  }
+
+  <!-- ═══════════════════ SUSPEND MODAL ═══════════════ -->
+  @if (showSuspendModal && suspendTarget) {
+  <div class="modal-backdrop" (click)="closeSuspendModal()">
+    <div class="modal modal--suspend" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">Suspend {{ suspendTarget.nomEntreprise }}</h2>
+        <button class="modal-close" (click)="closeSuspendModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (suspendLoading) {
+          <p class="suspend-loading">Loading client suggestions…</p>
+        }
+        @if (!suspendLoading && suspendSuggestions.length === 0) {
+          <p class="suspend-empty">This reseller has no clients. You can suspend them directly.</p>
+        }
+        @if (!suspendLoading && suspendSuggestions.length > 0) {
+          <p class="suspend-hint">Reassign each client before suspending. Suggestions are based on location.</p>
+          <div class="suspend-bulk-row">
+            <label class="suspend-bulk-label">Bulk assign all to:</label>
+            <select [(ngModel)]="bulkResellerId" (ngModelChange)="applyBulkAssign()" class="suspend-select">
+              <option [ngValue]="null">— choose —</option>
+              @for (rv of suspendResellers; track rv.idRev) {
+                <option [ngValue]="rv.idRev">{{ rv.nomEntreprise }} ({{ rv.location || '—' }})</option>
+              }
+            </select>
+          </div>
+          <div class="suspend-client-list">
+            @for (c of suspendSuggestions; track c.clientId) {
+              <div class="suspend-client-row">
+                <div class="suspend-client-info">
+                  <span class="suspend-client-name">{{ c.clientName }}</span>
+                  <span class="suspend-client-loc">{{ c.clientLocation || '—' }}</span>
+                </div>
+                <select [(ngModel)]="suspendClientAssignments[c.clientId]" class="suspend-select">
+                  <option [ngValue]="undefined">— unassigned —</option>
+                  @for (rv of suspendResellers; track rv.idRev) {
+                    <option [ngValue]="rv.idRev">{{ rv.nomEntreprise }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeSuspendModal()">Cancel</button>
+        <button class="btn-suspend" (click)="confirmSuspend()" [disabled]="suspendLoading">Suspend</button>
+      </div>
+    </div>
+  </div>
   }
 
   <!-- ═══════════════════ ADD / EDIT MODAL ═════════════ -->

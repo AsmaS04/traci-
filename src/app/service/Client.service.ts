@@ -55,6 +55,18 @@ export class ClientService {
     return this.http.put<Client>(`${this.adminUrl}/${id}`, client);
   }
 
+  suspend(id: number) {
+    return this.http.put<Client>(`${this.adminUrl}/${id}/suspend`, {});
+  }
+
+  reactivate(id: number) {
+    return this.http.put<Client>(`${this.adminUrl}/${id}/reactivate`, {});
+  }
+
+  reassignClient(clientId: number, resellerId: number) {
+    return this.http.put<Client>(`${this.adminUrl}/${clientId}/reassign`, null, { params: { resellerId: String(resellerId) } });
+  }
+
   // ── Reseller scope ──────────────────────────────────
   getMyClients() {
     return this.http.get<Client[]>(this.resellerUrl);
@@ -70,6 +82,14 @@ export class ClientService {
 
   updateMyClient(id: number, client: Partial<Client>) {
     return this.http.put<Client>(`${this.resellerUrl}/${id}`, client);
+  }
+
+  suspendMyClient(id: number) {
+    return this.http.put<Client>(`${this.resellerUrl}/${id}/suspend`, {});
+  }
+
+  reactivateMyClient(id: number) {
+    return this.http.put<Client>(`${this.resellerUrl}/${id}/reactivate`, {});
   }
 
   getMyClientDevices(id: number) {

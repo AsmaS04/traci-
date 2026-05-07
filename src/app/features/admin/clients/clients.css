@@ -3,6 +3,8 @@
 :host {
   --teal:      #0D9488;
   --teal-lt:   rgba(13,148,136,0.10);
+  --amber:     #F59E0B;
+  --amber-lt:  rgba(245,158,11,0.10);
   --bg:        #F8F9F9;
   --card:      #FFFFFF;
   --border:    #E5E7EB;
@@ -85,8 +87,10 @@
 .data-table td:first-child { padding: 0; }
 
 .row-accent { width: 4px; min-width: 4px; padding: 0 !important; }
-.row--active   .row-accent { background: #16A34A; }
-.row--inactive .row-accent { background: #DC2626; }
+.row--active     .row-accent { background: #16A34A; }
+.row--inactive   .row-accent { background: #DC2626; }
+.row--suspended  .row-accent { background: var(--amber); }
+.row--suspended  { background: rgba(245,158,11,0.04); }
 
 /* Columns */
 .col-id      { width: 60px; }
@@ -104,8 +108,9 @@
 .reseller-link  { font-size: 0.8rem; font-weight: 600; color: var(--teal); }
 
 .status-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.7rem; border-radius: 99px; font-size: 0.71rem; font-weight: 700; }
-.status-badge--active   { background: var(--green-lt); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
-.status-badge--inactive { background: var(--red-lt);   color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+.status-badge--active     { background: var(--green-lt); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+.status-badge--inactive   { background: var(--red-lt);   color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+.status-badge--suspended  { background: rgba(239,68,68,0.08); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .status-badge--active .status-dot { animation: pulse 1.8s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
@@ -116,6 +121,10 @@
 .action-btn--edit:hover   { background: var(--teal-lt); border-color: rgba(13,148,136,0.25); }
 .action-btn--delete { color: var(--red); }
 .action-btn--delete:hover { background: var(--red-lt);  border-color: rgba(239,68,68,0.2); }
+.action-btn--suspend { color: var(--amber); }
+.action-btn--suspend:hover { background: var(--amber-lt); border-color: rgba(245,158,11,0.25); }
+.action-btn--reactivate { color: var(--teal); }
+.action-btn--reactivate:hover { background: var(--teal-lt); border-color: rgba(13,148,136,0.25); }
 
 .empty-state { text-align: center; padding: 3.5rem !important; color: var(--text-300); }
 .empty-state svg { width: 36px; height: 36px; margin-bottom: 0.6rem; opacity: 0.4; }

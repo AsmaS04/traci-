@@ -98,7 +98,7 @@
   } @else {
     <div class="subs-list">
       @for (abo of filteredAbonnements(); track abo.idAbo) {
-        <div class="sub-card" [class.sub-card--active]="abo.status?.toLowerCase()==='actif'" [class.sub-card--expired]="abo.status?.toLowerCase()==='expiré'">
+        <div class="sub-card" [class.sub-card--active]="abo.status.toLowerCase()==='actif'" [class.sub-card--expired]="abo.status.toLowerCase()==='expiré'">
           <div class="sub-header">
             <h3 class="sub-title">{{ abo.dureeLabel }} — Subscription</h3>
             <span class="badge" [class]="statusBadgeClass(abo.status)">
@@ -110,7 +110,7 @@
             <div class="sub-detail-item"><p class="sdl">{{ i18n.t('sub_period') }}</p><p class="sdv">{{ formatDate(abo.startDate) }} → {{ formatDate(abo.endDate) }}</p></div>
             <div class="sub-detail-item"><p class="sdl">{{ i18n.t('sub_price') }}</p><p class="sdv sdv--price">{{ abo.totalTtc }} TND</p></div>
           </div>
-          @if (abo.status?.toLowerCase() === 'actif') {
+          @if (abo.status.toLowerCase() === 'actif') {
             <div class="sub-progress">
               <div class="progress-info"><span class="progress-lbl">{{ abo.joursRestants }} {{ i18n.t('sub_days_remaining') }}</span><span class="progress-pct">{{ getRemainingPercent(abo) | number:'1.0-0' }}% left</span></div>
               <div class="progress-track">
@@ -123,7 +123,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               {{ i18n.t('sub_details') }}
             </button>
-            @if (abo.status?.toLowerCase() === 'actif' || abo.status?.toLowerCase() === 'expiré') {
+            @if (abo.status.toLowerCase() === 'actif' || abo.status.toLowerCase() === 'expiré') {
               <button class="btn-primary" (click)="renouvelerAbonnement(abo)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                 {{ i18n.t('sub_renew') }}
@@ -154,7 +154,7 @@
         <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_price') }}</p><p class="detail-val sdv--price">{{ selectedAbonnement()!.totalTtc }} TND</p></div>
         <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_start_date') }}</p><p class="detail-val">{{ formatDate(selectedAbonnement()!.startDate) }}</p></div>
         <div class="detail-item"><p class="detail-label">{{ i18n.t('sub_end_date') }}</p><p class="detail-val">{{ formatDate(selectedAbonnement()!.endDate) }}</p></div>
-        @if (selectedAbonnement()!.status?.toLowerCase() === 'actif') {
+        @if (selectedAbonnement()!.status.toLowerCase() === 'actif') {
           <div class="detail-item"><p class="detail-label">Days Remaining</p><p class="detail-val">{{ selectedAbonnement()!.joursRestants }}</p></div>
         }
         <div class="detail-item"><p class="detail-label">Status</p>
@@ -164,7 +164,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" (click)="closeDetails()">Close</button>
-      @if (selectedAbonnement()!.status?.toLowerCase() === 'actif' || selectedAbonnement()!.status?.toLowerCase() === 'expiré') {
+      @if (selectedAbonnement()!.status.toLowerCase() === 'actif' || selectedAbonnement()!.status.toLowerCase() === 'expiré') {
         <button class="btn-primary" (click)="renouvelerAbonnement(selectedAbonnement()!); closeDetails()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           {{ i18n.t('sub_renew') }}

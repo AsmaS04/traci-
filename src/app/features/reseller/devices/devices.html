@@ -114,20 +114,20 @@
         <tbody>
           @for (d of filtered; track d.idDevice) {
           <tr class="table-row"
-            [class.row--actif]="d.status?.toLowerCase()==='actif'"
-            [class.row--libre]="d.status?.toLowerCase()==='libre'"
-            [class.row--expiré]="d.status?.toLowerCase()==='expiré'"
-            [class.row--inactif]="d.status?.toLowerCase()==='inactif'"
+            [class.row--actif]="d.status.toLowerCase()==='actif'"
+            [class.row--libre]="d.status.toLowerCase()==='libre'"
+            [class.row--expiré]="d.status.toLowerCase()==='expiré'"
+            [class.row--inactif]="d.status.toLowerCase()==='inactif'"
             (click)="openPanel(d)">
             <td class="row-accent"></td>
             <td class="col-id"><span class="id-badge">#{{ d.idDevice }}</span></td>
             <td>
               <div class="serial-cell">
                 <div class="device-icon"
-                  [class.device-icon--actif]="d.status?.toLowerCase()==='actif'"
-                  [class.device-icon--libre]="d.status?.toLowerCase()==='libre'"
-                  [class.device-icon--expiré]="d.status?.toLowerCase()==='expiré'"
-                  [class.device-icon--inactif]="d.status?.toLowerCase()==='inactif'">
+                  [class.device-icon--actif]="d.status.toLowerCase()==='actif'"
+                  [class.device-icon--libre]="d.status.toLowerCase()==='libre'"
+                  [class.device-icon--expiré]="d.status.toLowerCase()==='expiré'"
+                  [class.device-icon--inactif]="d.status.toLowerCase()==='inactif'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
                 </div>
                 <span class="serial-text">{{ d.numDevice || '—' }}</span>
@@ -147,10 +147,10 @@
             <td class="serial-text">{{ d.dateActivation || '—' }}</td>
             <td>
               <span class="status-pill"
-                [class.status--active]="d.status?.toLowerCase()==='actif'"
-                [class.status--libre]="d.status?.toLowerCase()==='libre'"
-                [class.status--expired]="d.status?.toLowerCase()==='expiré'"
-                [class.status--inactive]="d.status?.toLowerCase()==='inactif'">
+                [class.status--active]="d.status.toLowerCase()==='actif'"
+                [class.status--libre]="d.status.toLowerCase()==='libre'"
+                [class.status--expired]="d.status.toLowerCase()==='expiré'"
+                [class.status--inactive]="d.status.toLowerCase()==='inactif'">
                 <span class="status-dot"></span>{{ d.status || '—' }}
               </span>
             </td>
@@ -191,10 +191,10 @@
       <p class="dev-identity-model">{{ panelDevice.model || '—' }}</p>
       <p class="dev-identity-serial">{{ panelDevice.numDevice || '—' }}</p>
       <span class="status-pill"
-        [class.status--active]="panelDevice.status?.toLowerCase()==='actif'"
-        [class.status--libre]="panelDevice.status?.toLowerCase()==='libre'"
-        [class.status--expired]="panelDevice.status?.toLowerCase()==='expiré'"
-        [class.status--inactive]="panelDevice.status?.toLowerCase()==='inactif'">
+        [class.status--active]="panelDevice.status.toLowerCase()==='actif'"
+        [class.status--libre]="panelDevice.status.toLowerCase()==='libre'"
+        [class.status--expired]="panelDevice.status.toLowerCase()==='expiré'"
+        [class.status--inactive]="panelDevice.status.toLowerCase()==='inactif'">
         <span class="status-dot"></span>{{ panelDevice.status || '—' }}
       </span>
     </div>

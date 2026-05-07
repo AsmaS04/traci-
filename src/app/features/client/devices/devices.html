@@ -117,9 +117,9 @@
   } @else {
     <div class="devices-grid">
       @for (d of filteredDevices(); track d.idDevice) {
-        <div class="device-card" [class.device-card--actif]="d.status?.toLowerCase()==='actif'" [class.device-card--expired]="d.status?.toLowerCase()==='expiré'" [class.device-card--inactive]="d.status?.toLowerCase()==='inactif'" (click)="openPanel(d)">
+        <div class="device-card" [class.device-card--actif]="d.status.toLowerCase()==='actif'" [class.device-card--expired]="d.status.toLowerCase()==='expiré'" [class.device-card--inactive]="d.status.toLowerCase()==='inactif'" (click)="openPanel(d)">
           <div class="dc-header">
-            <div class="dc-icon" [class.dci--actif]="d.status?.toLowerCase()==='actif'" [class.dci--expired]="d.status?.toLowerCase()==='expiré'" [class.dci--inactive]="d.status?.toLowerCase()==='inactif'">
+            <div class="dc-icon" [class.dci--actif]="d.status.toLowerCase()==='actif'" [class.dci--expired]="d.status.toLowerCase()==='expiré'" [class.dci--inactive]="d.status.toLowerCase()==='inactif'">
               <span>{{ getDeviceIcon(d.model) }}</span>
             </div>
             <div class="dc-info">

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { Reseller } from '../../../models/reseller.model';
 import { Client } from '../../../models/client.model';
 import { TranslationService } from '../../../service/translation.service';
@@ -37,6 +38,15 @@ export class Resellers implements OnInit, OnDestroy {
   sortField: keyof Reseller = 'idRev';
   sortAsc = true;
   loading = true;
+
+  // Suspension modal
+  showSuspendModal      = false;
+  suspendTarget: Reseller | null = null;
+  suspendSuggestions: any[] = [];
+  suspendResellers: any[]   = [];
+  suspendLoading            = false;
+  suspendClientAssignments: { [key: number]: number } = {};
+  bulkResellerId: number | null = null;
 
   resellers: Reseller[] = [];
   formEmailExists  = false;
@@ -205,6 +215,72 @@ export class Resellers implements OnInit, OnDestroy {
     this.formEmailExists  = false;
     this.originalEmail   = '';
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
+  }
+
+  isSuspended(r: Reseller): boolean { return r.status === 'SUSPENDED'; }
+
+  openSuspendModal(r: Reseller, e: Event): void {
+    e.stopPropagation();
+    this.suspendTarget   = r;
+    this.suspendLoading  = true;
+    this.showSuspendModal = true;
+    this.suspendClientAssignments = {};
+    this.bulkResellerId = null;
+    this.resellerService.getReassignSuggestions(r.idRev).subscribe({
+      next: (data) => {
+        this.suspendSuggestions = data.clients;
+        this.suspendResellers   = data.resellers;
+        data.clients.forEach((c: any) => {
+          if (c.suggestedResellerId) this.suspendClientAssignments[c.clientId] = c.suggestedResellerId;
+        });
+        this.suspendLoading = false;
+      },
+      error: () => { this.suspendLoading = false; }
+    });
+  }
+
+  closeSuspendModal(): void {
+    this.showSuspendModal  = false;
+    this.suspendTarget     = null;
+    this.suspendSuggestions = [];
+    this.suspendResellers   = [];
+    this.suspendClientAssignments = {};
+    this.bulkResellerId = null;
+  }
+
+  applyBulkAssign(): void {
+    if (!this.bulkResellerId) return;
+    this.suspendSuggestions.forEach(c => {
+      this.suspendClientAssignments[c.clientId] = this.bulkResellerId!;
+    });
+  }
+
+  confirmSuspend(): void {
+    if (!this.suspendTarget) return;
+    const reassignCalls = this.suspendSuggestions
+      .filter(c => this.suspendClientAssignments[c.clientId])
+      .map(c => this.clientService.reassignClient(c.clientId, this.suspendClientAssignments[c.clientId]));
+
+    const doSuspend = () => {
+      this.resellerService.suspend(this.suspendTarget!.idRev).subscribe({
+        next: () => { this.loadResellers(); this.closeSuspendModal(); },
+        error: (err) => console.error('Failed to suspend reseller', err)
+      });
+    };
+
+    if (reassignCalls.length > 0) {
+      forkJoin(reassignCalls).subscribe({ next: doSuspend, error: doSuspend });
+    } else {
+      doSuspend();
+    }
+  }
+
+  openReactivate(r: Reseller, e: Event): void {
+    e.stopPropagation();
+    this.resellerService.reactivate(r.idRev).subscribe({
+      next: () => { this.loadResellers(); },
+      error: (err) => console.error('Failed to reactivate reseller', err)
+    });
   }
 
   formatDate(d: string): string {

@@ -10,4 +10,5 @@ export interface Reseller {
   createdAt: string;
   avatarUrl?: string;
   location?: string;
+  status?: string;
 }

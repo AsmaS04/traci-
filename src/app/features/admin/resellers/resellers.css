@@ -3,6 +3,8 @@
 :host {
   --teal:      #0D9488;
   --teal-lt:   rgba(13,148,136,0.10);
+  --amber:     #F59E0B;
+  --amber-lt:  rgba(245,158,11,0.10);
   --teal-mid:  rgba(13,148,136,0.18);
   --purple:    #BE8AC9;
   --purple-lt: rgba(190,138,201,0.10);
@@ -85,8 +87,12 @@
 .data-table td:first-child { padding: 0; }
 
 .row-accent { width: 4px; min-width: 4px; padding: 0 !important; }
-.row--healthy  .row-accent { background: #16A34A; }
-.row--inactive .row-accent { background: #DC2626; }
+.row--healthy    .row-accent { background: #16A34A; }
+.row--inactive   .row-accent { background: #DC2626; }
+.row--suspended  .row-accent { background: var(--amber); }
+.row--suspended  { background: rgba(245,158,11,0.04); }
+
+.status-badge--suspended { display: inline-flex; align-items: center; padding: 0.2rem 0.65rem; background: rgba(239,68,68,0.08); color: var(--red); border: 1px solid rgba(239,68,68,0.2); border-radius: 99px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; }
 
 /* Columns */
 .col-id      { width: 60px; }
@@ -116,6 +122,10 @@
 .action-btn--edit:hover   { background: var(--teal-lt); border-color: rgba(13,148,136,0.25); }
 .action-btn--delete { color: var(--red); }
 .action-btn--delete:hover { background: var(--red-lt); border-color: rgba(239,68,68,0.2); }
+.action-btn--suspend { color: var(--amber); }
+.action-btn--suspend:hover { background: var(--amber-lt); border-color: rgba(245,158,11,0.25); }
+.action-btn--reactivate { color: var(--teal); }
+.action-btn--reactivate:hover { background: var(--teal-lt); border-color: rgba(13,148,136,0.25); }
 
 .clients-count { font-size: 0.88rem; font-weight: 800; color: var(--text-900); }
 
@@ -182,6 +192,24 @@
 .delete-icon svg { width: 38px; height: 38px; }
 .delete-msg { text-align: center; padding: 0.5rem 1.6rem 0; font-size: 0.82rem; color: var(--text-500); line-height: 1.6; font-weight: 500; }
 .delete-msg strong { color: var(--text-900); font-weight: 700; }
+
+/* Suspension modal */
+.modal--suspend { max-width: 600px; }
+.suspend-loading { font-size: 0.82rem; color: var(--text-300); text-align: center; padding: 1.5rem 0; }
+.suspend-empty   { font-size: 0.82rem; color: var(--text-500); text-align: center; padding: 1rem 0; }
+.suspend-hint    { font-size: 0.78rem; color: var(--text-500); margin-bottom: 1rem; }
+.suspend-bulk-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.suspend-bulk-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-500); white-space: nowrap; }
+.suspend-select { flex: 1; padding: 0.55rem 0.85rem; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text-900); font-size: 0.8rem; font-family: 'Manrope', sans-serif; outline: none; min-width: 160px; }
+.suspend-select:focus { border-color: var(--teal); }
+.suspend-client-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; }
+.suspend-client-row  { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; flex-wrap: wrap; }
+.suspend-client-info { display: flex; flex-direction: column; flex: 1; min-width: 120px; }
+.suspend-client-name { font-size: 0.82rem; font-weight: 700; color: var(--text-900); }
+.suspend-client-loc  { font-size: 0.7rem; color: var(--text-300); }
+.btn-suspend { padding: 0.6rem 1.2rem; background: var(--amber); color: #fff; border: none; border-radius: 10px; font-size: 0.82rem; font-weight: 700; font-family: 'Manrope', sans-serif; cursor: pointer; transition: background var(--t); }
+.btn-suspend:hover { background: #D97706; }
+.btn-suspend:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Dark mode ───────────────────────────────────────── */
 :host-context(.dark) {
