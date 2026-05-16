@@ -1,0 +1,181 @@
+<div class="events-page">
+
+  <!-- ── FILTER BAR ── -->
+  <div class="filter-bar">
+
+    <!-- Date -->
+    <div class="fcc" (click)="stop($event)">
+      <button class="chip" [class.chip--active]="activeDateFilter" (click)="toggle('date', $event)">
+        <span class="chip__plus" *ngIf="!activeDateFilter">+</span>
+        <span class="chip__label">{{ t.t('events_filter_datetime') }}</span>
+        <ng-container *ngIf="activeDateFilter">
+          <span class="chip__sep">|</span>
+          <span class="chip__value">{{ dateChipLabel() }}</span>
+          <button class="chip__x" (click)="clearDate($event)">×</button>
+        </ng-container>
+        <span class="chip__caret" *ngIf="!activeDateFilter">›</span>
+      </button>
+
+      <div class="dropdown" *ngIf="openDropdown === 'date'" (click)="stop($event)">
+        <p class="dropdown__title">{{ t.t('events_filter_by_datetime') }}</p>
+        <select class="dd-select" [(ngModel)]="dateOperator">
+          <option value="equal">{{ t.t('events_date_equal') }}</option>
+          <option value="before">{{ t.t('events_date_before') }}</option>
+          <option value="after">{{ t.t('events_date_after') }}</option>
+          <option value="between">{{ t.t('events_date_between') }}</option>
+        </select>
+        <div class="date-row">
+          <input type="date" class="date-inp" [(ngModel)]="dateFrom" />
+          <ng-container *ngIf="dateOperator === 'between'">
+            <span class="date-sep">–</span>
+            <input type="date" class="date-inp" [(ngModel)]="dateTo" />
+          </ng-container>
+        </div>
+        <div class="dropdown__foot">
+          <button class="btn-apply" [disabled]="!dateFrom" (click)="applyDate()">
+            {{ t.t('events_filter_apply') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action -->
+    <div class="fcc" (click)="stop($event)">
+      <button class="chip" [class.chip--active]="activeAction" (click)="toggle('action', $event)">
+        <span class="chip__plus" *ngIf="!activeAction">+</span>
+        <span class="chip__label">{{ t.t('events_filter_action') }}</span>
+        <ng-container *ngIf="activeAction">
+          <span class="chip__sep">|</span>
+          <span class="chip__value">{{ t.t('event_type_' + activeAction) }}</span>
+          <button class="chip__x" (click)="clearAction($event)">×</button>
+        </ng-container>
+        <span class="chip__caret" *ngIf="!activeAction">›</span>
+      </button>
+
+      <div class="dropdown dropdown--wide" *ngIf="openDropdown === 'action'" (click)="stop($event)">
+        <p class="dropdown__title">{{ t.t('events_filter_by_action') }}</p>
+        <div class="opt-list">
+          <label class="opt-row" *ngFor="let ev of EVENT_TYPES">
+            <input type="radio" name="paction" [(ngModel)]="pendingAction" [value]="ev" />
+            <span class="opt-dot" [ngClass]="'opt-dot--' + color(ev)"></span>
+            <span class="opt-label">{{ t.t('event_type_' + ev) }}</span>
+          </label>
+        </div>
+        <div class="dropdown__foot">
+          <button class="btn-ghost" (click)="pendingAction = ''">{{ t.t('events_filter_clear') }}</button>
+          <button class="btn-apply" (click)="applyAction()">{{ t.t('events_filter_apply') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role -->
+    <div class="fcc" (click)="stop($event)">
+      <button class="chip" [class.chip--active]="activeRole" (click)="toggle('role', $event)">
+        <span class="chip__plus" *ngIf="!activeRole">+</span>
+        <span class="chip__label">{{ t.t('events_filter_role') }}</span>
+        <ng-container *ngIf="activeRole">
+          <span class="chip__sep">|</span>
+          <span class="chip__value">{{ t.t('role_' + activeRole) }}</span>
+          <button class="chip__x" (click)="clearRole($event)">×</button>
+        </ng-container>
+        <span class="chip__caret" *ngIf="!activeRole">›</span>
+      </button>
+
+      <div class="dropdown" *ngIf="openDropdown === 'role'" (click)="stop($event)">
+        <p class="dropdown__title">{{ t.t('events_filter_by_role') }}</p>
+        <div class="opt-list">
+          <label class="opt-row" *ngFor="let r of ROLES">
+            <input type="radio" name="prole" [(ngModel)]="pendingRole" [value]="r" />
+            <span class="role-badge" [ngClass]="'role-badge--' + r.toLowerCase()">
+              {{ t.t('role_' + r) }}
+            </span>
+          </label>
+        </div>
+        <div class="dropdown__foot">
+          <button class="btn-ghost" (click)="pendingRole = ''">{{ t.t('events_filter_clear') }}</button>
+          <button class="btn-apply" (click)="applyRole()">{{ t.t('events_filter_apply') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="clear-all" *ngIf="hasFilter" (click)="clearAll()">
+      {{ t.t('events_filter_reset') }}
+    </button>
+  </div>
+
+  <!-- ── LOADING ── -->
+  <div class="state-center" *ngIf="loading">
+    <span class="spinner"></span>
+  </div>
+
+  <!-- ── EMPTY ── -->
+  <div class="state-center state-empty" *ngIf="!loading && events.length === 0">
+    <i class="ti ti-calendar-off"></i>
+    <p>{{ t.t('events_empty') }}</p>
+  </div>
+
+  <!-- ── TABLE ── -->
+  <div class="table-wrap" *ngIf="!loading && events.length > 0">
+    <table class="ev-table">
+
+      <thead>
+        <tr>
+          <th>{{ t.t('events_col_datetime') }}</th>
+          <th>{{ t.t('events_col_event') }}</th>
+          <th>{{ t.t('events_col_details') }}</th>
+          <th>{{ t.t('events_col_role') }}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let ev of paginatedEvents" [ngClass]="'row-accent--' + color(ev.type)">
+
+          <!-- Time -->
+          <td class="td-time">
+            <span class="time-main">{{ formatTime(ev.createdAt) }}</span>
+            <span class="time-date">{{ fmtDate(ev.createdAt) }}</span>
+          </td>
+
+          <!-- Event type badge -->
+          <td>
+            <span class="ev-badge" [ngClass]="'ev-badge--' + color(ev.type)">
+              {{ t.t('event_type_' + ev.type) }}
+            </span>
+          </td>
+
+          <!-- Details -->
+          <td class="td-detail">
+            <span class="detail-label">{{ ev.label }}</span>
+            <span class="detail-sub">{{ ev.detail }}</span>
+          </td>
+
+          <!-- Role — null-safe -->
+          <td>
+            <span
+              *ngIf="ev.role"
+              class="role-badge"
+              [ngClass]="'role-badge--' + roleClass(ev.role)"
+            >
+              {{ roleLabel(ev.role) }}
+            </span>
+            <span *ngIf="!ev.role" class="no-role">—</span>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── PAGINATION ── -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="pg-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+        ‹
+      </button>
+      <span class="pg-info">{{ currentPage }} / {{ totalPages }}</span>
+      <button class="pg-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+        ›
+      </button>
+    </div>
+
+  </div>
+
+</div>

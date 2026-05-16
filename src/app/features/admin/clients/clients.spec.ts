@@ -1,23 +1,67 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { signal } from '@angular/core';
+import { of } from 'rxjs';
 import { Clients } from './clients';
 import { TranslationService } from '../../../service/translation.service';
+import { ClientService } from '../../../service/Client.service';
+import { ResellerService } from '../../../service/Reseller.service';
+import { DeviceService } from '../../../service/Device.service';
+import { AbonnementService } from '../../../service/Abonnement.service';
 import { Client } from '../../../models/client.model';
+import { Reseller } from '../../../models/reseller.model';
+
+const MOCK_CLIENTS: Client[] = [
+  { idClient: 1, email: 'ahmed@a.com', login: 'ahmed', firstName: 'Ahmed', lastName: 'Ben Ali', phone: '12345678', location: 'Tunis', graceDaysLeft: 5,  graceDaysUsed: 0, idRev: 1, resellerName: 'ResellerX', createdAt: '2024-01-01', region: 'Tunis' },
+  { idClient: 2, email: 'sara@b.com',  login: 'sara',  firstName: 'Sara',  lastName: 'Triki',   phone: '87654321', location: 'Sfax',  graceDaysLeft: 0,  graceDaysUsed: 3, idRev: 2, resellerName: 'ResellerY', createdAt: '2024-02-01', region: 'Sfax'  },
+];
+
+const MOCK_RESELLERS: Reseller[] = [
+  { idRev: 1, username: 'resA', email: 'resA@x.com', nomEntreprise: 'ResellerX', deviceCostByDay: 1, daysCount: 30, phone: '10000001', clientCount: 5, createdAt: '2023-01-01' },
+  { idRev: 2, username: 'resB', email: 'resB@x.com', nomEntreprise: 'ResellerY', deviceCostByDay: 2, daysCount: 30, phone: '10000002', clientCount: 3, createdAt: '2023-01-01' },
+];
 
 describe('Clients', () => {
   let component: Clients;
   let fixture: ComponentFixture<Clients>;
-  let mockTranslationService: jasmine.SpyObj<TranslationService>;
+  let mockClientService: jest.Mocked<Pick<ClientService, 'getAll' | 'update' | 'suspend' | 'reactivate'>>;
+  let mockResellerService: jest.Mocked<Pick<ResellerService, 'getAll'>>;
+  let mockDeviceService: jest.Mocked<Pick<DeviceService, 'getByClient'>>;
+
+  const mockTranslationService = {
+    t: (key: string) => key,
+    lang: signal<'en' | 'fr'>('en'),
+    loaded: signal(true),
+  };
 
   beforeEach(async () => {
-    mockTranslationService = jasmine.createSpyObj('TranslationService', [], {
-      // Add any properties if needed
-    });
+    mockClientService = {
+      getAll:      jest.fn().mockReturnValue(of([...MOCK_CLIENTS])),
+      update:      jest.fn(),
+      suspend:     jest.fn(),
+      reactivate:  jest.fn(),
+    } as any;
+
+    mockResellerService = {
+      getAll: jest.fn().mockReturnValue(of([...MOCK_RESELLERS])),
+    } as any;
+
+    mockDeviceService = {
+      getByClient: jest.fn().mockReturnValue(of([])),
+    } as any;
+
+    const mockAboService = {
+      getByClient: jest.fn().mockReturnValue(of([])),
+    };
 
     await TestBed.configureTestingModule({
       imports: [Clients, FormsModule],
       providers: [
-        { provide: TranslationService, useValue: mockTranslationService }
+        { provide: ClientService,      useValue: mockClientService      },
+        { provide: ResellerService,    useValue: mockResellerService    },
+        { provide: DeviceService,      useValue: mockDeviceService      },
+        { provide: AbonnementService,  useValue: mockAboService         },
+        { provide: TranslationService, useValue: mockTranslationService },
       ]
     }).compileComponents();
 
@@ -33,320 +77,174 @@ describe('Clients', () => {
   it('should initialize with default values', () => {
     expect(component.view).toBe('table');
     expect(component.selected).toBeNull();
-    expect(component.showModal).toBeFalse();
-    expect(component.modalMode).toBe('add');
+    expect(component.showModal).toBe(false);
+    expect(component.modalMode).toBe('edit');
     expect(component.formData).toEqual({});
     expect(component.searchQuery).toBe('');
     expect(component.filterActive).toBe('all');
-    expect(component.sortField).toBe('id');
-    expect(component.sortAsc).toBeTrue();
+    expect(component.sortField).toBe('idClient');
+    expect(component.sortAsc).toBe(true);
   });
 
-  it('should have predefined regions', () => {
-    expect(component.regions).toBeDefined();
+  it('should load clients on init', () => {
+    expect(component.clients.length).toBe(2);
+    expect(component.clients[0].firstName).toBe('Ahmed');
+  });
+
+  it('should load resellers on init', () => {
+    expect(component.resellers.length).toBe(2);
+    expect(component.resellers[0].username).toBe('resA');
+  });
+
+  it('should have 24 predefined regions starting with Tunis', () => {
     expect(component.regions.length).toBe(24);
     expect(component.regions[0]).toBe('Tunis');
   });
 
-  it('should have predefined resellers', () => {
-    expect(component.resellers).toBeDefined();
-    expect(component.resellers.length).toBe(8);
-    expect(component.resellers[0].name).toBe('Khalil Mansour');
+  describe('isActive', () => {
+    it('should return true when graceDaysLeft > 0', () => {
+      expect(component.isActive(MOCK_CLIENTS[0])).toBe(true);
+    });
+
+    it('should return false when graceDaysLeft is 0', () => {
+      expect(component.isActive(MOCK_CLIENTS[1])).toBe(false);
+    });
   });
 
-  it('should have initial clients data', () => {
-    expect(component.clients).toBeDefined();
-    expect(component.clients.length).toBe(12);
-    expect(component.clients[0].name).toBe('Société Elyes');
+  describe('fullName', () => {
+    it('should combine firstName and lastName', () => {
+      expect(component.fullName(MOCK_CLIENTS[0])).toBe('Ahmed Ben Ali');
+    });
   });
 
   describe('filtered getter', () => {
-    it('should return all clients when no filters', () => {
-      expect(component.filtered.length).toBe(12);
+    it('should return all clients when no filters applied', () => {
+      expect(component.filtered.length).toBe(2);
     });
 
-    it('should filter by search query', () => {
-      component.searchQuery = 'Elyes';
+    it('should filter by search query on first name', () => {
+      component.searchQuery = 'Ahmed';
       expect(component.filtered.length).toBe(1);
-      expect(component.filtered[0].name).toBe('Société Elyes');
+      expect(component.filtered[0].firstName).toBe('Ahmed');
     });
 
-    it('should filter by active status', () => {
+    it('should filter active clients only', () => {
       component.filterActive = 'active';
-      const activeCount = component.clients.filter(c => c.isActive).length;
-      expect(component.filtered.length).toBe(activeCount);
+      expect(component.filtered.every(c => component.isActive(c))).toBe(true);
     });
 
-    it('should filter by inactive status', () => {
+    it('should filter inactive clients only', () => {
       component.filterActive = 'inactive';
-      const inactiveCount = component.clients.filter(c => !c.isActive).length;
-      expect(component.filtered.length).toBe(inactiveCount);
+      expect(component.filtered.every(c => !component.isActive(c))).toBe(true);
     });
 
-    it('should sort by field ascending', () => {
-      component.sortField = 'name';
+    it('should sort ascending by firstName', () => {
+      component.sortField = 'firstName';
       component.sortAsc = true;
-      const filtered = component.filtered;
-      expect(filtered[0].name.localeCompare(filtered[1].name)).toBeLessThanOrEqual(0);
+      const result = component.filtered;
+      expect(result[0].firstName.localeCompare(result[1].firstName)).toBeLessThanOrEqual(0);
     });
 
-    it('should sort by field descending', () => {
-      component.sortField = 'name';
+    it('should sort descending by firstName', () => {
+      component.sortField = 'firstName';
       component.sortAsc = false;
-      const filtered = component.filtered;
-      expect(filtered[0].name.localeCompare(filtered[1].name)).toBeGreaterThanOrEqual(0);
+      const result = component.filtered;
+      expect(result[0].firstName.localeCompare(result[1].firstName)).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe('sortBy', () => {
-    it('should toggle sort direction if same field', () => {
-      component.sortField = 'name';
+    it('should toggle sort direction when same field clicked', () => {
+      component.sortField = 'firstName';
       component.sortAsc = true;
-      component.sortBy('name');
-      expect(component.sortAsc).toBeFalse();
+      component.sortBy('firstName');
+      expect(component.sortAsc).toBe(false);
     });
 
-    it('should set new field and ascending if different field', () => {
-      component.sortField = 'id';
-      component.sortBy('name');
-      expect(component.sortField).toBe('name');
-      expect(component.sortAsc).toBeTrue();
+    it('should set new field and reset to ascending for a different field', () => {
+      component.sortField = 'idClient';
+      component.sortBy('firstName');
+      expect(component.sortField).toBe('firstName');
+      expect(component.sortAsc).toBe(true);
     });
   });
 
   describe('sortIcon', () => {
-    it('should return ↕ for unsorted field', () => {
-      expect(component.sortIcon('name')).toBe('↕');
+    it('should return ↕ for a non-active sort field', () => {
+      expect(component.sortIcon('firstName')).toBe('↕');
     });
 
-    it('should return ↑ for ascending sort', () => {
-      component.sortField = 'name';
+    it('should return ↑ for active ascending field', () => {
+      component.sortField = 'firstName';
       component.sortAsc = true;
-      expect(component.sortIcon('name')).toBe('↑');
+      expect(component.sortIcon('firstName')).toBe('↑');
     });
 
-    it('should return ↓ for descending sort', () => {
-      component.sortField = 'name';
+    it('should return ↓ for active descending field', () => {
+      component.sortField = 'firstName';
       component.sortAsc = false;
-      expect(component.sortIcon('name')).toBe('↓');
+      expect(component.sortIcon('firstName')).toBe('↓');
     });
   });
 
   describe('openDetail and backToTable', () => {
-    it('should open detail view', () => {
-      const client = component.clients[0];
-      component.openDetail(client);
+    it('should switch to detail view with the selected client', () => {
+      component.openDetail(MOCK_CLIENTS[0]);
       expect(component.view).toBe('detail');
-      expect(component.selected).toBe(client);
+      expect(component.selected).toBe(MOCK_CLIENTS[0]);
     });
 
-    it('should go back to table view', () => {
+    it('should return to table view and clear selection', () => {
       component.view = 'detail';
-      component.selected = component.clients[0];
+      component.selected = MOCK_CLIENTS[0];
       component.backToTable();
       expect(component.view).toBe('table');
       expect(component.selected).toBeNull();
     });
   });
 
-  describe('openAdd', () => {
-    it('should open add modal with default form data', () => {
-      component.openAdd();
-      expect(component.showModal).toBeTrue();
-      expect(component.modalMode).toBe('add');
-      expect(component.formData.region).toBe('Tunis');
-      expect(component.formData.isActive).toBeTrue();
-      expect(component.formData.resellerId).toBe(component.resellers[0].id);
-      expect(component.formData.resellerName).toBe(component.resellers[0].companyName);
-    });
-  });
-
   describe('openEdit', () => {
-    it('should open edit modal with client data', () => {
-      const client = component.clients[0];
+    it('should open edit modal with a copy of the client data', () => {
       const event = new Event('click');
-      spyOn(event, 'stopPropagation');
-      component.openEdit(client, event);
-      expect(component.showModal).toBeTrue();
+      const stopSpy = jest.spyOn(event, 'stopPropagation');
+      component.openEdit(MOCK_CLIENTS[0], event);
+      expect(component.showModal).toBe(true);
       expect(component.modalMode).toBe('edit');
-      expect(component.formData).toEqual(client);
-      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(component.formData).toEqual(MOCK_CLIENTS[0]);
+      expect(stopSpy).toHaveBeenCalled();
     });
   });
 
   describe('onResellerChange', () => {
-    it('should update resellerName when resellerId changes', () => {
-      component.formData.resellerId = 2;
+    it('should update resellerName when idRev changes', () => {
+      component.formData.idRev = 2;
       component.onResellerChange();
-      expect(component.formData.resellerName).toBe('NetPlus Solutions');
-    });
-  });
-
-  describe('saveForm', () => {
-    it('should add new client in add mode', () => {
-      const initialLength = component.clients.length;
-      component.modalMode = 'add';
-      component.formData = {
-        name: 'New Client',
-        email: 'new@client.com',
-        phone: '+216 70 123 456',
-        region: 'Sousse',
-        resellerId: 3,
-        resellerName: 'ConnectPro Tunis',
-        isActive: true
-      };
-      component.saveForm();
-      expect(component.clients.length).toBe(initialLength + 1);
-      const newClient = component.clients[component.clients.length - 1];
-      expect(newClient.name).toBe('New Client');
-      expect(newClient.id).toBeGreaterThan(0);
-      expect(component.showModal).toBeFalse();
-    });
-
-    it('should update existing client in edit mode', () => {
-      const client = component.clients[0];
-      component.modalMode = 'edit';
-      component.formData = { ...client, name: 'Updated Name' };
-      component.saveForm();
-      const updatedClient = component.clients.find(c => c.id === client.id);
-      expect(updatedClient?.name).toBe('Updated Name');
-      expect(component.showModal).toBeFalse();
-    });
-
-    it('should update selected client if editing selected', () => {
-      const client = component.clients[0];
-      component.selected = client;
-      component.modalMode = 'edit';
-      component.formData = { ...client, name: 'Updated Selected' };
-      component.saveForm();
-      expect(component.selected?.name).toBe('Updated Selected');
+      expect(component.formData.resellerName).toBe('ResellerY');
     });
   });
 
   describe('closeModal', () => {
-    it('should close modal and reset form data', () => {
+    it('should hide modal and reset formData', () => {
       component.showModal = true;
-      component.formData = { name: 'Test' };
+      component.formData = { firstName: 'Test' };
       component.closeModal();
-      expect(component.showModal).toBeFalse();
+      expect(component.showModal).toBe(false);
       expect(component.formData).toEqual({});
     });
   });
 
   describe('formatDate', () => {
-    it('should format date correctly', () => {
-      const date = '2023-03-10';
-      const formatted = component.formatDate(date);
-      expect(formatted).toBe('10 mars 2023'); // Assuming fr-TN locale
+    it('should return — for null', () => {
+      expect(component.formatDate(null)).toBe('—');
+    });
+
+    it('should return — for undefined', () => {
+      expect(component.formatDate(undefined)).toBe('—');
+    });
+
+    it('should return a formatted string for a valid date', () => {
+      const result = component.formatDate('2023-03-10');
+      expect(result).toContain('2023');
     });
   });
 });
-    { id:3,  name:'Alpha Logistics',       email:'ops@alphalog.tn',         phone:'+216 70 333 444', region:'Sousse',   resellerId:3, resellerName:'ConnectPro Tunis',  totalDevices:25, activeDevices:20, isActive:true,  joinDate:'2022-12-01' },
-    { id:4,  name:'Ben Salem SARL',        email:'bensalem@gmail.com',      phone:'+216 74 444 555', region:'Bizerte',  resellerId:4, resellerName:'Alpha Track',       totalDevices:4,  activeDevices:2,  isActive:false, joinDate:'2024-01-20' },
-    { id:5,  name:'Ferchichi Transport',   email:'info@ferchichi.tn',       phone:'+216 72 555 666', region:'Nabeul',   resellerId:5, resellerName:'GPS Tunisie',       totalDevices:15, activeDevices:14, isActive:true,  joinDate:'2023-09-05' },
-    { id:6,  name:'FleetCo Tunis',         email:'fleet@fleetco.tn',        phone:'+216 71 666 777', region:'Tunis',    resellerId:6, resellerName:'FleetMaster TN',    totalDevices:32, activeDevices:30, isActive:true,  joinDate:'2022-08-14' },
-    { id:7,  name:'Rekik Frères',          email:'rekik@rekikfreres.tn',    phone:'+216 75 777 888', region:'Gabès',    resellerId:7, resellerName:'IoT Gabès',          totalDevices:6,  activeDevices:5,  isActive:true,  joinDate:'2024-04-02' },
-    { id:8,  name:'SudTrans',              email:'contact@sudtrans.tn',     phone:'+216 76 888 999', region:'Medenine', resellerId:8, resellerName:'TrackSud',           totalDevices:9,  activeDevices:8,  isActive:true,  joinDate:'2023-11-18' },
-    { id:9,  name:'Karoui & Associés',     email:'karoui@associes.tn',      phone:'+216 71 999 000', region:'Tunis',    resellerId:1, resellerName:'TechVision SARL',  totalDevices:18, activeDevices:0,  isActive:false, joinDate:'2023-01-07' },
-    { id:10, name:'Hannibal Motors',       email:'fleet@hannibalmotor.tn',  phone:'+216 73 000 111', region:'Sfax',     resellerId:2, resellerName:'NetPlus Solutions', totalDevices:22, activeDevices:19, isActive:true,  joinDate:'2022-10-25' },
-    { id:11, name:'Nabeul Agri',           email:'info@nabeulAgri.tn',      phone:'+216 72 112 223', region:'Nabeul',   resellerId:5, resellerName:'GPS Tunisie',       totalDevices:5,  activeDevices:4,  isActive:true,  joinDate:'2024-02-28' },
-    { id:12, name:'Monastir Shipping',     email:'ops@monastirship.tn',     phone:'+216 73 223 334', region:'Monastir', resellerId:3, resellerName:'ConnectPro Tunis',  totalDevices:11, activeDevices:9,  isActive:false, joinDate:'2023-07-10' },
-  ];
-
-  get filtered(): Client[] {
-    const q = this.searchQuery.toLowerCase().trim();
-    let list = [...this.clients];
-
-    if (q) list = list.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      c.resellerName.toLowerCase().includes(q) ||
-      c.region.toLowerCase().includes(q) ||
-      String(c.id).includes(q)
-    );
-
-    if (this.filterActive === 'active')   list = list.filter(c => c.isActive);
-    if (this.filterActive === 'inactive') list = list.filter(c => !c.isActive);
-
-    list.sort((a, b) => {
-      const av = a[this.sortField] ?? '';
-      const bv = b[this.sortField] ?? '';
-      if (av === bv) return 0;
-      return (av > bv ? 1 : -1) * (this.sortAsc ? 1 : -1);
-    });
-    return list;
-  }
-
-  sortBy(field: keyof Client): void {
-    if (this.sortField === field) this.sortAsc = !this.sortAsc;
-    else { this.sortField = field; this.sortAsc = true; }
-  }
-
-  sortIcon(field: keyof Client): string {
-    if (this.sortField !== field) return '↕';
-    return this.sortAsc ? '↑' : '↓';
-  }
-
-  openDetail(c: Client): void {
-    this.selected = c;
-    this.view = 'detail';
-  }
-
-  backToTable(): void {
-    this.view = 'table';
-    this.selected = null;
-  }
-
-  openAdd(): void {
-    this.formData = { region: 'Tunis', isActive: true, resellerId: this.resellers[0].id, resellerName: this.resellers[0].companyName };
-    this.modalMode = 'add';
-    this.showModal = true;
-  }
-
-  openEdit(c: Client, e: Event): void {
-    e.stopPropagation();
-    this.formData = { ...c };
-    this.modalMode = 'edit';
-    this.showModal = true;
-  }
-
-  onResellerChange(): void {
-    const r = this.resellers.find(r => r.id === Number(this.formData.resellerId));
-    if (r) this.formData.resellerName = r.companyName;
-  }
-
-  saveForm(): void {
-    if (this.modalMode === 'add') {
-      const newId = Math.max(0, ...this.clients.map(c => c.id)) + 1;
-      this.clients = [...this.clients, {
-        id:            newId,
-        name:          this.formData.name ?? '',
-        email:         this.formData.email ?? '',
-        phone:         this.formData.phone ?? '',
-        region:        this.formData.region ?? 'Tunis',
-        resellerId:    Number(this.formData.resellerId),
-        resellerName:  this.formData.resellerName ?? '',
-        totalDevices:  0,
-        activeDevices: 0,
-        isActive:      this.formData.isActive ?? true,
-        joinDate:      new Date().toISOString().split('T')[0],
-      }];
-    } else {
-      this.clients = this.clients.map(c =>
-        c.id === this.formData.id ? { ...c, ...this.formData } as Client : c
-      );
-      if (this.selected?.id === this.formData.id)
-        this.selected = this.clients.find(c => c.id === this.formData.id) ?? null;
-    }
-    this.showModal = false;
-    this.formData = {};
-  }
-
-  closeModal(): void {
-    this.showModal = false;
-    this.formData = {};
-  }
-
-  formatDate(d: string): string {
-    return new Date(d).toLocaleDateString('fr-TN', { day:'2-digit', month:'short', year:'numeric' });
-  }
-}

@@ -7,26 +7,14 @@
       </div>
     </div>
     <div class="sk-kpi-strip">
-      @for (_ of [1,2,3,4,5]; track $index) {
+      @for (_ of [1,2,3,4,5,6]; track $index) {
         <div class="sk-kpi">
           <div class="sk sk-text-xl" style="width:48px"></div>
           <div class="sk sk-text-sm" style="width:64px"></div>
         </div>
       }
     </div>
-    <div class="sk-toolbar">
-      <div class="sk" style="width:220px;height:36px;border-radius:10px;"></div>
-      <div class="sk" style="width:200px;height:36px;border-radius:10px;"></div>
-      <div class="sk" style="width:140px;height:36px;border-radius:10px;"></div>
-      <div class="sk sk-text-sm" style="width:80px"></div>
-    </div>
     <div class="sk-table-card">
-      <div class="sk-table-header">
-        <div class="sk sk-text" style="width:40px"></div>
-        <div class="sk sk-text" style="width:80px"></div>
-        <div class="sk sk-text" style="width:60px"></div>
-        <div class="sk sk-text" style="width:60px"></div>
-      </div>
       @for (_ of [1,2,3,4,5,6]; track $index) {
         <div class="sk-table-row">
           <div class="sk sk-avatar"></div>
@@ -36,7 +24,6 @@
           </div>
           <div class="sk sk-text" style="width:80px"></div>
           <div class="sk sk-text" style="width:60px"></div>
-          <div class="sk sk-text" style="width:70px"></div>
         </div>
       }
     </div>
@@ -51,7 +38,53 @@
       <p class="page-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
       <h1 class="page-title">{{ i18n.t('nav_devices') }}</h1>
     </div>
+    @if (pendingRequests.length > 0) {
+      <button class="btn-requests" (click)="showRequestsPanel = !showRequestsPanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        {{ i18n.t('btn_device_requests') }}
+        <span class="requests-badge">{{ pendingRequests.length }}</span>
+      </button>
+    }
   </div>
+
+  <!-- ── Pending requests panel ──────────────────────── -->
+  @if (showRequestsPanel) {
+  <div class="requests-card">
+    <div class="requests-header">
+      <p class="requests-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="10" y1="10" x2="14" y2="10"/></svg>
+        {{ i18n.t('section_pending_requests') }}
+      </p>
+      <span class="requests-pool">Pool: {{ unassignedCount }} unassigned devices available</span>
+    </div>
+
+    @if (pendingRequests.length === 0) {
+      <p class="requests-empty">{{ i18n.t('dev_requests_empty') }}</p>
+    }
+
+    @for (req of pendingRequests; track req.id) {
+    <div class="request-row">
+      <div class="request-info">
+        <p class="request-reseller">{{ req.resellerName }}</p>
+        <p class="request-meta">
+          Requesting <strong>{{ req.requestedCount }}</strong> devices
+          @if (req.message) { · "{{ req.message }}" }
+          · {{ formatDateTime(req.createdAt) }}
+        </p>
+      </div>
+      <div class="request-actions">
+        @if (unassignedCount === 0) {
+          <span class="request-no-pool">{{ i18n.t('dev_no_pool') }}</span>
+        }
+        <button class="btn-fulfill" [disabled]="unassignedCount === 0" (click)="openFulfill(req)">
+          {{ i18n.t('btn_send_devices') }}
+        </button>
+        <button class="btn-reject" (click)="rejectRequest(req)">{{ i18n.t('btn_reject') }}</button>
+      </div>
+    </div>
+    }
+  </div>
+  }
 
   <!-- KPI strip -->
   <div class="kpi-strip">
@@ -77,7 +110,12 @@
     <div class="kpi-div"></div>
     <div class="kpi-card kpi-card--libre">
       <p class="kpi-val">{{ libreCount }}</p>
-      <p class="kpi-label">Libre</p>
+      <p class="kpi-label">{{ i18n.t('kpi_libre') }}</p>
+    </div>
+    <div class="kpi-div"></div>
+    <div class="kpi-card kpi-card--unassigned">
+      <p class="kpi-val">{{ unassignedDbCount }}</p>
+      <p class="kpi-label">{{ i18n.t('kpi_unassigned') }}</p>
     </div>
   </div>
 
@@ -88,11 +126,12 @@
       <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('dev_search_placeholder')"/>
     </div>
     <div class="filter-tabs">
-      <button [class.active]="filterStatus==='all'"      (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
-      <button [class.active]="filterStatus==='actif'"    (click)="filterStatus='actif'">{{ i18n.t('filter_active') }}</button>
-      <button [class.active]="filterStatus==='expiré'"   (click)="filterStatus='expiré'">{{ i18n.t('dev_expired') }}</button>
-      <button [class.active]="filterStatus==='inactif'"  (click)="filterStatus='inactif'">{{ i18n.t('filter_inactive') }}</button>
-      <button [class.active]="filterStatus==='libre'"    (click)="filterStatus='libre'">Libre</button>
+      <button [class.active]="filterStatus==='all'"        (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
+      <button [class.active]="filterStatus==='actif'"      (click)="filterStatus='actif'">{{ i18n.t('filter_active') }}</button>
+      <button [class.active]="filterStatus==='expiré'"     (click)="filterStatus='expiré'">{{ i18n.t('dev_expired') }}</button>
+      <button [class.active]="filterStatus==='inactif'"    (click)="filterStatus='inactif'">{{ i18n.t('filter_inactive') }}</button>
+      <button [class.active]="filterStatus==='libre'"      (click)="filterStatus='libre'">{{ i18n.t('kpi_libre') }}</button>
+      <button [class.active]="filterStatus==='unassigned'" (click)="filterStatus='unassigned'">{{ i18n.t('kpi_unassigned') }}</button>
     </div>
     <select class="filter-select" [(ngModel)]="filterModel">
       @for (m of modelOptions; track m) {
@@ -127,6 +166,7 @@
             [class.row--libre]="(d.status||'').toLowerCase()==='libre'"
             [class.row--expiré]="(d.status||'').toLowerCase()==='expiré'"
             [class.row--inactif]="(d.status||'').toLowerCase()==='inactif'"
+            [class.row--unassigned]="(d.status||'').toLowerCase()==='unassigned'"
             (click)="openPanel(d)">
             <td class="row-accent"></td>
             <td class="col-id"><span class="id-badge">#{{ d.idDevice }}</span></td>
@@ -136,7 +176,8 @@
                   [class.device-icon--actif]="(d.status||'').toLowerCase()==='actif'"
                   [class.device-icon--libre]="(d.status||'').toLowerCase()==='libre'"
                   [class.device-icon--expiré]="(d.status||'').toLowerCase()==='expiré'"
-                  [class.device-icon--inactif]="(d.status||'').toLowerCase()==='inactif'">
+                  [class.device-icon--inactif]="(d.status||'').toLowerCase()==='inactif'"
+                  [class.device-icon--unassigned]="(d.status||'').toLowerCase()==='unassigned'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
                 </div>
                 <span class="serial-text">{{ d.numDevice || '—' }}</span>
@@ -181,6 +222,7 @@
 </div>
 }
 
+<!-- ── Panel backdrop ─────────────────────────────────── -->
 @if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
 
 @if (panelDevice) {
@@ -211,6 +253,49 @@
       <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelDevice.clientName || '—' }}</p></div>
       <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ formatDate(panelDevice.dateActivation) }}</p></div>
       <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val">{{ panelDevice.simProvider || '—' }}</p></div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ── Fulfill modal ──────────────────────────────────── -->
+@if (showFulfillModal && fulfillTarget) {
+<div class="modal-backdrop" (click)="closeFulfillModal()">
+  <div class="modal modal--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('modal_send_devices_to') }} {{ fulfillTarget.resellerName }}</h2>
+      <button class="modal-close" (click)="closeFulfillModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fulfill-info">
+        <div class="fulfill-stat">
+          <p class="fulfill-stat-val">{{ fulfillTarget.requestedCount }}</p>
+          <p class="fulfill-stat-label">{{ i18n.t('label_requested') }}</p>
+        </div>
+        <div class="fulfill-stat">
+          <p class="fulfill-stat-val" [class.fulfill-stat--warn]="unassignedCount < fulfillTarget.requestedCount">{{ unassignedCount }}</p>
+          <p class="fulfill-stat-label">{{ i18n.t('label_available_pool') }}</p>
+        </div>
+      </div>
+      @if (fulfillTarget.message) {
+        <p class="fulfill-message">"{{ fulfillTarget.message }}"</p>
+      }
+      <div class="form-group" style="margin-top:1rem">
+        <label>{{ i18n.t('label_devices_to_send') }} (max {{ unassignedCount }})</label>
+        <input type="number"
+          [(ngModel)]="fulfillCount"
+          [min]="1"
+          [max]="unassignedCount"
+          [placeholder]="i18n.t('placeholder_enter_count')"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeFulfillModal()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save"
+        [disabled]="fulfillCount < 1 || fulfillCount > unassignedCount"
+        (click)="confirmFulfill()">
+        {{ i18n.t('btn_send') }} {{ fulfillCount }} {{ i18n.t('nav_devices') }}
+      </button>
     </div>
   </div>
 </div>

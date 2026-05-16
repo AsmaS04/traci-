@@ -1,8 +1,23 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { TranslationService } from '../../../service/translation.service';
-import { ClientService, PaiementDTO } from '../../../service/Client.service';
 import { ToastService } from '../../../service/Toast.service';
+
+export interface FactureDTO {
+  id: number;
+  odooMoveId: number;
+  invoiceNumber: string;
+  clientId: number;
+  invoiceDate: string;
+  dueDate: string;
+  amountUntaxed: number;
+  taxAmount: number;
+  total: number;
+  status: string;
+  serviceLabel: string;
+}
 
 type FilterStatut = 'ALL' | 'PAID' | 'PENDING' | 'OVERDUE';
 
@@ -16,70 +31,81 @@ type FilterStatut = 'ALL' | 'PAID' | 'PENDING' | 'OVERDUE';
 export default class FacturesComponent implements OnInit {
 
   i18n          = inject(TranslationService);
-  private clientService = inject(ClientService);
-  private toast         = inject(ToastService);
+  private toast  = inject(ToastService);
+  private route  = inject(ActivatedRoute);
+  private router = inject(Router);
+  private http   = inject(HttpClient);
 
-  payments         = signal<PaiementDTO[]>([]);
+  factures         = signal<FactureDTO[]>([]);
   loading          = signal(true);
-  selectedFacture  = signal<PaiementDTO | null>(null);
+  selectedFacture  = signal<FactureDTO | null>(null);
   showDetailsModal = signal(false);
   filterStatut     = signal<FilterStatut>('ALL');
 
   private statusMap(s: string): 'PAID' | 'PENDING' | 'OVERDUE' {
-    if (s === 'completed') return 'PAID';
-    if (s === 'pending')   return 'PENDING';
+    if (s === 'paid')   return 'PAID';
+    if (s === 'posted') return 'PENDING';
     return 'OVERDUE';
   }
 
   filteredFactures = computed(() => {
-    const f   = this.filterStatut();
-    const all = this.payments();
-    if (f === 'ALL') return all;
-    return all.filter(p => this.statusMap(p.paymentStatus) === f);
+    const filter = this.filterStatut();
+    const all    = this.factures();
+    if (filter === 'ALL') return all;
+    return all.filter(f => this.statusMap(f.status) === filter);
   });
 
   facturesStats = computed(() => {
-    const all = this.payments();
+    const all = this.factures();
     return {
       total:        all.length,
-      montantTotal: all.reduce((s, p) => s + (p.amount ?? 0), 0),
-      payees:       all.filter(p => p.paymentStatus === 'completed').length,
-      enAttente:    all.filter(p => p.paymentStatus === 'pending').length
+      montantTotal: all.reduce((s, f) => s + (f.total ?? 0), 0),
+      payees:       all.filter(f => f.status === 'paid').length,
+      enAttente:    all.filter(f => f.status === 'posted').length
     };
   });
 
   ngOnInit() {
+    this.handleStripeReturn();
+    this.loadFactures();
+  }
+
+  private loadFactures() {
     this.loading.set(true);
-    this.clientService.getMyPayments().subscribe({
-      next: (data: PaiementDTO[]) => { this.payments.set(data); this.loading.set(false); },
+    this.http.get<FactureDTO[]>('http://localhost:8080/api/client/factures/my').subscribe({
+      next: (data) => { this.factures.set(data); this.loading.set(false); },
       error: () => { this.toast.error('Failed to load invoices.'); this.loading.set(false); }
     });
+  }
+
+  private handleStripeReturn() {
+    const status = this.route.snapshot.queryParamMap.get('payment');
+    if (status === 'success') {
+      this.toast.success('Paiement confirmé — abonnement renouvelé et facture envoyée par email.');
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
   }
 
   setFilter(s: FilterStatut)               { this.filterStatut.set(s); }
   isFilterActive(s: FilterStatut): boolean { return this.filterStatut() === s; }
 
-  openDetails(p: PaiementDTO)  { this.selectedFacture.set(p); this.showDetailsModal.set(true); }
-  closeDetails()               { this.showDetailsModal.set(false); this.selectedFacture.set(null); }
+  openDetails(f: FactureDTO)  { this.selectedFacture.set(f); this.showDetailsModal.set(true); }
+  closeDetails()              { this.showDetailsModal.set(false); this.selectedFacture.set(null); }
 
-  telechargerFacture(p: PaiementDTO) {
-    this.toast.info(`Download for ${p.payRef} — Odoo integration coming soon.`);
-  }
-
-  payerFacture(p: PaiementDTO) {
-    this.toast.info(`Payment for ${p.payRef} (${p.amount} TND) — Konnect integration coming soon.`);
+  telechargerFacture(f: FactureDTO) {
+    this.toast.info(`Download INV-${f.id} — PDF coming soon.`);
   }
 
   statusBadgeClass(s: string): string {
-    if (s === 'completed') return 'badge--paid';
-    if (s === 'pending')   return 'badge--pending';
+    if (s === 'paid')   return 'badge--paid';
+    if (s === 'posted') return 'badge--pending';
     return 'badge--overdue';
   }
 
   statusLabel(s: string): string {
-    if (s === 'completed') return 'Paid';
-    if (s === 'pending')   return 'Pending';
-    if (s === 'failed')    return 'Failed';
+    if (s === 'paid')   return 'Paid';
+    if (s === 'posted') return 'Pending';
+    if (s === 'draft')  return 'Draft';
     return s;
   }
 

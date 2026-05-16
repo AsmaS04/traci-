@@ -246,3 +246,52 @@
   .toolbar { flex-direction: column; align-items: flex-start; }
   .devices-grid { grid-template-columns: 1fr; }
 }
+
+/* Panel tabs */
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin: 0 -1.8rem 1.2rem;
+  padding: 0 1.8rem;
+  gap: 1rem;
+}
+.panel-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.8rem;
+  border: none;
+  background: transparent;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-300);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.panel-tab svg { width: 13px; height: 13px; }
+.panel-tab--active { color: var(--orange); border-bottom-color: var(--orange); }
+
+/* Subscriptions list */
+.abos-list { display: flex; flex-direction: column; gap: 0.65rem; }
+.abo-item { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; }
+.abo-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.45rem; }
+.abo-item-left { display: flex; align-items: center; gap: 0.5rem; }
+.abo-ref { font-size: 0.72rem; font-weight: 700; color: var(--text-300); }
+.abo-amount { font-size: 0.9rem; font-weight: 800; color: var(--text-900); }
+.abo-item-details { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-500); margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.25rem; }
+.abo-days-bar { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 0.25rem; }
+.abo-days-fill { height: 100%; background: #0D9488; border-radius: 99px; }
+.abo-days-label { font-size: 0.68rem; font-weight: 600; color: #0D9488; }
+
+.abo-pill { display: inline-flex; align-items: center; padding: 0.15rem 0.5rem; border-radius: 99px; font-size: 0.62rem; font-weight: 700; border: 1px solid; }
+.abo-pill--actif { background: rgba(22,163,74,0.10); color: #16A34A; border-color: rgba(22,163,74,0.25); }
+.abo-pill--expired { background: rgba(239,68,68,0.10); color: #DC2626; border-color: rgba(239,68,68,0.25); }
+.abo-pill--inactive { background: rgba(156,163,175,0.12); color: #6B7280; border-color: rgba(156,163,175,0.25); }
+
+.tab-loading { display: flex; align-items: center; gap: 0.75rem; padding: 2rem; color: var(--text-300); font-size: 0.82rem; font-weight: 600; }
+.tab-empty { display: flex; flex-direction: column; align-items: center; padding: 3rem 1rem; color: var(--text-300); text-align: center; }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--orange); animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

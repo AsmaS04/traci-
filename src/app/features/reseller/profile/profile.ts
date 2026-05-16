@@ -9,12 +9,12 @@ import { NotificationWebsocketService } from '../../../service/notification-webs
 import { Reseller } from '../../../models/reseller.model';
 import { Subscription } from 'rxjs';
 
-type TabName = 'profile' | 'security' | 'notifications' | 'activity';
+type TabName = 'profile'  | 'notifications' | 'activity';
 
 @Component({
   selector: 'app-reseller-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, TitleCasePipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './profile.html',
   styleUrls: ['./profile.css'],
 })
@@ -106,25 +106,7 @@ export default class ResellerProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Security ──────────────────────────────────────────
-  security = { currentPassword: '', newPassword: '', confirmPassword: '' };
-  twoFaEnabled = false;
 
-  get passwordStrength(): string {
-    const p = this.security.newPassword;
-    if (!p) return '';
-    if (p.length >= 12 && /[A-Z]/.test(p) && /\d/.test(p)) return 'strong';
-    if (p.length >= 8) return 'medium';
-    return 'weak';
-  }
-
-  updatePassword() { console.log('TODO: update password'); }
-  revokeSession(i: number) { this.sessions.splice(i, 1); }
-
-  sessions = [
-    { device: 'Chrome on Windows', location: 'Tunis, TN', lastActive: 'just now',  current: true  },
-    { device: 'Firefox on macOS',  location: 'Tunis, TN', lastActive: '2 days ago', current: false },
-  ];
 
   // ── Notifications ─────────────────────────────────────
   notifSettings = [

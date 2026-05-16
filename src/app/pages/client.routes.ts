@@ -32,6 +32,7 @@ export const CLIENT_ROUTES: Routes = [
         path: 'profil',
         loadComponent: () => import('../features/client/profil/profil')
       }
+      
     ]
   }
 ];

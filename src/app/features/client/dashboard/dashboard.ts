@@ -1,11 +1,23 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { TranslationService } from '../../../service/translation.service';
-import { ClientService, AbonnementDTO, PaiementDTO } from '../../../service/Client.service';
+import { ClientService, AbonnementDTO } from '../../../service/Client.service';
 import { ToastService } from '../../../service/Toast.service';
 import { Device } from '../../../models/device.model';
 import { Client } from '../../../models/client.model';
+import { loadStripe } from '@stripe/stripe-js';
+
+export interface PlanOption {
+  id: string;
+  label: string;
+  dureeMois: number;
+  prixUnitaire: number;
+  nbDevices: number;
+  totalTtc: number;
+  popular?: boolean;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -16,27 +28,36 @@ import { Client } from '../../../models/client.model';
 })
 export default class DashboardComponent implements OnInit {
 
-  i18n          = inject(TranslationService);
-  router        = inject(Router);
+  i18n                  = inject(TranslationService);
+  router                = inject(Router);
+  private route         = inject(ActivatedRoute);
+  private http          = inject(HttpClient);
   private clientService = inject(ClientService);
   private toast         = inject(ToastService);
 
-  abonnement         = signal<AbonnementDTO | null>(null);
-  isLoading          = signal(true);
-  renewLoading       = signal(false);
-  showExpiryOverlay  = signal(false);   // full-screen warning on open
-  showForfaitsModal  = signal(false);
-  showPaymentModal   = signal(false);
-  selectedForfaitForPayment = signal<any>(null);
+  abonnement        = signal<AbonnementDTO | null>(null);
+  isLoading         = signal(true);
+  renewLoading      = signal(false);
+  showExpiryOverlay = signal(false);
+  showForfaitsModal = signal(false);
+  currentClientId   = signal(0);
+  plans             = signal<PlanOption[]>([]);
+  plansLoading      = signal(false);
+  hasEverPaid       = signal(false);
 
   user: { prenom: string; nom: string; email: string } = { prenom: 'Client', nom: '', email: '' };
   clientDevices: Device[] = [];
 
-  forfaits = [
-    { dureeMois: 3,  dureeLabel: '3 Months', prix: 60,  prixUnitaire: 20, populaire: false, economie: 0  },
-    { dureeMois: 6,  dureeLabel: '6 Months', prix: 102, prixUnitaire: 17, populaire: true,  economie: 15 },
-    { dureeMois: 12, dureeLabel: '1 Year',   prix: 180, prixUnitaire: 15, populaire: false, economie: 25 },
-  ];
+  // ── Single source of truth ────────────────────────────
+  get subscriptionState(): 'none' | 'pending' | 'active' | 'warning' | 'danger' | 'expired' {
+    const abo = this.abonnement();
+    if (!abo)                return 'none';
+    if (!this.hasEverPaid()) return 'pending';
+    if (this.daysLeft <= 0)  return 'expired';
+    if (this.daysLeft <= 7)  return 'danger';
+    if (this.daysLeft <= 15) return 'warning';
+    return 'active';
+  }
 
   // ── Computed ──────────────────────────────────────────
   get daysLeft(): number {
@@ -60,36 +81,36 @@ export default class DashboardComponent implements OnInit {
     return 282.74 * (1 - this.remainingPercent / 100);
   }
 
-  // Progress bar / ring color: green → orange → red → deep red
-  get progressColor(): string {
-    if (this.daysLeft <= 0)                              return '#7f1d1d'; // deep red: expired
-    if (this.daysLeft <= 7)                              return '#DC2626'; // red: critical
-    if (this.daysLeft <= this.totalDays * 0.5)           return '#D97706'; // orange: half gone
-    return '#0D9488';                                                       // green: healthy
-  }
-
-  get urgencyLevel(): 'safe' | 'warning' | 'danger' | 'expired' {
-    if (!this.abonnement()) return 'expired';
-    if (this.daysLeft <= 0)  return 'expired';
-    if (this.daysLeft <= 7)  return 'danger';
-    if (this.daysLeft <= 15) return 'warning';
-    return 'safe';
-  }
-
-  get urgencyColor(): string {
-    return { safe: '#0D9488', warning: '#D97706', danger: '#DC2626', expired: '#7f1d1d' }[this.urgencyLevel];
-  }
-
-  get urgencyBg(): string {
-    return { safe: 'rgba(13,148,136,0.05)', warning: 'rgba(217,119,6,0.05)', danger: 'rgba(220,38,38,0.05)', expired: 'rgba(127,29,29,0.06)' }[this.urgencyLevel];
-  }
-
   get progressPercent(): number {
     const abo = this.abonnement();
-    if (!abo) return 100;
+    if (!abo) return 0;
     const start = new Date(abo.startDate).getTime();
     const end   = new Date(abo.endDate).getTime();
     return Math.min(100, Math.max(0, Math.round(((Date.now() - start) / (end - start)) * 100)));
+  }
+
+  get progressColor(): string {
+    const map: Record<string, string> = {
+      none:    '#9ca3af',
+      pending: '#D97706',
+      active:  '#0D9488',
+      warning: '#D97706',
+      danger:  '#DC2626',
+      expired: '#7f1d1d'
+    };
+    return map[this.subscriptionState];
+  }
+
+  get urgencyBg(): string {
+    const map: Record<string, string> = {
+      none:    'rgba(156,163,175,0.06)',
+      pending: 'rgba(245,158,11,0.05)',
+      active:  'rgba(13,148,136,0.05)',
+      warning: 'rgba(217,119,6,0.05)',
+      danger:  'rgba(220,38,38,0.05)',
+      expired: 'rgba(127,29,29,0.06)'
+    };
+    return map[this.subscriptionState];
   }
 
   get expiryDateStr(): string {
@@ -107,17 +128,33 @@ export default class DashboardComponent implements OnInit {
 
   get planLabel(): string {
     const abo = this.abonnement();
-    if (!abo) return 'No Plan';
+    if (!abo) return 'No Active Subscription';
     return abo.dureeLabel ?? `${abo.dureeMois} Month Plan`;
   }
 
   get statusChipLabel(): string {
-    return { safe: 'ACTIVE', warning: 'EXPIRING SOON', danger: 'CRITICAL', expired: 'EXPIRED' }[this.urgencyLevel];
+    const map: Record<string, string> = {
+      none:    'NO PLAN',
+      pending: 'PENDING PAYMENT',
+      active:  'ACTIVE',
+      warning: 'EXPIRING SOON',
+      danger:  'CRITICAL',
+      expired: 'EXPIRED'
+    };
+    return map[this.subscriptionState];
   }
 
-  // Always show grace period button when not fully healthy
-  get showGracePeriodButton(): boolean {
-    return this.urgencyLevel !== 'safe';
+  get renewButtonLabel(): string {
+    const s = this.subscriptionState;
+    if (s === 'none' || s === 'pending') return 'Pay Now';
+    if (s === 'expired')                 return 'Resubscribe';
+    return 'Renew Subscription';
+  }
+
+  get graceActive(): boolean {
+    return this.subscriptionState === 'warning'
+        || this.subscriptionState === 'danger'
+        || this.subscriptionState === 'expired';
   }
 
   get graceDaysLeft(): number {
@@ -126,37 +163,50 @@ export default class DashboardComponent implements OnInit {
   }
 
   get smartMessage(): { icon: 'ok' | 'warn'; title: string; body: string; level: 'ok' | 'warn' | 'danger' | 'expired' } {
-    switch (this.urgencyLevel) {
-      case 'safe':    return { icon: 'ok',   title: 'Everything is running smoothly',               body: 'No action required at the moment.',                          level: 'ok'      };
-      case 'warning': return { icon: 'warn', title: `Subscription expires in ${this.daysLeft} days`, body: 'Plan ahead — renew before your service is interrupted.',     level: 'warn'    };
-      case 'danger':  return { icon: 'warn', title: `⚠ Only ${this.daysLeft} days left`,            body: 'Your service will stop very soon. Renew immediately.',       level: 'danger'  };
-      case 'expired': return { icon: 'warn', title: 'Your subscription has expired',                 body: 'Renew now to restore access to your devices.',              level: 'expired' };
+    switch (this.subscriptionState) {
+      case 'none':    return { icon: 'warn', level: 'expired', title: 'No active subscription',            body: 'Contact your reseller to get a device and start your service.' };
+      case 'pending': return { icon: 'warn', level: 'warn',    title: 'Payment required to activate',      body: 'Your device is assigned. Pay now to activate the tracking service.' };
+      case 'active':  return { icon: 'ok',   level: 'ok',      title: 'Everything is running smoothly',    body: 'No action required at the moment.' };
+      case 'warning': return { icon: 'warn', level: 'warn',    title: `Subscription expires in ${this.daysLeft} days`, body: 'Plan ahead — renew before your service is interrupted.' };
+      case 'danger':  return { icon: 'warn', level: 'danger',  title: `⚠ Only ${this.daysLeft} days left`, body: 'Your service will stop very soon. Renew immediately.' };
+      case 'expired': return { icon: 'warn', level: 'expired', title: 'Your subscription has expired',      body: 'Renew now to restore access to your devices.' };
     }
   }
 
   get activeDevicesCount(): number {
     return this.clientDevices.filter(d =>
-['actif','active'].includes((d.status ?? '').toLowerCase())
+      ['actif', 'active'].includes((d.status ?? '').toLowerCase())
     ).length;
   }
 
   // ── Lifecycle ─────────────────────────────────────────
   ngOnInit() {
     this.isLoading.set(true);
+    this.loadClientId();
+    this.handleStripeReturn();
+
     this.clientService.getMyProfile().subscribe({
-      next: (c: Client) => { this.user = { prenom: c.firstName ?? 'Client', nom: c.lastName ?? '', email: c.email ?? '' }; },
+      next: (c: Client) => {
+        this.user = { prenom: c.firstName ?? 'Client', nom: c.lastName ?? '', email: c.email ?? '' };
+      },
       error: () => {}
     });
+
     this.clientService.getMyDevices().subscribe({
       next: (d: Device[]) => { this.clientDevices = d; },
       error: () => {}
     });
+
+    this.http.get<any[]>('http://localhost:8080/api/client/factures/my').subscribe({
+      next: (f) => this.hasEverPaid.set(f.length > 0),
+      error: () => this.hasEverPaid.set(false)
+    });
+
     this.clientService.getActiveAbonnement().subscribe({
       next: (abo: AbonnementDTO) => {
         this.abonnement.set(abo);
         this.isLoading.set(false);
-        // Show full-screen overlay if 7 days or fewer remain
-        if (abo.joursRestants <= 7) {
+        if (abo.joursRestants <= 7 && this.hasEverPaid()) {
           this.showExpiryOverlay.set(true);
         }
       },
@@ -164,34 +214,103 @@ export default class DashboardComponent implements OnInit {
     });
   }
 
-  // ── Actions ───────────────────────────────────────────
-  dismissOverlay()     { this.showExpiryOverlay.set(false); }
-  openRenewModal()     { this.showForfaitsModal.set(true); this.showExpiryOverlay.set(false); }
-  closeForfaitsModal() { this.showForfaitsModal.set(false); }
-
-  activateGracePeriod() {
-    this.toast.info(`Grace period gives you ${this.graceDaysLeft} extra days — activation coming soon.`);
+  private loadClientId() {
+    this.http.get<any>('http://localhost:8080/api/clients/me').subscribe({
+      next: (profile) => this.currentClientId.set(profile.id),
+      error: () => console.error('Could not load client profile')
+    });
   }
 
-  selectForfait(f: any) {
-    if (this.renewLoading()) return;
-    this.renewLoading.set(true);
-    const nbDevices = this.clientDevices.length || 1;
-    this.clientService.renewAbonnement(f.dureeMois, f.prixUnitaire, nbDevices).subscribe({
-      next: (newAbo: AbonnementDTO) => {
-        this.clientService.initPayment(newAbo.idAbo, newAbo.totalTtc).subscribe({
-          next: (payment: PaiementDTO) => {
-            this.renewLoading.set(false);
-            this.closeForfaitsModal();
-            this.selectedForfaitForPayment.set({ ...f, payRef: payment.payRef, aboId: newAbo.idAbo });
-            this.showPaymentModal.set(true);
-            this.toast.success('Plan selected — complete payment to activate.');
-          },
-          error: () => { this.renewLoading.set(false); this.toast.error('Failed to initialise payment. Please try again.'); }
-        });
-      },
-      error: () => { this.renewLoading.set(false); this.toast.error('Failed to renew subscription. Please try again.'); }
+  private handleStripeReturn() {
+    const status = this.route.snapshot.queryParamMap.get('payment');
+    if (status === 'success') {
+      this.toast.success('Payment confirmed — subscription activated and invoice sent by email.');
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+      this.hasEverPaid.set(true);
+      this.clientService.getActiveAbonnement().subscribe({
+        next: (abo) => this.abonnement.set(abo),
+        error: () => {}
+      });
+    } else if (status === 'cancelled') {
+      this.toast.info('Payment cancelled.');
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
+  }
+
+  // ── Actions ───────────────────────────────────────────
+  dismissOverlay() { this.showExpiryOverlay.set(false); }
+
+  openRenewModal() {
+    const abo = this.abonnement();
+    this.showExpiryOverlay.set(false);
+
+    if (!abo) {
+      this.toast.info('Contact your reseller to set up your subscription first.');
+      return;
+    }
+
+    if (this.currentClientId() === 0) {
+      this.http.get<any>('http://localhost:8080/api/clients/me').subscribe({
+        next: (profile) => {
+          this.currentClientId.set(profile.id);
+          this.loadPlansAndOpen(abo);
+        },
+        error: () => this.toast.error('Could not load client profile.')
+      });
+    } else {
+      this.loadPlansAndOpen(abo);
+    }
+  }
+
+  private loadPlansAndOpen(abo: AbonnementDTO) {
+    this.plansLoading.set(true);
+    this.showForfaitsModal.set(true);
+    this.http.get<PlanOption[]>(`http://localhost:8080/api/payment/plans/${abo.idAbo}`).subscribe({
+      next: (plans) => { this.plans.set(plans); this.plansLoading.set(false); },
+      error: () => {
+        this.toast.error('Could not load plans.');
+        this.plansLoading.set(false);
+        this.showForfaitsModal.set(false);
+      }
     });
+  }
+
+  closeForfaitsModal() {
+    this.showForfaitsModal.set(false);
+    this.renewLoading.set(false);
+  }
+
+  async selectPlan(plan: PlanOption) {
+    if (this.renewLoading()) return;
+    const abo = this.abonnement();
+    if (!abo) return;
+
+    this.renewLoading.set(true);
+    this.http.post<any>('http://localhost:8080/api/payment/initiate-renewal', {
+      aboId:     abo.idAbo,
+      clientId:  this.currentClientId(),
+      dureeMois: plan.dureeMois
+    }).subscribe({
+      next: async (response) => {
+        const stripe = await loadStripe('pk_test_51TUmvOAdm9DoANgJsAktoNNpKzQS9sCyMzIA40UFj3CWYPjkC4UBA9Uj35QJJLaW53lc9qtxik41ZOqwE7kblfqy007Qqtj77m');
+        if (!stripe) { this.renewLoading.set(false); return; }
+        this.closeForfaitsModal();
+        const result = await stripe.redirectToCheckout({ sessionId: response.sessionId });
+        if (result.error) {
+          this.toast.error('Stripe redirect failed.');
+          this.renewLoading.set(false);
+        }
+      },
+      error: () => {
+        this.toast.error('Failed to create payment session.');
+        this.renewLoading.set(false);
+      }
+    });
+  }
+
+  activateGracePeriod() {
+    if (!this.graceActive) return;
+    this.toast.info(`Grace period gives you ${this.graceDaysLeft} extra days — activation coming soon.`);
   }
 
   navigateTo(p: string) { this.router.navigate([p]); }

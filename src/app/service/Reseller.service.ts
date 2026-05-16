@@ -70,4 +70,13 @@ export class ResellerService {
       formData
     );
   }
+
+
+  getMyCommissions() {
+  return this.http.get<any[]>(`${this.portalUrl}/commissions`);
+}
+
+getMyInvoices() {
+  return this.http.get<any[]>(`${this.portalUrl}/invoices`);
+}
 }

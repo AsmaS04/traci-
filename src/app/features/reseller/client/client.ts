@@ -7,10 +7,10 @@ import { ResellerService } from '../../../service/Reseller.service';
 import { DeviceService } from '../../../service/Device.service';
 import { AbonnementService, AbonnementDTO } from '../../../service/Abonnement.service';
 import { ToastService } from '../../../service/Toast.service';
+import { DeviceRequestService } from '../../../service/DeviceRequest.service';
 import { Client } from '../../../models/client.model';
 import { Device } from '../../../models/device.model';
 import { Reseller } from '../../../models/reseller.model';
-import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-reseller-clients',
@@ -21,13 +21,13 @@ import { ActivatedRoute } from '@angular/router';
 })
 export default class ResellerClientsComponent implements OnInit, OnDestroy {
 
-  readonly i18n           = inject(TranslationService);
-  private clientService   = inject(ClientService);
-  private resellerService = inject(ResellerService);
-  private deviceService   = inject(DeviceService);
-  private aboService      = inject(AbonnementService);
-  private toastService    = inject(ToastService);
-  private route = inject(ActivatedRoute);
+  readonly i18n               = inject(TranslationService);
+  private clientService       = inject(ClientService);
+  private resellerService     = inject(ResellerService);
+  private deviceService       = inject(DeviceService);
+  private aboService          = inject(AbonnementService);
+  private toastService        = inject(ToastService);
+  private deviceRequestService = inject(DeviceRequestService);
 
   clients: Client[] = [];
   reseller: Reseller = {
@@ -37,28 +37,19 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   loading = true;
 
   private emailCheckTimeout: any = null;
-  formEmailExists = false;
+  formEmailExists  = false;
   private originalEmail = '';
 
- ngOnInit() {
-  this.resellerService.getMyProfile().subscribe({
-    next: (r) => { this.reseller = r; },
-    error: () => {}
-  });
-  this.clientService.getMyClients().subscribe({
-    next: (data) => {
-      this.clients = data;
-      this.loading = false;
-      // Auto-open panel if ?id= param present
-      const idParam = this.route.snapshot.queryParamMap.get('id');
-      if (idParam) {
-        const target = data.find(c => c.idClient === +idParam);
-        if (target) this.openPanel(target);
-      }
-    },
-    error: () => { this.loading = false; }
-  });
-}
+  ngOnInit() {
+    this.resellerService.getMyProfile().subscribe({
+      next: (r) => { this.reseller = r; },
+      error: () => {}
+    });
+    this.clientService.getMyClients().subscribe({
+      next: (data) => { this.clients = data; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
+  }
 
   ngOnDestroy() {
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
@@ -68,8 +59,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   search = '';
   filterStatus: 'all' | 'active' | 'inactive' = 'all';
 
-  isActive(c: Client)     { return (c.graceDaysLeft ?? 0) > 0; }
-  isSuspended(c: Client)  { return c.status === 'SUSPENDED'; }
+  isActive(c: Client)    { return (c.graceDaysLeft ?? 0) > 0; }
   fullName(c: Client)    { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
   initials(c: Client)    { return ((c.firstName ?? '?')[0] + (c.lastName ?? '?')[0]).toUpperCase(); }
   get totalCount()       { return this.clients.length; }
@@ -107,13 +97,15 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
 
   closePanel() { this.panelOpen = false; }
 
+  isSuspended(c: Client): boolean { return c.status === 'SUSPENDED'; }
+
   suspendPanelClient() {
     if (!this.panelClient) return;
     this.clientService.suspendMyClient(this.panelClient.idClient).subscribe({
       next: (updated) => {
-        this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
         this.panelClient = updated;
-        this.toastService.success(`${this.fullName(updated)} suspended`);
+        this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
+        this.toastService.success(`${this.fullName(updated)} suspended successfully`);
       },
       error: () => this.toastService.error('Failed to suspend client')
     });
@@ -123,9 +115,9 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     if (!this.panelClient) return;
     this.clientService.reactivateMyClient(this.panelClient.idClient).subscribe({
       next: (updated) => {
-        this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
         this.panelClient = updated;
-        this.toastService.success(`${this.fullName(updated)} reactivated`);
+        this.clients = this.clients.map(c => c.idClient === updated.idClient ? updated : c);
+        this.toastService.success(`${this.fullName(updated)} reactivated successfully`);
       },
       error: () => this.toastService.error('Failed to reactivate client')
     });
@@ -150,7 +142,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Add / Edit ──────────────────────────────────────────
+  // ── Add / Edit ───────────────────────────────────────────
   showModal  = false;
   isEdit     = false;
   selected: Client | null = null;
@@ -412,5 +404,44 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     return Math.round((this.assignDone / this.assignTotal) * 100);
   }
 
-  fmt(n: number) { return new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0); }
+  // ══════════════════════════════════════════════════════════
+  // DEVICE REQUEST MODAL
+  // ══════════════════════════════════════════════════════════
+  showRequestModal   = false;
+  requestCount       = 1;
+  requestMessage     = '';
+  requestSubmitting  = false;
+
+  openRequestModal() {
+  this.requestCount    = 1;
+  this.requestMessage  = '';
+  this.showRequestModal = true;
+}
+
+  closeRequestModal() { this.showRequestModal = false; }
+
+  submitDeviceRequest() {
+    if (this.requestCount < 1 || this.requestCount > 50) return;
+    this.requestSubmitting = true;
+
+    this.deviceRequestService.createRequest(
+      this.reseller.idRev,
+      this.requestCount,
+      this.requestMessage
+    ).subscribe({
+      next: () => {
+        this.requestSubmitting  = false;
+        this.showRequestModal   = false;
+        this.toastService.success(`Request for ${this.requestCount} devices sent to admin`);
+      },
+      error: () => {
+        this.requestSubmitting = false;
+        this.toastService.error('Failed to send request');
+      }
+    });
+  }
+
+  fmt(n: number) {
+    return new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0);
+  }
 }

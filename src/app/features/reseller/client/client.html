@@ -120,12 +120,12 @@
       </button>
       <button class="panel-btn-edit" (click)="openEdit(panelClient)">{{ i18n.t('btn_edit') }}</button>
       @if (!isSuspended(panelClient)) {
-        <button class="panel-btn-suspend" (click)="suspendPanelClient()" title="Suspend client">
+        <button class="panel-btn-suspend" (click)="suspendPanelClient()" [title]="i18n.t('tooltip_suspend')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
         </button>
       }
       @if (isSuspended(panelClient)) {
-        <button class="panel-btn-reactivate" (click)="reactivatePanelClient()" title="Reactivate client">
+        <button class="panel-btn-reactivate" (click)="reactivatePanelClient()" [title]="i18n.t('tooltip_reactivate')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
       }
@@ -185,11 +185,11 @@
       <div class="stat-row">
         <div class="mini-stat">
           <p class="mini-val">{{ panelClient.graceDaysLeft ?? 0 }}</p>
-          <p class="mini-label">Days Left</p>
+          <p class="mini-label">{{ i18n.t('grace_days_left') }}</p>
         </div>
         <div class="mini-stat">
           <p class="mini-val">{{ panelClient.graceDaysUsed ?? 0 }}</p>
-          <p class="mini-label">Days Used</p>
+          <p class="mini-label">{{ i18n.t('grace_days_used') }}</p>
         </div>
         <div class="mini-stat">
           <p class="mini-val--sm">{{ reseller.nomEntreprise }}</p>
@@ -200,14 +200,14 @@
 
     @if (panelTab==='devices') {
       @if (panelDevicesLoading) {
-        <div class="tab-loading"><div class="spinner"></div><p>Loading devices…</p></div>
+        <div class="tab-loading"><div class="spinner"></div><p>{{ i18n.t('loading_devices') }}</p></div>
       } @else if (panelDevices.length === 0) {
         <div class="tab-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
-          <p>No devices assigned to this client</p>
+          <p>{{ i18n.t('empty_no_devices_client') }}</p>
           <button class="tab-empty-btn" (click)="openAssignModal(panelClient)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Assign Devices
+            {{ i18n.t('res_assign_device') }}
           </button>
         </div>
       } @else {
@@ -225,7 +225,7 @@
                 <p class="device-item-serial">{{ d.numDevice || '—' }}</p>
                 <p class="device-item-imei">IMEI {{ d.imei || '—' }}</p>
                 @if (d.dateActivation) {
-                  <p class="device-item-date">Activated {{ formatDate(d.dateActivation) }}</p>
+                  <p class="device-item-date">{{ i18n.t('device_activated') }} {{ formatDate(d.dateActivation) }}</p>
                 }
               </div>
             </div>
@@ -236,11 +236,11 @@
 
     @if (panelTab==='operations') {
       @if (panelAbosLoading) {
-        <div class="tab-loading"><div class="spinner"></div><p>Loading subscriptions…</p></div>
+        <div class="tab-loading"><div class="spinner"></div><p>{{ i18n.t('loading_subscriptions') }}</p></div>
       } @else if (panelAbos.length === 0) {
         <div class="tab-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          <p>No subscriptions found</p>
+          <p>{{ i18n.t('sub_no_subscriptions') }}</p>
         </div>
       } @else {
         <div class="abos-list">
@@ -261,7 +261,7 @@
                 <div class="abo-days-bar">
                   <div class="abo-days-fill" [style.width.%]="getProgressWidth(a)"></div>
                 </div>
-                <p class="abo-days-label">{{ a.joursRestants }} days remaining</p>
+                <p class="abo-days-label">{{ a.joursRestants }} {{ i18n.t('sub_days_remaining') }}</p>
               }
             </div>
           }
@@ -292,14 +292,14 @@
           <input type="text" [(ngModel)]="form.lastName" [placeholder]="i18n.t('profile_last_name')"/>
         </div>
         <div class="form-group">
-  <label>{{ i18n.t('form_email') }}</label>
-  <input type="email"
-    [(ngModel)]="form.email"
-    (ngModelChange)="onEmailChange()"
-    placeholder="email@example.com"
-    [class.input--error]="formEmailError"/>
-  @if (formEmailError) { <span class="field-error">{{ i18n.t(formEmailError) }}</span> }
-</div>
+          <label>{{ i18n.t('form_email') }}</label>
+          <input type="email"
+            [(ngModel)]="form.email"
+            (ngModelChange)="onEmailChange()"
+            placeholder="email@example.com"
+            [class.input--error]="formEmailError"/>
+          @if (formEmailError) { <span class="field-error">{{ i18n.t(formEmailError) }}</span> }
+        </div>
         <div class="form-group">
           <label>{{ i18n.t('form_phone') }}</label>
           <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX" [class.input--error]="formPhoneError"/>
@@ -313,49 +313,66 @@
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" (click)="closeModal()">{{ i18n.t('btn_cancel') }}</button>
-      <button class="btn-save"   (click)="saveClient(); $event.stopPropagation()">{{ i18n.t('btn_save') }}</button>
+      <button class="btn-save" (click)="saveClient(); $event.stopPropagation()">{{ i18n.t('btn_save') }}</button>
     </div>
   </div>
 </div>
 }
 
-<!-- ══ HYBRID ASSIGN MODAL (standalone — NOT nested inside anything) ══ -->
+<!-- ══ HYBRID ASSIGN MODAL ════════════════════════════════ -->
 @if (showAssignModal && assignTargetClient) {
 <div class="modal-backdrop" (click)="closeAssignModal()">
 <div class="assign-modal" (click)="$event.stopPropagation()">
 
   <div class="am-header">
     <div>
-      <h2 class="am-title">Assign Devices</h2>
-      <p class="am-sub">to <strong>{{ fullName(assignTargetClient) }}</strong></p>
+      <h2 class="am-title">{{ i18n.t('modal_assign_devices') }}</h2>
+      <p class="am-sub">{{ i18n.t('label_to') }} <strong>{{ fullName(assignTargetClient) }}</strong></p>
     </div>
     <button class="am-close" (click)="closeAssignModal()" [disabled]="assignInProgress">✕</button>
   </div>
 
   <div class="am-tabs">
     <button class="am-tab" [class.am-tab--active]="assignTab==='pick'" (click)="switchAssignTab('pick')" [disabled]="assignInProgress">
-      ☑ Pick Devices
+      ☑ {{ i18n.t('assign_pick_devices') }}
       @if (selectedDeviceIds.size > 0 && assignTab==='pick') { <span class="am-tab-badge">{{ selectedDeviceIds.size }}</span> }
     </button>
     <button class="am-tab" [class.am-tab--active]="assignTab==='count'" (click)="switchAssignTab('count')" [disabled]="assignInProgress">
-      🔢 Assign by Count
+      🔢 {{ i18n.t('assign_by_count') }}
     </button>
   </div>
 
   @if (assignTab === 'pick') {
     <div class="am-body">
       @if (libreLoading) {
-        <div class="am-loading"><div class="spinner"></div><p>Loading available devices…</p></div>
+        <div class="am-loading"><div class="spinner"></div><p>{{ i18n.t('loading_devices') }}</p></div>
       } @else if (libreDevices.length === 0) {
-        <div class="am-empty"><span>📦</span><p>No libre devices available</p></div>
+        <div class="no-devices-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            style="width:36px;height:36px;color:var(--text-300);margin-bottom:.5rem">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor"/>
+          </svg>
+          <p style="font-size:0.82rem;color:var(--text-300);margin-bottom:.75rem">
+            {{ i18n.t('dev_no_libre') }}
+          </p>
+          <button class="btn-request-devices" (click)="openRequestModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" style="width:14px;height:14px">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {{ i18n.t('btn_request_more_devices') }}
+          </button>
+        </div>
       } @else {
         <div class="am-select-all" (click)="toggleSelectAll()">
           <div class="am-checkbox" [class.am-checkbox--checked]="allSelected" [class.am-checkbox--partial]="someSelected">
             @if (allSelected)  { <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg> }
             @if (someSelected) { <span>—</span> }
           </div>
-          <span class="am-select-all-label">@if (allSelected) { Deselect all } @else { Select all ({{ libreDevices.length }}) }</span>
-          @if (selectedDeviceIds.size > 0) { <span class="am-selected-count">{{ selectedDeviceIds.size }} selected</span> }
+          <span class="am-select-all-label">@if (allSelected) { {{ i18n.t('btn_deselect_all') }} } @else { {{ i18n.t('btn_select_all') }} ({{ libreDevices.length }}) }</span>
+          @if (selectedDeviceIds.size > 0) { <span class="am-selected-count">{{ selectedDeviceIds.size }} {{ i18n.t('label_selected') }}</span> }
         </div>
         <div class="am-device-list">
           @for (d of libreDevices; track d.idDevice) {
@@ -379,16 +396,16 @@
   @if (assignTab === 'count') {
     <div class="am-body">
       <div class="am-count-section">
-        <label class="am-field-label">Number of devices to assign</label>
+        <label class="am-field-label">{{ i18n.t('label_devices_to_assign') }}</label>
         <div class="am-count-row">
           <button class="am-count-btn" (click)="assignCount = assignCount > 1 ? assignCount-1 : 1; updateCountPreview()" [disabled]="assignCount <= 1">−</button>
           <input class="am-count-input" type="number" [(ngModel)]="assignCount" min="1" [max]="libreDevices.length" (ngModelChange)="updateCountPreview()"/>
           <button class="am-count-btn" (click)="assignCount = assignCount < libreDevices.length ? assignCount+1 : libreDevices.length; updateCountPreview()" [disabled]="assignCount >= libreDevices.length">+</button>
-          <span class="am-count-hint">of {{ libreDevices.length }} available</span>
+          <span class="am-count-hint">{{ i18n.t('label_of') }} {{ libreDevices.length }} {{ i18n.t('label_available') }}</span>
         </div>
         @if (countPreview.length > 0) {
           <div class="am-preview">
-            <p class="am-preview-label">Preview — first {{ countPreview.length }} devices:</p>
+            <p class="am-preview-label">{{ i18n.t('label_preview_devices') }} {{ countPreview.length }}:</p>
             <div class="am-preview-list">
               @for (d of countPreview; track d.idDevice) {
                 <div class="am-preview-row">
@@ -401,7 +418,13 @@
           </div>
         }
         @if (libreDevices.length === 0 && !libreLoading) {
-          <div class="am-empty"><span>📦</span><p>No libre devices available</p></div>
+          <div class="am-empty">
+            <span>📦</span>
+            <p>{{ i18n.t('dev_no_libre') }}</p>
+            <button class="btn-request-devices" style="margin-top:.5rem" (click)="openRequestModal()">
+              {{ i18n.t('btn_request_more_devices') }}
+            </button>
+          </div>
         }
       </div>
     </div>
@@ -410,15 +433,15 @@
   <div class="am-config">
     <div class="am-config-row">
       <div class="am-field">
-        <label class="am-field-label">Duration (months)</label>
+        <label class="am-field-label">{{ i18n.t('label_duration_months') }}</label>
         <input class="am-field-input" type="number" [(ngModel)]="assignDuration" min="1" max="24" [disabled]="assignInProgress"/>
       </div>
       <div class="am-field">
-        <label class="am-field-label">Price / device / month (TND)</label>
+        <label class="am-field-label">{{ i18n.t('label_price_per_device') }}</label>
         <input class="am-field-input" type="number" [(ngModel)]="assignPrice" min="0" step="0.5" [disabled]="assignInProgress"/>
       </div>
       <div class="am-field am-field--summary">
-        <label class="am-field-label">Summary</label>
+        <label class="am-field-label">{{ i18n.t('label_summary') }}</label>
         <p class="am-summary">
           <strong>{{ devicesToAssign.length }}</strong> device{{ devicesToAssign.length !== 1 ? 's' : '' }}
           · <strong>{{ assignDuration }}</strong> month{{ assignDuration !== 1 ? 's' : '' }}
@@ -431,23 +454,67 @@
   @if (assignInProgress) {
     <div class="am-progress">
       <div class="am-progress-bar"><div class="am-progress-fill" [style.width.%]="assignProgress"></div></div>
-      <p class="am-progress-label">{{ assignDone }} / {{ assignTotal }} assigned…</p>
+      <p class="am-progress-label">{{ assignDone }} / {{ assignTotal }} {{ i18n.t('label_assigning') }}</p>
     </div>
   }
 
   <div class="am-footer">
-    <button class="am-btn-cancel" (click)="closeAssignModal()" [disabled]="assignInProgress">Cancel</button>
+    <button class="am-btn-cancel" (click)="closeAssignModal()" [disabled]="assignInProgress">{{ i18n.t('btn_cancel') }}</button>
     <button class="am-btn-assign" (click)="runBulkAssign()" [disabled]="!canAssign">
-      @if (assignInProgress) { <span class="spinner-sm"></span> Assigning… }
+      @if (assignInProgress) { <span class="spinner-sm"></span> {{ i18n.t('label_assigning') }} }
       @else {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
-        Assign {{ devicesToAssign.length > 0 ? devicesToAssign.length + ' Device' + (devicesToAssign.length > 1 ? 's' : '') : '' }}
+        {{ i18n.t('btn_assign') }}{{ devicesToAssign.length > 0 ? ' ' + devicesToAssign.length : '' }}
       }
     </button>
   </div>
 
 </div>
+</div>
+}
+
+<!-- ══ REQUEST MORE DEVICES MODAL ════════════════════════ -->
+@if (showRequestModal) {
+<div class="modal-backdrop" (click)="closeRequestModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('btn_request_more_devices') }}</h2>
+      <button class="modal-close" (click)="closeRequestModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.82rem;color:var(--text-500);margin-bottom:1.2rem;line-height:1.6">
+        {{ i18n.t('request_devices_notice') }}
+      </p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>{{ i18n.t('label_devices_count_range') }}</label>
+          <input type="number"
+            [(ngModel)]="requestCount"
+            [min]="1"
+            [max]="50"
+            placeholder="e.g. 10"/>
+          @if (requestCount < 1 || requestCount > 50) {
+            <span class="field-error">{{ i18n.t('error_devices_range') }}</span>
+          }
+        </div>
+        <div class="form-group">
+          <label>{{ i18n.t('label_message_optional') }}</label>
+          <input type="text"
+            [(ngModel)]="requestMessage"
+            placeholder="e.g. For new clients in Sousse"/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeRequestModal()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save"
+        [disabled]="requestCount < 1 || requestCount > 50 || requestSubmitting"
+        (click)="submitDeviceRequest()">
+        {{ requestSubmitting ? i18n.t('btn_sending') : i18n.t('btn_send_request') }}
+      </button>
+    </div>
+  </div>
 </div>
 }

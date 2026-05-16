@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { Reseller } from '../../../models/reseller.model';
 import { Client } from '../../../models/client.model';
 import { TranslationService } from '../../../service/translation.service';
@@ -22,7 +23,9 @@ export class Resellers implements OnInit, OnDestroy {
     public i18n: TranslationService,
     private resellerService: ResellerService,
     private clientService: ClientService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   private emailCheckTimeout: any = null;
@@ -31,16 +34,18 @@ export class Resellers implements OnInit, OnDestroy {
   selected: Reseller | null = null;
   selectedClients: Client[] = [];
 
-  showModal       = false;
+  showModal     = false;
   modalMode: 'add' | 'edit' = 'add';
   formData: Partial<Reseller> = {};
-  searchQuery = '';
+  searchQuery   = '';
   sortField: keyof Reseller = 'idRev';
-  sortAsc = true;
-  loading = true;
+  sortAsc       = true;
+  loading       = true;
 
-  // Suspension modal
-  showSuspendModal      = false;
+  pendingRequests   = signal<any[]>([]);
+  processingRequest = signal<number | null>(null);
+
+  showSuspendModal = false;
   suspendTarget: Reseller | null = null;
   suspendSuggestions: any[] = [];
   suspendResellers: any[]   = [];
@@ -49,7 +54,7 @@ export class Resellers implements OnInit, OnDestroy {
   bulkResellerId: number | null = null;
 
   resellers: Reseller[] = [];
-  formEmailExists  = false;
+  formEmailExists = false;
   private originalEmail = '';
 
   readonly governorates = [
@@ -65,7 +70,7 @@ export class Resellers implements OnInit, OnDestroy {
       next: (data) => {
         this.resellers = data;
         this.loading   = false;
-        // Auto-open detail if ?id= param present (from search navigation)
+        this.loadPendingRequests();
         const idParam = this.route.snapshot.queryParamMap.get('id');
         if (idParam) {
           const target = data.find(r => r.idRev === +idParam);
@@ -116,7 +121,7 @@ export class Resellers implements OnInit, OnDestroy {
 
   openDetail(r: Reseller): void {
     this.selected = r;
-    this.view = 'detail';
+    this.view     = 'detail';
     this.loadResellerClients(r.idRev);
   }
 
@@ -130,20 +135,20 @@ export class Resellers implements OnInit, OnDestroy {
   backToTable(): void { this.view = 'table'; this.selected = null; this.selectedClients = []; }
 
   openAdd(): void {
-    this.formData        = {};
-    this.formEmailExists  = false;
-    this.originalEmail   = '';
-    this.modalMode       = 'add';
-    this.showModal       = true;
+    this.formData       = {};
+    this.formEmailExists = false;
+    this.originalEmail  = '';
+    this.modalMode      = 'add';
+    this.showModal      = true;
   }
 
   openEdit(r: Reseller, e: Event): void {
     e.stopPropagation();
-    this.formData        = { ...r };
-    this.originalEmail   = r.email ?? '';
-    this.formEmailExists  = false;
-    this.modalMode       = 'edit';
-    this.showModal       = true;
+    this.formData       = { ...r };
+    this.originalEmail  = r.email ?? '';
+    this.formEmailExists = false;
+    this.modalMode      = 'edit';
+    this.showModal      = true;
   }
 
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
@@ -158,7 +163,8 @@ export class Resellers implements OnInit, OnDestroy {
   }
 
   get formPhoneError(): string {
-    return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '') ? 'msg_error_invalid_phone' : '';
+    return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '')
+      ? 'msg_error_invalid_phone' : '';
   }
 
   onEmailChange(): void {
@@ -167,7 +173,6 @@ export class Resellers implements OnInit, OnDestroy {
     const email = this.formData.email ?? '';
     if (!this.isValidEmail(email)) return;
     if (this.modalMode === 'edit' && email.trim().toLowerCase() === this.originalEmail.trim().toLowerCase()) return;
-
     this.emailCheckTimeout = setTimeout(() => {
       this.resellerService.checkEmail(email).subscribe({
         next: (res) => { this.formEmailExists = res.exists; },
@@ -210,10 +215,10 @@ export class Resellers implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
-    this.showModal       = false;
-    this.formData        = {};
-    this.formEmailExists  = false;
-    this.originalEmail   = '';
+    this.showModal      = false;
+    this.formData       = {};
+    this.formEmailExists = false;
+    this.originalEmail  = '';
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
 
@@ -221,11 +226,11 @@ export class Resellers implements OnInit, OnDestroy {
 
   openSuspendModal(r: Reseller, e: Event): void {
     e.stopPropagation();
-    this.suspendTarget   = r;
-    this.suspendLoading  = true;
+    this.suspendTarget    = r;
+    this.suspendLoading   = true;
     this.showSuspendModal = true;
     this.suspendClientAssignments = {};
-    this.bulkResellerId = null;
+    this.bulkResellerId   = null;
     this.resellerService.getReassignSuggestions(r.idRev).subscribe({
       next: (data) => {
         this.suspendSuggestions = data.clients;
@@ -240,12 +245,12 @@ export class Resellers implements OnInit, OnDestroy {
   }
 
   closeSuspendModal(): void {
-    this.showSuspendModal  = false;
-    this.suspendTarget     = null;
+    this.showSuspendModal   = false;
+    this.suspendTarget      = null;
     this.suspendSuggestions = [];
     this.suspendResellers   = [];
     this.suspendClientAssignments = {};
-    this.bulkResellerId = null;
+    this.bulkResellerId     = null;
   }
 
   applyBulkAssign(): void {
@@ -285,6 +290,32 @@ export class Resellers implements OnInit, OnDestroy {
 
   formatDate(d: string): string {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('fr-TN', { day:'2-digit', month:'short', year:'numeric' });
+    return new Date(d).toLocaleDateString('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  navigateTo(path: string) { this.router.navigate([path]); }
+
+  // ── Access Requests ───────────────────────────────────────
+  private loadPendingRequests() {
+    this.http.get<any[]>('http://localhost:8080/api/request-access/reseller/pending')
+      .subscribe({
+        next: (data) => this.pendingRequests.set(data.filter(r => r.status === 'PENDING')),
+        error: () => {}
+      });
+  }
+
+  regeneratePassword(req: any) {
+    this.processingRequest.set(req.id);
+    this.http.post(`http://localhost:8080/api/request-access/regenerate-password/${req.id}`, {})
+      .subscribe({
+        next: () => { this.processingRequest.set(null); this.loadPendingRequests(); },
+        error: () => { this.processingRequest.set(null); }
+      });
+  }
+
+  formatReqDate(d: string): string {
+    return new Date(d).toLocaleDateString('fr-TN', {
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+    });
   }
 }

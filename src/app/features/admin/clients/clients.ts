@@ -8,13 +8,14 @@ import { TranslationService } from '../../../service/translation.service';
 import { ClientService } from '../../../service/Client.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { DeviceService } from '../../../service/Device.service';
+import { AbonnementService, AbonnementDTO } from '../../../service/Abonnement.service';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './clients.html',
-  styleUrl: './clients.css',
+  styleUrls: ['./clients.css'],
 })
 export class Clients implements OnInit {
 
@@ -22,13 +23,19 @@ export class Clients implements OnInit {
     public i18n: TranslationService,
     private clientService: ClientService,
     private resellerService: ResellerService,
-    private deviceService: DeviceService
+    private deviceService: DeviceService,
+    private aboService: AbonnementService
   ) {}
 
   view: 'table' | 'detail' = 'table';
   selected: Client | null = null;
   selectedDevices: Device[] = [];
   devicesLoading = false;
+
+  // Subscriptions tab
+  panelSubscriptions: AbonnementDTO[] = [];
+  panelSubscriptionsLoading = false;
+  panelTab: 'devices' | 'subscriptions' = 'devices';
 
   showModal       = false;
   modalMode: 'add' | 'edit' = 'edit';
@@ -106,7 +113,9 @@ export class Clients implements OnInit {
   openDetail(c: Client): void {
     this.selected = c;
     this.view = 'detail';
+    this.panelTab = 'devices';
     this.selectedDevices = [];
+    this.panelSubscriptions = [];
     this.devicesLoading = true;
     this.deviceService.getByClient(c.idClient).subscribe({
       next: (devices) => { this.selectedDevices = devices; this.devicesLoading = false; },
@@ -114,7 +123,19 @@ export class Clients implements OnInit {
     });
   }
 
-  backToTable(): void { this.view = 'table'; this.selected = null; this.selectedDevices = []; }
+  backToTable(): void { this.view = 'table'; this.selected = null; this.selectedDevices = []; this.panelSubscriptions = []; }
+
+  switchPanelTab(tab: 'devices' | 'subscriptions') {
+    this.panelTab = tab;
+    if (!this.selected) return;
+    if (tab === 'subscriptions' && this.panelSubscriptions.length === 0) {
+      this.panelSubscriptionsLoading = true;
+      this.aboService.getByClient(this.selected.idClient).subscribe({
+        next: (subs) => { this.panelSubscriptions = subs; this.panelSubscriptionsLoading = false; },
+        error: () => { this.panelSubscriptionsLoading = false; }
+      });
+    }
+  }
 
   openEdit(c: Client, e: Event): void {
     e.stopPropagation();
@@ -186,12 +207,36 @@ export class Clients implements OnInit {
     return 'dev-status--inactive';
   }
 
-  get activeDeviceCount()   { return this.selectedDevices.filter(d => (d.status ?? '').toLowerCase() === 'actif').length; }
-  get expiredDeviceCount()  { return this.selectedDevices.filter(d => (d.status ?? '').toLowerCase() === 'expiré').length; }
-  get inactiveDeviceCount() { return this.selectedDevices.filter(d => (d.status ?? '').toLowerCase() === 'inactif').length; }
+  get activeDeviceCount(): number {
+    return this.selectedDevices.filter(d => (d.status ?? '').toLowerCase() === 'actif').length;
+  }
+  get expiredDeviceCount(): number {
+    return this.selectedDevices.filter(d => (d.status ?? '').toLowerCase() === 'expiré').length;
+  }
+  get inactiveDeviceCount(): number {
+    return this.selectedDevices.filter(d => (d.status ?? '').toLowerCase() === 'inactif').length;
+  }
+
+  // Subscription helpers
+  fmt(n: number): string {
+    return new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+  }
+
+  getProgressWidth(a: AbonnementDTO): number {
+    const daysUsed = a.dureeMois * 30 - a.joursRestants;
+    const percent = (daysUsed / (a.dureeMois * 30)) * 100;
+    return Math.min(Math.max(percent, 0), 100);
+  }
+
+  aboStatusClass(status: string): string {
+    const s = (status ?? '').toLowerCase();
+    if (s === 'actif')   return 'abo-pill--actif';
+    if (s === 'expiré')  return 'abo-pill--expired';
+    return 'abo-pill--inactive';
+  }
 
   // totals
-  get totalCount()    { return this.clients.length; }
-  get activeCount()   { return this.clients.filter(c => this.isActive(c)).length; }
-  get inactiveCount() { return this.clients.filter(c => !this.isActive(c)).length; }
+  get totalCount(): number   { return this.clients.length; }
+  get activeCount(): number  { return this.clients.filter(c => this.isActive(c)).length; }
+  get inactiveCount(): number { return this.clients.filter(c => !this.isActive(c)).length; }
 }

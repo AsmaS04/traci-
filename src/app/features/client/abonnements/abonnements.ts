@@ -15,7 +15,7 @@ type FilterStatut = 'ALL' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
 })
 export default class AbonnementsComponent implements OnInit {
 
-  i18n          = inject(TranslationService);
+  i18n                  = inject(TranslationService);
   private clientService = inject(ClientService);
   private toast         = inject(ToastService);
 
@@ -57,29 +57,27 @@ export default class AbonnementsComponent implements OnInit {
     });
   }
 
-  setFilter(s: FilterStatut)                   { this.filterStatut.set(s); }
-  isFilterActive(s: FilterStatut): boolean     { return this.filterStatut() === s; }
+  setFilter(s: FilterStatut)               { this.filterStatut.set(s); }
+  isFilterActive(s: FilterStatut): boolean { return this.filterStatut() === s; }
 
   openDetails(abo: AbonnementDTO)  { this.selectedAbonnement.set(abo); this.showDetailsModal.set(true); }
   closeDetails()                   { this.showDetailsModal.set(false); this.selectedAbonnement.set(null); }
 
-  renouvelerAbonnement(abo: AbonnementDTO) {
-    this.toast.info(`Renewal for subscription #${abo.idAbo} — payment flow coming soon.`);
-  }
-
   statusBadgeClass(status: string): string {
     const s = (status ?? '').toLowerCase();
-    if (s === 'actif')             return 'badge--active';
-    if (s === 'expiré')            return 'badge--expired';
+    if (s === 'actif')     return 'badge--active';
+    if (s === 'expiré')    return 'badge--expired';
+    if (s === 'completed') return 'badge--default';
     if (s === 'annulé' || s === 'suspendu') return 'badge--cancelled';
     return 'badge--default';
   }
 
   statusLabel(status: string): string {
     const s = (status ?? '').toLowerCase();
-    if (s === 'actif')   return 'Active';
-    if (s === 'expiré')  return 'Expired';
-    if (s === 'annulé')  return 'Cancelled';
+    if (s === 'actif')     return 'Active';
+    if (s === 'expiré')    return 'Expired';
+    if (s === 'completed') return 'Completed';
+    if (s === 'annulé')    return 'Cancelled';
     return status;
   }
 
@@ -90,16 +88,14 @@ export default class AbonnementsComponent implements OnInit {
     return Math.min(100, Math.max(0, Math.round(((Date.now() - start) / (end - start)) * 100)));
   }
 
-  getRemainingPercent(abo: AbonnementDTO): number {
-    return 100 - this.getProgressPercent(abo);
-  }
+  getRemainingPercent(abo: AbonnementDTO): number { return 100 - this.getProgressPercent(abo); }
 
   progressColor(abo: AbonnementDTO): string {
     const rem = abo.joursRestants ?? 0;
     const tot = (abo.dureeMois ?? 1) * 30;
-    if (rem <= 0)             return '#7f1d1d';
-    if (rem <= 7)             return '#DC2626';
-    if (rem <= tot * 0.5)     return '#D97706';
+    if (rem <= 0)         return '#7f1d1d';
+    if (rem <= 7)         return '#DC2626';
+    if (rem <= tot * 0.5) return '#D97706';
     return '#0D9488';
   }
 

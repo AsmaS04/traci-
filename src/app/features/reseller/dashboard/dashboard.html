@@ -10,8 +10,8 @@
         <div class="sk sk-btn" style="width:130px"></div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.4rem">
-      @for (_ of [1,2,3]; track $index) {
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1.4rem">
+      @for (_ of [1,2]; track $index) {
         <div class="sk-card" style="display:flex;align-items:center;gap:.75rem">
           <div class="sk sk-avatar sk-circle"></div>
           <div style="flex:1;display:flex;flex-direction:column;gap:.4rem">
@@ -22,13 +22,12 @@
         </div>
       }
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.4rem">
-      @for (_ of [1,2]; track $index) {
-        <div class="sk-card" style="min-height:160px;display:flex;flex-direction:column;gap:.75rem">
-          <div class="sk sk-text-lg" style="width:140px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1.4rem">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="sk-card" style="min-height:140px;display:flex;flex-direction:column;gap:.75rem">
+          <div class="sk sk-text-lg" style="width:120px"></div>
           <div class="sk sk-text" style="width:100%"></div>
           <div class="sk sk-text" style="width:90%"></div>
-          <div class="sk sk-text" style="width:80%"></div>
         </div>
       }
     </div>
@@ -77,9 +76,9 @@
     </div>
   </div>
 
-  <!-- ══ ROW 1 — KPI CARDS ════════════════════════════════════ -->
-  <div class="kpi-row">
-
+  <!-- ══ ROW 1 — KPI CARDS (Clients + Devices) ══════════════ -->
+  <div class="kpi-row" style="grid-template-columns: repeat(2, 1fr);">
+    <!-- Clients -->
     <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/clients')">
       <div class="kpi-icon kpi-icon--teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -89,16 +88,17 @@
       </div>
       <div class="kpi-body">
         <p class="kpi-label">{{ i18n.t('res_stat_clients') }}</p>
-        <p class="kpi-value">{{ fmt(totalClients) }}</p>
+        <p class="kpi-value">{{ fmtInt(totalClients) }}</p>
         @if (mostActiveClient !== '—') {
-          <p class="kpi-sub">Latest: {{ mostActiveClient }}</p>
+          <p class="kpi-sub">{{ i18n.t('label_latest') }}: {{ mostActiveClient }}</p>
         } @else {
-          <p class="kpi-sub kpi-sub--muted">No clients yet</p>
+          <p class="kpi-sub kpi-sub--muted">{{ i18n.t('empty_no_clients_yet') }}</p>
         }
       </div>
       <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
 
+    <!-- Devices -->
     <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="kpi-icon kpi-icon--blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -107,78 +107,56 @@
       </div>
       <div class="kpi-body">
         <p class="kpi-label">{{ i18n.t('res_stat_devices') }}</p>
-        <p class="kpi-value">{{ fmt(totalDevices) }}</p>
+        <p class="kpi-value">{{ fmtInt(totalDevices()) }}</p>
         <div class="device-inline">
-          <span class="device-inline__active"><span class="dot dot--green"></span>{{ activeDevices }} {{ i18n.t('active') }}</span>
-          <span class="device-inline__offline"><span class="dot dot--red"></span>{{ offlineDevices }} {{ i18n.t('offline') }}</span>
+          <span class="device-inline__active"><span class="dot dot--green"></span>{{ fmtInt(activeDevices()) }} {{ i18n.t('active') }}</span>
+          <span class="device-inline__offline"><span class="dot dot--red"></span>{{ fmtInt(offlineDevices()) }} {{ i18n.t('offline') }}</span>
         </div>
       </div>
       <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
-
-    <div class="kpi-card" [class.kpi-card--alert]="alertsCount > 0" (click)="navigateTo('/reseller-dashboard/devices')">
-      <div class="kpi-icon" [class.kpi-icon--amber]="alertsCount > 0" [class.kpi-icon--green]="alertsCount === 0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-      </div>
-      <div class="kpi-body">
-        <p class="kpi-label">{{ i18n.t('res_alerts') }}</p>
-        <p class="kpi-value" [class.kpi-value--amber]="alertsCount > 0">{{ alertsCount }}</p>
-        @if (alertsCount === 0) { <p class="kpi-sub kpi-sub--ok">All clear</p> }
-        @else { <p class="kpi-sub kpi-sub--warn">Needs attention</p> }
-      </div>
-      <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-    </div>
-
   </div>
 
-  <!-- ══ ROW 2 — ATTENTION + HEALTH ══════════════════════════ -->
+  <!-- ══ ROW 2 — ACTION ROW (Commission | Health | Attention) ══ -->
   <div class="action-row">
-
-    <div class="card attention-card">
+    <!-- Commission Earned card with filters -->
+    <div class="card commission-card" (click)="navigateToInvoices()">
       <div class="card-head">
         <p class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon title-icon--warn">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="title-icon">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
           </svg>
-          Attention Needed
+          {{ i18n.t('kpi_commission_earned') }}
         </p>
+        <div class="commission-filters" (click)="$event.stopPropagation()">
+          <button class="filter-chip" [class.active]="commissionRange === 'today'" (click)="setCommissionRange('today')">{{ i18n.t('dashboard_today') }}</button>
+          <button class="filter-chip" [class.active]="commissionRange === 'week'" (click)="setCommissionRange('week')">{{ i18n.t('res_filter_week') }}</button>
+          <button class="filter-chip" [class.active]="commissionRange === 'month'" (click)="setCommissionRange('month')">{{ i18n.t('res_filter_month') }}</button>
+          <button class="filter-chip" [class.active]="commissionRange === 'all'" (click)="setCommissionRange('all')">{{ i18n.t('filter_all') }}</button>
+        </div>
       </div>
-
-      @if (issueClients === 0 && offlineDevices === 0 && totalClients > 0) {
-        <div class="attention-ok">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <p>Everything looks good</p>
+      <div class="health-main" style="justify-content: space-between; align-items: center;">
+        <div>
+          <p class="kpi-value" style="font-size: 1.6rem;">{{ fmt(totalCommission()) }} TND</p>
+          <p class="kpi-sub">
+            @switch (commissionRange) {
+              @case ('today') { <span>{{ i18n.t('label_todays_earnings') }}</span> }
+              @case ('week')  { <span>{{ i18n.t('label_last_7_days') }}</span> }
+              @case ('month') { <span>{{ i18n.t('dashboard_this_month') }}</span> }
+              @default        { <span>{{ i18n.t('label_total_earned') }}</span> }
+            }
+          </p>
         </div>
-      }
-      @if (issueClients > 0) {
-        <div class="attention-item attention-item--warn" (click)="navigateTo('/reseller-dashboard/clients')">
-          <div class="attention-dot attention-dot--warn"></div>
-          <span>{{ issueClients }} client(s) with expired subscription</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      }
-      @if (offlineDevices > 0) {
-        <div class="attention-item attention-item--red" (click)="navigateTo('/reseller-dashboard/devices')">
-          <div class="attention-dot attention-dot--red"></div>
-          <span>{{ offlineDevices }} device(s) currently offline</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      }
-      @if (totalClients === 0) {
-        <div class="attention-item attention-item--blue" (click)="openAddClient()">
-          <div class="attention-dot attention-dot--blue"></div>
-          <span>Start by adding your first client</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      }
+        <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5; width:20px;">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
     </div>
 
+    <!-- Client Health card -->
     <div class="card health-card">
-      <p class="card-title">Client Health</p>
+      <p class="card-title">{{ i18n.t('section_client_health') }}</p>
       <div class="health-main">
         <div class="health-donut-wrap">
           <svg width="80" height="80" viewBox="0 0 72 72">
@@ -205,33 +183,84 @@
       </div>
     </div>
 
+    <!-- Attention Needed card -->
+    <div class="card attention-card">
+      <div class="card-head">
+        <p class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon title-icon--warn">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          {{ i18n.t('section_attention_needed') }}
+        </p>
+      </div>
+
+      @if (issueClients === 0 && offlineDevices() === 0 && totalClients > 0 && pendingRequests().length === 0) {
+        <div class="attention-ok">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <p>{{ i18n.t('attention_all_good') }}</p>
+        </div>
+      }
+      @if (issueClients > 0) {
+        <div class="attention-item attention-item--warn" (click)="navigateTo('/reseller-dashboard/clients')">
+          <div class="attention-dot attention-dot--warn"></div>
+          <span>{{ issueClients }} {{ i18n.t('attention_expired_subs') }}</span>
+          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      }
+      @if (offlineDevices() > 0) {
+        <div class="attention-item attention-item--red" (click)="navigateTo('/reseller-dashboard/devices')">
+          <div class="attention-dot attention-dot--red"></div>
+          <span>{{ offlineDevices() }} {{ i18n.t('attention_offline_devices') }}</span>
+          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      }
+      @if (pendingRequests().length > 0) {
+        <div class="attention-item attention-item--warn" (click)="scrollToRequests()">
+          <div class="attention-dot attention-dot--warn"></div>
+          <span>{{ pendingRequests().length }} {{ i18n.t('attention_password_requests') }}</span>
+          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      }
+      @if (totalClients === 0) {
+        <div class="attention-item attention-item--blue" (click)="openAddClient()">
+          <div class="attention-dot attention-dot--blue"></div>
+          <span>{{ i18n.t('attention_add_first_client') }}</span>
+          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      }
+    </div>
   </div>
 
-  <!-- ══ ROW 3 — CHART + CLIENT LIST ══════════════════════════ -->
+  <!-- ══ ROW 3 — BOTTOM (Chart + Recent Clients) ═════════════ -->
   <div class="bottom-row">
 
     <div class="card spark-card">
       <div class="card-head">
-        <p class="card-title">Client Status</p>
+        <p class="card-title">{{ i18n.t('section_client_status') }}</p>
         <span class="trend-badge" [class.trend-badge--red]="issueClients > 0">
           {{ issueClients > 0 ? issueClients + ' expired' : '✓ All active' }}
         </span>
       </div>
       <div id="client-status-chart"></div>
-      <p class="chart-note">Accounts expire when subscription is unpaid</p>
+      <p class="chart-note">{{ i18n.t('chart_note_accounts_expire') }}</p>
     </div>
 
     <div class="card clients-card">
       <div class="card-head">
-        <p class="card-title">Recent Clients</p>
-        <button class="view-all" (click)="navigateTo('/reseller-dashboard/clients')">View all →</button>
+        <p class="card-title">{{ i18n.t('section_recent_clients') }}</p>
+        <button class="view-all" (click)="navigateTo('/reseller-dashboard/clients')">{{ i18n.t('dashboard_view_all') }}</button>
       </div>
 
       @if (clients().length === 0) {
         <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          <p>You haven't added any clients yet</p>
-          <button class="empty-cta" (click)="openAddClient()">Add your first client</button>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          </svg>
+          <p>{{ i18n.t('empty_no_clients_added') }}</p>
+          <button class="empty-cta" (click)="openAddClient()">{{ i18n.t('btn_add_first_client') }}</button>
         </div>
       }
 
@@ -250,6 +279,54 @@
     </div>
 
   </div>
+
+  <!-- ══ ACCESS REQUESTS WIDGET (if any) ════════════════════ -->
+  @if (pendingRequests().length > 0) {
+    <div id="access-requests-section" style="margin-top:1rem">
+      <div class="card ar-card">
+        <div class="card-head">
+          <p class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" style="width:13px;height:13px;color:#DC2626">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+            </svg>
+            {{ i18n.t('dashboard_access_requests') }}
+            <span class="ar-count-badge">{{ pendingRequests().length }} {{ i18n.t('dashboard_pending') }}</span>
+          </p>
+        </div>
+        <div class="ar-list">
+          @for (req of pendingRequests(); track req.id) {
+            <div class="ar-item">
+              <div class="ar-avatar">{{ req.email.charAt(0).toUpperCase() }}</div>
+              <div class="ar-info">
+                <p class="ar-email">{{ req.email }}</p>
+                <p class="ar-date">{{ i18n.t('label_requested') }} {{ formatReqDate(req.requestDate) }}</p>
+              </div>
+              <span class="ar-role-badge">{{ i18n.t('role_CLIENT') }}</span>
+              <button class="ar-btn" [disabled]="processingRequest() === req.id" (click)="regeneratePassword(req)">
+                @if (processingRequest() === req.id) {
+                  <svg style="width:13px;height:13px;animation:spin 1s linear infinite"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  {{ i18n.t('dashboard_sending') }}
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" style="width:13px;height:13px">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                  </svg>
+                  {{ i18n.t('dashboard_regenerate_password') }}
+                }
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 
 </div>
 }
@@ -273,14 +350,11 @@
           <input type="text" [(ngModel)]="addForm.lastName" [placeholder]="i18n.t('profile_last_name')"/>
         </div>
         <div class="form-group">
-  <label>{{ i18n.t('form_email') }}</label>
-  <input type="email"
-    [(ngModel)]="addForm.email"
-    (ngModelChange)="onAddEmailChange()"
-    placeholder="email@example.com"
-    [class.input--error]="addEmailError"/>
-  @if (addEmailError) { <span class="field-error">{{ i18n.t(addEmailError) }}</span> }
-</div>
+          <label>{{ i18n.t('form_email') }}</label>
+          <input type="email" [(ngModel)]="addForm.email" (ngModelChange)="onAddEmailChange()"
+                 placeholder="email@example.com" [class.input--error]="addEmailError"/>
+          @if (addEmailError) { <span class="field-error">{{ i18n.t(addEmailError) }}</span> }
+        </div>
         <div class="form-group">
           <label>{{ i18n.t('form_phone') }}</label>
           <input type="tel" [(ngModel)]="addForm.phone" placeholder="+216 XX XXX XXX" [class.input--error]="addPhoneError"/>

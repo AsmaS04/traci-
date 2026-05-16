@@ -57,16 +57,16 @@
   <div class="hdr">
     <div>
       <p class="hdr-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
-      <h1 class="hdr-title">Control Tower</h1>
+      <h1 class="hdr-title">{{ i18n.t('dashboard_control_tower') }}</h1>
     </div>
     <div class="hdr-actions">
       <button class="act-btn act-btn--primary" (click)="openAddReseller()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
-        Add Reseller
+        {{ i18n.t('dashboard_add_reseller') }}
       </button>
       <button class="act-btn act-btn--amber" (click)="navigateTo('/admin/devices')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        View Alerts
+        {{ i18n.t('dashboard_view_alerts') }}
         @if (alertEntries.length > 0) { <span class="act-badge">{{ alertEntries.length }}</span> }
       </button>
     </div>
@@ -74,16 +74,15 @@
 
   <!-- ══ ROW 1 — KPIs ════════════════════════════════════ -->
   <div class="kpi-row">
-
     <div class="kpi" (click)="navigateTo('/admin/resellers')">
       <div class="kpi-icon kpi-icon--teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
       <div class="kpi-body">
         <p class="kpi-num">{{ fmt(totalResellers) }}</p>
-        <p class="kpi-label">Total Resellers</p>
+        <p class="kpi-label">{{ i18n.t('dashboard_total_resellers') }}</p>
       </div>
-      <span class="kpi-chip kpi-chip--up">+{{ newResellersMonth }} this month</span>
+      <span class="kpi-chip kpi-chip--up">{{ i18n.t('dashboard_this_month_prefix') }}+{{ newResellersMonth }} {{ i18n.t('dashboard_this_month_suffix') }}</span>
     </div>
 
     <div class="kpi" (click)="navigateTo('/admin/clients')">
@@ -92,10 +91,10 @@
       </div>
       <div class="kpi-body">
         <p class="kpi-num">{{ fmt(totalClients) }}</p>
-        <p class="kpi-label">Total Clients</p>
+        <p class="kpi-label">{{ i18n.t('dashboard_total_clients') }}</p>
       </div>
-      @if (newClientsMonth > 0) { <span class="kpi-chip kpi-chip--up">+{{ newClientsMonth }} this month</span> }
-      @if (newClientsMonth === 0) { <span class="kpi-chip kpi-chip--warn">0 growth ⚠</span> }
+      @if (newClientsMonth > 0) { <span class="kpi-chip kpi-chip--up">{{ i18n.t('dashboard_this_month_prefix') }}+{{ newClientsMonth }} {{ i18n.t('dashboard_this_month_suffix') }}</span> }
+      @if (newClientsMonth === 0) { <span class="kpi-chip kpi-chip--warn">{{ i18n.t('dashboard_0_growth') }}</span> }
     </div>
 
     <div class="kpi" (click)="navigateTo('/admin/devices')">
@@ -104,9 +103,9 @@
       </div>
       <div class="kpi-body">
         <p class="kpi-num">{{ fmt(devActive) }}</p>
-        <p class="kpi-label">Active Devices</p>
+        <p class="kpi-label">{{ i18n.t('dashboard_active_devices') }}</p>
       </div>
-      <span class="kpi-chip kpi-chip--up">Running subs</span>
+      <span class="kpi-chip kpi-chip--up">{{ i18n.t('dashboard_running_subs') }}</span>
     </div>
 
     <div class="kpi" [class.kpi--alert]="criticalIssues > 0">
@@ -115,12 +114,11 @@
       </div>
       <div class="kpi-body">
         <p class="kpi-num" [class.kpi-num--red]="criticalIssues > 0">{{ criticalIssues }}</p>
-        <p class="kpi-label">Critical Issues</p>
+        <p class="kpi-label">{{ i18n.t('dashboard_critical_issues') }}</p>
       </div>
-      @if (criticalIssues === 0) { <span class="kpi-chip kpi-chip--up">All clear</span> }
-      @if (criticalIssues > 0)   { <span class="kpi-chip kpi-chip--down">Needs action</span> }
+      @if (criticalIssues === 0) { <span class="kpi-chip kpi-chip--up">{{ i18n.t('dashboard_all_clear') }}</span> }
+      @if (criticalIssues > 0)   { <span class="kpi-chip kpi-chip--down">{{ i18n.t('dashboard_needs_action') }}</span> }
     </div>
-
   </div>
 
   <!-- ══ ROW 2 — SYSTEM LOG + REVENUE ════════════════════ -->
@@ -130,9 +128,9 @@
       <div class="card-head">
         <p class="card-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          System Events
+          {{ i18n.t('dashboard_system_events') }}
         </p>
-        <span class="card-subtitle">Today</span>
+        <span class="card-subtitle">{{ i18n.t('dashboard_today') }}</span>
       </div>
       <div class="syslog-list">
         @for (evt of systemEvents; track $index) {
@@ -146,38 +144,53 @@
           </div>
         }
         @if (systemEvents.length === 0) {
-          <div class="empty-state"><p class="empty-msg">No events today</p></div>
+          <div class="empty-state"><p class="empty-msg">{{ i18n.t('dashboard_no_events') }}</p></div>
         }
       </div>
     </div>
 
+    <!-- Revenue card -->
     <div class="card revenue-card">
       <div class="card-head">
         <p class="card-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          Revenue
+          {{ i18n.t('dashboard_revenue') }}
         </p>
-        <span class="card-subtitle">From subscriptions</span>
+        <span class="card-subtitle">{{ i18n.t('dashboard_from_subscriptions') }}</span>
       </div>
       <div class="rev-body">
+        <!-- Gross vs Net for This Month -->
         <div class="rev-main">
-          <p class="rev-label">This Month</p>
-          <p class="rev-num">{{ fmtCurrency(totalRevenueMonth) }}</p>
-          <span class="rev-growth">{{ revenueGrowthPct }} vs last month</span>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;">
+            <div>
+              <p class="rev-label">{{ i18n.t('dashboard_gross_revenue_month') }}</p>
+              <p class="rev-num">{{ fmtCurrency(totalRevenueMonth) }}</p>
+            </div>
+            <div>
+              <p class="rev-label">{{ i18n.t('dashboard_net_revenue_platform') }}</p>
+              <p class="rev-num" style="color: #16A34A;">{{ fmtCurrency(netRevenueMonth) }}</p>
+            </div>
+          </div>
+          <span class="rev-growth">{{ revenueGrowthPct }} {{ i18n.t('dashboard_vs_last_month') }}</span>
         </div>
         <div class="rev-divider"></div>
+        <!-- Daily, Yearly, Active Subs, Expiring Soon -->
         <div class="rev-secondary">
           <div class="rev-stat">
-            <p class="rev-stat-num">{{ fmtCurrency(totalRevenueAllTime) }}</p>
-            <p class="rev-stat-label">All Time</p>
+            <p class="rev-stat-num">{{ fmtCurrency(dailyRevenue) }}</p>
+            <p class="rev-stat-label">{{ i18n.t('dashboard_todays_revenue') }}</p>
           </div>
           <div class="rev-stat">
-            <p class="rev-stat-num">{{ fmt(devActive) }}</p>
-            <p class="rev-stat-label">Active Subs</p>
+            <p class="rev-stat-num">{{ fmtCurrency(yearlyRevenue) }}</p>
+            <p class="rev-stat-label">{{ i18n.t('dashboard_year_to_date') }}</p>
+          </div>
+          <div class="rev-stat">
+            <p class="rev-stat-num">{{ fmt(activeSubscriptions) }}</p>
+            <p class="rev-stat-label">{{ i18n.t('dashboard_active_subs') }}</p>
           </div>
           <div class="rev-stat">
             <p class="rev-stat-num" [class.rev-warn]="devExpiring > 0">{{ devExpiring }}</p>
-            <p class="rev-stat-label">Expiring Soon</p>
+            <p class="rev-stat-label">{{ i18n.t('dashboard_expiring_soon') }}</p>
           </div>
         </div>
       </div>
@@ -188,31 +201,31 @@
   <!-- ══ ROW 3 — CHARTS ══════════════════════════════════ -->
   <div class="charts-row">
     <div class="card chart-card">
-      <p class="card-title">Device Status</p>
+      <p class="card-title">{{ i18n.t('dashboard_device_status') }}</p>
       <div id="donut-chart"></div>
     </div>
     <div class="card chart-card chart-card--wide">
-      <p class="card-title">Growth — Last 6 Months</p>
+      <p class="card-title">{{ i18n.t('dashboard_growth_last_6_months') }}</p>
       <div id="area-chart"></div>
     </div>
     <div class="card growth-card">
-      <p class="card-title">This Month</p>
+      <p class="card-title">{{ i18n.t('dashboard_this_month') }}</p>
       <div class="growth-stack">
         <div class="growth-item">
           <p class="growth-num">+{{ newResellersMonth }}</p>
-          <p class="growth-label">New Resellers</p>
+          <p class="growth-label">{{ i18n.t('dashboard_new_resellers') }}</p>
         </div>
         <div class="growth-item">
           <p class="growth-num" [class.growth-num--warn]="newClientsMonth === 0">
             @if (newClientsMonth > 0) { +{{ newClientsMonth }} }
             @if (newClientsMonth === 0) { 0 ⚠ }
           </p>
-          <p class="growth-label">New Clients</p>
+          <p class="growth-label">{{ i18n.t('dashboard_new_clients') }}</p>
         </div>
         <div class="growth-item growth-item--hl" (click)="navigateTo('/admin/resellers')">
-          <p class="growth-sub">Best Performing</p>
+          <p class="growth-sub">{{ i18n.t('dashboard_best_performing') }}</p>
           <p class="growth-best">{{ topResellers[0]?.name ?? '—' }}</p>
-          @if (topResellers[0]?.clients) { <p class="growth-detail">{{ topResellers[0].clients }} clients</p> }
+          @if (topResellers[0]?.clients) { <p class="growth-detail">{{ topResellers[0].clients }} {{ i18n.t('dashboard_clients') }}</p> }
         </div>
       </div>
     </div>
@@ -220,19 +233,18 @@
 
   <!-- ══ ROW 4 — ALERTS + TOP RESELLERS ════════════════= -->
   <div class="bottom-row">
-
     <div class="card alerts-card">
       <div class="card-head">
         <p class="card-title">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Alerts
+          {{ i18n.t('dashboard_alerts') }}
         </p>
-        @if (alertEntries.length > 0) { <span class="card-subtitle">{{ alertEntries.length }} active</span> }
+        @if (alertEntries.length > 0) { <span class="card-subtitle">{{ alertEntries.length }} {{ i18n.t('dashboard_active') }}</span> }
       </div>
       @if (alertEntries.length === 0) {
         <div class="empty-ok">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          <p>No active alerts</p>
+          <p>{{ i18n.t('dashboard_no_active_alerts') }}</p>
         </div>
       }
       @for (alert of alertEntries; track $index) {
@@ -249,11 +261,11 @@
 
     <div class="card top-res-card">
       <div class="card-head">
-        <p class="card-title">Top Resellers</p>
-        <button class="view-all" (click)="navigateTo('/admin/resellers')">View all →</button>
+        <p class="card-title">{{ i18n.t('dashboard_top_resellers') }}</p>
+        <button class="view-all" (click)="navigateTo('/admin/resellers')">{{ i18n.t('dashboard_view_all') }} →</button>
       </div>
       <div class="tr-head">
-        <span>#</span><span>Reseller</span><span>Clients</span><span>Devices</span>
+        <span>#</span><span>{{ i18n.t('dashboard_reseller') }}</span><span>{{ i18n.t('dashboard_clients') }}</span><span>{{ i18n.t('dashboard_devices') }}</span>
       </div>
       @for (r of topResellers; track r.rank) {
         <div class="tr-row" (click)="navigateTo('/admin/resellers')">
@@ -263,10 +275,56 @@
           <span class="tr-num">{{ r.devices }}</span>
         </div>
       }
-      @if (topResellers.length === 0) { <div class="empty-state"><p class="empty-msg">No resellers yet</p></div> }
+      @if (topResellers.length === 0) { <div class="empty-state"><p class="empty-msg">{{ i18n.t('dashboard_no_resellers') }}</p></div> }
     </div>
-
   </div>
+
+  <!-- ══ ROW 5 — ACCESS REQUESTS ════════════════════════════ -->
+  @if (pendingRequests().length > 0) {
+  <div class="access-requests-row">
+    <div class="card ar-card">
+      <div class="card-head">
+        <p class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="title-icon title-icon--red">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+          </svg>
+          {{ i18n.t('dashboard_access_requests') }}
+          <span class="ar-count-badge">{{ pendingRequests().length }} {{ i18n.t('dashboard_pending') }}</span>
+        </p>
+        <button class="view-all" (click)="navigateTo('/admin/access-requests')">{{ i18n.t('dashboard_view_all') }} →</button>
+      </div>
+
+      <div class="ar-list">
+        @for (req of pendingRequests().slice(0, 5); track req.id) {
+          <div class="ar-item">
+            <div class="ar-avatar">{{ req.email.charAt(0).toUpperCase() }}</div>
+            <div class="ar-info">
+              <p class="ar-email">{{ req.email }}</p>
+              <p class="ar-date">{{ formatReqDate(req.requestDate) }}</p>
+            </div>
+            <span class="ar-role-badge">{{ req.role }}</span>
+            <button
+              class="ar-btn"
+              [disabled]="processingRequest() === req.id"
+              (click)="regeneratePassword(req)">
+              @if (processingRequest() === req.id) {
+                <svg style="width:13px;height:13px;animation:spin 1s linear infinite" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                {{ i18n.t('dashboard_sending') }}
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                </svg>
+                {{ i18n.t('dashboard_regenerate_password') }}
+              }
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+  }
 
 </div>
 }
@@ -276,33 +334,33 @@
 <div class="modal-backdrop" (click)="closeAddReseller()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2 class="modal-title">Add Reseller</h2>
+      <h2 class="modal-title">{{ i18n.t('dashboard_add_reseller_title') }}</h2>
       <button class="modal-close" (click)="closeAddReseller()">&#x2715;</button>
     </div>
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group">
-          <label>USERNAME</label>
+          <label>{{ i18n.t('dashboard_username_label') }}</label>
           <input type="text" [(ngModel)]="resellerForm.username" placeholder="e.g. khalil.mansour"/>
         </div>
         <div class="form-group">
-          <label>COMPANY NAME</label>
+          <label>{{ i18n.t('dashboard_company_name_label') }}</label>
           <input type="text" [(ngModel)]="resellerForm.nomEntreprise" placeholder="e.g. TechVision SARL"/>
         </div>
         <div class="form-group">
-          <label>EMAIL</label>
+          <label>{{ i18n.t('dashboard_email_label') }}</label>
           <input type="email" [(ngModel)]="resellerForm.email" (ngModelChange)="onResellerEmailChange()" placeholder="email@company.tn" [class.input--error]="resellerEmailError"/>
           @if (resellerEmailError) { <span class="field-error">{{ i18n.t(resellerEmailError) }}</span> }
         </div>
         <div class="form-group">
-          <label>PHONE</label>
+          <label>{{ i18n.t('dashboard_phone_label') }}</label>
           <input type="tel" [(ngModel)]="resellerForm.phone" placeholder="+216 XX XXX XXX" [class.input--error]="resellerPhoneError"/>
           @if (resellerPhoneError) { <span class="field-error">{{ i18n.t(resellerPhoneError) }}</span> }
         </div>
         <div class="form-group" style="grid-column: 1 / -1">
           <label>{{ i18n.t('form_region') }}</label>
           <select [(ngModel)]="resellerForm.location">
-            <option value="">— Select governorate —</option>
+            <option value="">{{ i18n.t('dashboard_select_governorate') }}</option>
             @for (g of governorates; track g) {
               <option [value]="g">{{ g }}</option>
             }
@@ -311,8 +369,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" (click)="closeAddReseller()">Cancel</button>
-      <button class="btn-save" (click)="saveReseller()">+ Add Reseller</button>
+      <button class="btn-cancel" (click)="closeAddReseller()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-save" (click)="saveReseller()">{{ i18n.t('dashboard_add_reseller_button') }}</button>
     </div>
   </div>
 </div>

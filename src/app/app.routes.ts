@@ -18,7 +18,8 @@ export const routes: Routes = [
       { path: 'clients',      loadComponent: () => import('./features/admin/clients/clients').then(m => m.Clients) },
       { path: 'devices',      loadComponent: () => import('./features/admin/devices/devices').then(m => m.AdminDevices) },
       { path: 'profil',       loadComponent: () => import('./features/admin/profile/profile').then(m => m.AdminProfil) },
-      // { path: 'transactions', loadComponent: () => import('./features/admin/transactions/transaction').then(m => m.Transactions) },
+      { path: 'events',       loadComponent: () => import('./features/admin/events/events').then(m => m.EventsComponent) },
+      { path: 'transactions', loadComponent: () => import('./features/admin/transactions/transaction').then(m => m.Transactions) },
     ]
   },
 

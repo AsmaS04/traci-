@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:karma": "ng test"
   },
   "prettier": {
     "overrides": [
@@ -27,6 +29,7 @@
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
     "@stomp/stompjs": "^7.3.0",
+    "@stripe/stripe-js": "^2.4.0",
     "apexcharts": "^5.10.6",
     "chart.js": "^4.5.1",
     "daisyui": "^5.5.19",
@@ -40,11 +43,16 @@
     "@angular/build": "^20.1.0",
     "@angular/cli": "^20.1.0",
     "@angular/compiler-cli": "^20.1.0",
+    "@angular/platform-browser-dynamic": "^21.2.13",
     "@types/jasmine": "~5.1.0",
+    "@types/jest": "^30.0.0",
     "@types/leaflet": "^1.9.21",
     "@types/sockjs-client": "^1.5.4",
     "autoprefixer": "^10.4.24",
     "jasmine-core": "~5.8.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "jest-preset-angular": "^16.1.5",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",

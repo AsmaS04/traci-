@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { ThemeService } from '../../../service/theme.service';
 import { AuthService } from '../../../service/Auth.service';
 import { ToastComponent } from '../../../shared/toast/toast.component';
 import { SidebarComponent, SidebarEntry, SidebarUser } from '../../../shared/sidebar/sidebar';
@@ -15,12 +16,13 @@ import { NavbarComponent, NavbarUser } from '../../../shared/navbar/navbar';
 })
 export default class ClientLayoutComponent implements OnInit {
 
-  private readonly i18n        = inject(TranslationService);
-  private readonly authService = inject(AuthService);
-  private readonly router      = inject(Router);
+  private readonly i18n         = inject(TranslationService);
+  private readonly authService  = inject(AuthService);
+  private readonly router       = inject(Router);
+  private readonly themeService = inject(ThemeService);
 
-  isDark = false;
-  onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
+  get isDark(): boolean { return this.themeService.currentTheme() === 'dark'; }
+  onDarkToggle(): void  { this.themeService.toggleTheme(); }
 
   private username = '';
   private email    = '';

@@ -1,14 +1,17 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { AdminService } from '../../../service/Admin.service';
 import { ResellerService } from '../../../service/Reseller.service';
+import { DeviceRequestService } from '../../../service/DeviceRequest.service';
 import { Reseller } from '../../../models/reseller.model';
 import ApexCharts from 'apexcharts';
 import { NotificationWebsocketService, AppNotification } from '../../../service/notification-websocket.service';
 import { Subscription } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { signal } from '@angular/core';
 
 interface SystemEvent {
   time: string;
@@ -41,7 +44,7 @@ interface TopReseller {
 export class Dashboard implements OnInit, OnDestroy {
 
   private donutChart: ApexCharts | null = null;
-  private areaChart: ApexCharts | null = null;
+  private areaChart:  ApexCharts | null = null;
   private refreshInterval: any = null;
   private notifSub!: Subscription;
   private emailCheckTimeout: any = null;
@@ -51,7 +54,9 @@ export class Dashboard implements OnInit, OnDestroy {
     public i18n: TranslationService,
     private adminService: AdminService,
     private resellerService: ResellerService,
-    private notifWs: NotificationWebsocketService
+    private deviceRequestService: DeviceRequestService,
+    private notifWs: NotificationWebsocketService,
+    private http: HttpClient
   ) {}
 
   totalResellers    = 0;
@@ -67,17 +72,38 @@ export class Dashboard implements OnInit, OnDestroy {
   newResellersMonth = 0;
   newClientsMonth   = 0;
 
-  totalRevenueMonth   = 18450;
-  totalRevenueAllTime = 142800;
-  revenueGrowthPct    = '+12.4%';
+  // Real revenue from database
+  totalRevenueMonth   = 0;
+  totalRevenueAllTime = 0;
+  revenueGrowthPct    = '0%';
+  revenueByReseller: { name: string; amount: number; pct: number }[] = [];
+
+  // Daily and yearly revenue
+  dailyRevenue = 0;
+  yearlyRevenue = 0;
+
+  // Active subscriptions (corrected)
+  activeSubscriptions = 0;
 
   alertEntries: AlertEntry[]  = [];
   topResellers: TopReseller[] = [];
   systemEvents: SystemEvent[] = [];
 
-  showAddReseller    = false;
-  resellerForm: any  = {};
+  showAddReseller     = false;
+  resellerForm: any   = {};
   resellerEmailExists = false;
+
+  pendingRequests   = signal<any[]>([]);
+  processingRequest = signal<number | null>(null);
+
+  // Net revenue (93% of gross, after 7% commission)
+  get netRevenueMonth(): number {
+    return this.totalRevenueMonth * 0.93;
+  }
+
+  get netRevenueAllTime(): number {
+    return this.totalRevenueAllTime * 0.93;
+  }
 
   ngOnInit() {
     this.loadAll();
@@ -86,7 +112,7 @@ export class Dashboard implements OnInit, OnDestroy {
     this.notifSub = this.notifWs.notification$.subscribe((n: AppNotification) => {
       const type = n.type as string;
       const now  = new Date();
-      const t    = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const t    = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 
       this.systemEvents.unshift({
         time:   t,
@@ -96,8 +122,9 @@ export class Dashboard implements OnInit, OnDestroy {
       });
       if (this.systemEvents.length > 50) this.systemEvents.pop();
 
-      if (['NEW_CLIENT', 'NEW_RESELLER', 'DEVICE_ASSIGNED'].includes(type)) {
+      if (['NEW_CLIENT', 'NEW_RESELLER', 'DEVICE_ASSIGNED', 'NEW_DEVICE_REQUEST'].includes(type)) {
         this.loadDashboard();
+        this.loadResellers();
       }
     });
   }
@@ -113,6 +140,12 @@ export class Dashboard implements OnInit, OnDestroy {
   private loadAll() {
     this.loadDashboard();
     this.loadResellers();
+    this.loadPendingRequests();
+    this.loadRevenueStats();
+    this.loadRevenueByReseller();
+    this.loadDailyRevenue();
+    this.loadYearlyRevenue();
+    this.loadActiveSubscriptions();
   }
 
   private loadDashboard() {
@@ -146,11 +179,58 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   }
 
+  private loadRevenueStats() {
+    this.adminService.getRevenueStats().subscribe({
+      next: (stats) => {
+        this.totalRevenueMonth = stats.currentMonth;
+        this.totalRevenueAllTime = stats.allTime;
+        const prev = stats.previousMonth;
+        if (prev > 0) {
+          const growth = ((stats.currentMonth - prev) / prev) * 100;
+          this.revenueGrowthPct = (growth > 0 ? '+' : '') + growth.toFixed(1) + '%';
+        } else {
+          this.revenueGrowthPct = stats.currentMonth > 0 ? '+100%' : '0%';
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  private loadRevenueByReseller() {
+    this.adminService.getRevenueByReseller().subscribe({
+      next: (data) => { this.revenueByReseller = data; },
+      error: () => { this.revenueByReseller = []; }
+    });
+  }
+
+  private loadDailyRevenue() {
+    this.http.get<{ daily: number }>('http://localhost:8080/api/admin/revenue/daily')
+      .subscribe({
+        next: (res) => this.dailyRevenue = res.daily,
+        error: () => this.dailyRevenue = 0
+      });
+  }
+
+  private loadYearlyRevenue() {
+    this.http.get<{ yearly: number }>('http://localhost:8080/api/admin/revenue/yearly')
+      .subscribe({
+        next: (res) => this.yearlyRevenue = res.yearly,
+        error: () => this.yearlyRevenue = 0
+      });
+  }
+
+  private loadActiveSubscriptions() {
+    this.http.get<number>('http://localhost:8080/api/admin/subscriptions/active')
+      .subscribe({
+        next: (count) => this.activeSubscriptions = count,
+        error: () => this.activeSubscriptions = 0
+      });
+  }
+
   private loadResellers() {
     this.resellerService.getAll().subscribe({
       next: (resellers: Reseller[]) => {
         const sorted = [...resellers].sort((a, b) => (b.clientCount ?? 0) - (a.clientCount ?? 0));
-
         this.topResellers = sorted.slice(0, 5).map((r, i) => ({
           rank:    i + 1,
           name:    r.nomEntreprise || r.username || '—',
@@ -159,8 +239,8 @@ export class Dashboard implements OnInit, OnDestroy {
         }));
 
         const inactiveCount = resellers.filter(r => (r.clientCount ?? 0) === 0).length;
-
         this.alertEntries = [];
+
         if (inactiveCount > 0) {
           this.alertEntries.push({
             severity: 'warning',
@@ -169,6 +249,7 @@ export class Dashboard implements OnInit, OnDestroy {
             route:    '/admin/resellers',
           });
         }
+
         if (this.devExpiring > 0) {
           this.alertEntries.push({
             severity: 'critical',
@@ -177,6 +258,20 @@ export class Dashboard implements OnInit, OnDestroy {
             route:    '/admin/devices',
           });
         }
+
+        this.deviceRequestService.getPendingRequests().subscribe({
+          next: (requests) => {
+            if (requests.length > 0) {
+              this.alertEntries.push({
+                severity: 'warning',
+                label:    `${requests.length} pending device request(s)`,
+                detail:   'Resellers are waiting for devices',
+                route:    '/admin/devices',
+              });
+            }
+          },
+          error: () => {}
+        });
       },
       error: (err) => console.error('Failed to load resellers', err)
     });
@@ -186,6 +281,7 @@ export class Dashboard implements OnInit, OnDestroy {
     if (type.includes('RESELLER')) return 'reseller';
     if (type.includes('CLIENT'))   return 'client';
     if (type.includes('DEVICE'))   return 'device';
+    if (type === 'ACCESS_REQUEST') return 'admin';
     return 'admin';
   }
 
@@ -196,6 +292,7 @@ export class Dashboard implements OnInit, OnDestroy {
     return t === 'reseller' ? 'ev--teal' : t === 'client' ? 'ev--blue' : t === 'device' ? 'ev--amber' : 'ev--purple';
   }
 
+  // ── Add reseller modal methods ─────────────────────────────────
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
 
@@ -208,7 +305,8 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   get resellerPhoneError(): string {
-    return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone) ? 'msg_error_invalid_phone' : '';
+    return (this.resellerForm.phone ?? '') && !this.isValidPhone(this.resellerForm.phone)
+      ? 'msg_error_invalid_phone' : '';
   }
 
   onResellerEmailChange() {
@@ -216,7 +314,6 @@ export class Dashboard implements OnInit, OnDestroy {
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
     const email = this.resellerForm.email ?? '';
     if (!this.isValidEmail(email)) return;
-
     this.emailCheckTimeout = setTimeout(() => {
       this.resellerService.checkEmail(email).subscribe({
         next: (res) => { this.resellerEmailExists = res.exists; },
@@ -226,14 +323,14 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   openAddReseller() {
-    this.resellerForm       = { username: '', nomEntreprise: '', email: '', phone: '' , location: ''};
+    this.resellerForm       = { username: '', nomEntreprise: '', email: '', phone: '', location: '' };
     this.resellerEmailExists = false;
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
     this.showAddReseller = true;
   }
 
   closeAddReseller() {
-    this.showAddReseller = false;
+    this.showAddReseller    = false;
     this.resellerEmailExists = false;
   }
 
@@ -256,6 +353,7 @@ export class Dashboard implements OnInit, OnDestroy {
     });
   }
 
+  // ── Charts ────────────────────────────────────────────────────
   private renderDonutChart() {
     this.adminService.getDeviceStatus().subscribe({
       next: (data) => {
@@ -329,10 +427,35 @@ export class Dashboard implements OnInit, OnDestroy {
       error: (err) => console.error('Failed to load growth data', err)
     });
   }
+
   readonly governorates = [
-  'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
-  'Kairouan','Kasserine','Kébili','Kef','Mahdia','Manouba','Médenine',
-  'Monastir','Nabeul','Sfax','Sidi Bouzid','Siliana','Sousse',
-  'Tataouine','Tozeur','Tunis','Zaghouan'
-];
+    'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
+    'Kairouan','Kasserine','Kébili','Kef','Mahdia','Manouba','Médenine',
+    'Monastir','Nabeul','Sfax','Sidi Bouzid','Siliana','Sousse',
+    'Tataouine','Tozeur','Tunis','Zaghouan'
+  ];
+
+  // ── Access Requests ───────────────────────────────────────
+  private loadPendingRequests() {
+    this.http.get<any[]>('http://localhost:8080/api/request-access/reseller/pending')
+      .subscribe({
+        next: (data) => this.pendingRequests.set(data.filter(r => r.status === 'PENDING')),
+        error: () => {}
+      });
+  }
+
+  regeneratePassword(req: any) {
+    this.processingRequest.set(req.id);
+    this.http.post(`http://localhost:8080/api/request-access/regenerate-password/${req.id}`, {})
+      .subscribe({
+        next: () => { this.processingRequest.set(null); this.loadPendingRequests(); },
+        error: () => { this.processingRequest.set(null); }
+      });
+  }
+
+  formatReqDate(d: string): string {
+    return new Date(d).toLocaleDateString('fr-TN', {
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+    });
+  }
 }

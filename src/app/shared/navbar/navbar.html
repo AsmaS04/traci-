@@ -80,13 +80,16 @@
 
     @if (showNotifications) {
       <div class="notif-wrap">
-        <button class="topbar-btn" (click)="toggleNotif()">
+        <button class="topbar-btn notif-btn" (click)="toggleNotif()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
-          @if (notifCount > 0) { <span class="notif-badge"></span> }
+          @if (notifCount > 0) {
+            <span class="notif-badge">{{ notifCount > 99 ? '99+' : notifCount }}</span>
+          }
         </button>
+
         @if (notifOpen) {
           <div class="notif-dropdown">
             <div class="notif-header">
@@ -98,7 +101,8 @@
                 <p class="notif-empty">No notifications</p>
               }
               @for (n of notifications; track $index) {
-                <div class="notif-item">
+                <div class="notif-item" [class.notif-item--unread]="!n.isRead">
+                  @if (!n.isRead) { <span class="notif-unread-dot"></span> }
                   <div class="notif-item-icon"
                     [class.notif-icon--client]="n.icon==='client'"
                     [class.notif-icon--reseller]="n.icon==='reseller'"
@@ -120,8 +124,8 @@
                   </div>
                   <div class="notif-item-body">
                     <p class="notif-item-text">{{ n.text }}</p>
+                    <span class="notif-item-time">{{ n.time }}</span>
                   </div>
-                  <span class="notif-item-time">{{ n.time }}</span>
                 </div>
               }
             </div>

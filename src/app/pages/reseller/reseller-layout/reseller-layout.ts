@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { ThemeService } from '../../../service/theme.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { ClientService } from '../../../service/Client.service';
 import { DeviceService } from '../../../service/Device.service';
@@ -10,6 +11,7 @@ import { NavbarComponent, NavbarSearchItem, NavbarUser } from '../../../shared/n
 import { Reseller } from '../../../models/reseller.model';
 import { forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, Subject, switchMap } from 'rxjs';
+import { NotificationWebsocketService } from '../../../service/notification-websocket.service';
 
 @Component({
   selector: 'app-reseller-layout',
@@ -20,14 +22,16 @@ import { catchError, debounceTime, distinctUntilChanged, map, Subject, switchMap
 })
 export default class ResellerLayout implements OnInit {
 
-  private readonly resellerService = inject(ResellerService);
-  private readonly clientService   = inject(ClientService);
-  private readonly deviceService   = inject(DeviceService);
-  private readonly router          = inject(Router);
-  private readonly i18n            = inject(TranslationService);
+  private readonly resellerService     = inject(ResellerService);
+  private readonly clientService       = inject(ClientService);
+  private readonly deviceService       = inject(DeviceService);
+  private readonly router              = inject(Router);
+  private readonly i18n                = inject(TranslationService);
+  private readonly themeService        = inject(ThemeService);
+  private readonly notificationService = inject(NotificationWebsocketService);
 
-  isDark = false;
-  onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
+  get isDark(): boolean { return this.themeService.currentTheme() === 'dark'; }
+  onDarkToggle(): void  { this.themeService.toggleTheme(); }
 
   reseller: Reseller = {
     idRev: 0, username: '', email: '', nomEntreprise: 'TRACI',
@@ -126,10 +130,20 @@ export default class ResellerLayout implements OnInit {
 
   ngOnInit(): void {
     this.resellerService.getMyProfile().subscribe({
-      next:  (r: Reseller) => { this.reseller = r; },
+      next:  (r: Reseller) => {
+        this.reseller = r;
+        // Store idRev in localStorage for WebSocket subscription
+        if (r.idRev) {
+          localStorage.setItem('idRev', r.idRev.toString());
+        }
+        // Connect WebSocket after we have the reseller ID
+        this.notificationService.connect();
+      },
       error: () => {
         this.reseller.username = localStorage.getItem('username') ?? 'Reseller';
         this.reseller.email    = localStorage.getItem('email') ?? '';
+        // Still attempt to connect with existing idRev if any
+        this.notificationService.connect();
       },
     });
   }

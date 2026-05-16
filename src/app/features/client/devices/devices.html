@@ -56,7 +56,7 @@
   <div class="kpi-strip">
     <div class="kpi-card">
       <div class="kpi-card-head">
-        <span class="kpi-label">Total</span>
+        <span class="kpi-label">{{ i18n.t('kpi_total') }}</span>
         <div class="kpi-icon kpi-icon--blue">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
         </div>
@@ -83,7 +83,7 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-card-head">
-        <span class="kpi-label">Inactive</span>
+        <span class="kpi-label">{{ i18n.t('filter_inactive') }}</span>
         <div class="kpi-icon kpi-icon--gray">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
         </div>
@@ -97,12 +97,12 @@
     <button class="filter-btn" [class.filter-btn--active]="filterStatus()==='all'"      (click)="filterStatus.set('all')">{{ i18n.t('filter_all') }}</button>
     <button class="filter-btn" [class.filter-btn--active-green]="filterStatus()==='actif'"   (click)="filterStatus.set('actif')">{{ i18n.t('filter_active') }}</button>
     <button class="filter-btn" [class.filter-btn--active-red]="filterStatus()==='expiré'"   (click)="filterStatus.set('expiré')">{{ i18n.t('dev_expired') }}</button>
-    <button class="filter-btn" [class.filter-btn--active-gray]="filterStatus()==='inactif'" (click)="filterStatus.set('inactif')">Inactive</button>
+    <button class="filter-btn" [class.filter-btn--active-gray]="filterStatus()==='inactif'" (click)="filterStatus.set('inactif')">{{ i18n.t('filter_inactive') }}</button>
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" type="text" [value]="search()" (input)="search.set($any($event.target).value)" placeholder="Search by serial, model, IMEI…"/>
+      <input class="search-input" type="text" [value]="search()" (input)="search.set($any($event.target).value)" [placeholder]="i18n.t('dev_search_placeholder')"/>
     </div>
-    <span style="font-size:0.72rem;font-weight:600;color:var(--text-300,#9ca3af);margin-left:auto;white-space:nowrap">{{ filteredDevices().length }} devices</span>
+    <span style="font-size:0.72rem;font-weight:600;color:var(--text-300,#9ca3af);margin-left:auto;white-space:nowrap">{{ filteredDevices().length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
   </div>
 
   <!-- Device cards grid -->
@@ -112,7 +112,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
       </div>
       <h3 class="empty-title">{{ i18n.t('res_no_devices') }}</h3>
-      <p class="empty-sub">Try adjusting your filters</p>
+      <p class="empty-sub">{{ i18n.t('empty_adjust_filters') }}</p>
     </div>
   } @else {
     <div class="devices-grid">
@@ -132,13 +132,13 @@
           </div>
           <div class="dc-body">
             <div class="dc-row"><span>IMEI</span><span>{{ d.imei || '—' }}</span></div>
-            <div class="dc-row"><span>Activation</span><span>{{ formatDate(d.dateActivation) }}</span></div>
+            <div class="dc-row"><span>{{ i18n.t('label_activation') }}</span><span>{{ formatDate(d.dateActivation) }}</span></div>
             @if (d.simProvider) { <div class="dc-row"><span>SIM</span><span class="dc-sim">{{ d.simProvider }}</span></div> }
           </div>
           <div class="dc-footer">
             <button class="btn-secondary" (click)="openPanel(d);$event.stopPropagation()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              View Details
+              {{ i18n.t('btn_view_details') }}
             </button>
           </div>
         </div>
@@ -156,21 +156,21 @@
     <div class="panel-topbar">
       <button class="panel-back" (click)="closePanel()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        Back
+        {{ i18n.t('btn_back') }}
       </button>
     </div>
-    <p class="panel-eyebrow">Device Details</p>
+    <p class="panel-eyebrow">{{ i18n.t('dev_detail_eyebrow') }}</p>
     <h2 class="panel-title">{{ panelDevice()!.model || '—' }}</h2>
     <div class="panel-body">
       <div class="detail-item">
-        <p class="detail-label">Status</p>
+        <p class="detail-label">{{ i18n.t('col_status') }}</p>
         <span class="badge" [class]="statusClass(panelDevice()!.status)"><span class="badge-dot"></span>{{ panelDevice()!.status || '—' }}</span>
       </div>
-      <div class="detail-item"><p class="detail-label">Serial Number</p><p class="detail-val">{{ panelDevice()!.numDevice || '—' }}</p></div>
+      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_serial_number') }}</p><p class="detail-val">{{ panelDevice()!.numDevice || '—' }}</p></div>
       <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice()!.imei || '—' }}</p></div>
-      <div class="detail-item"><p class="detail-label">Activation Date</p><p class="detail-val">{{ formatDate(panelDevice()!.dateActivation) }}</p></div>
-      @if (panelDevice()!.simProvider) { <div class="detail-item"><p class="detail-label">SIM Provider</p><p class="detail-val" style="color:#0D9488">{{ panelDevice()!.simProvider }}</p></div> }
-      <div class="detail-item"><p class="detail-label">Added On</p><p class="detail-val">{{ formatDate(panelDevice()!.createdAt) }}</p></div>
+      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ formatDate(panelDevice()!.dateActivation) }}</p></div>
+      @if (panelDevice()!.simProvider) { <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val" style="color:#0D9488">{{ panelDevice()!.simProvider }}</p></div> }
+      <div class="detail-item"><p class="detail-label">{{ i18n.t('label_added_on') }}</p><p class="detail-val">{{ formatDate(panelDevice()!.createdAt) }}</p></div>
     </div>
   </div>
 }

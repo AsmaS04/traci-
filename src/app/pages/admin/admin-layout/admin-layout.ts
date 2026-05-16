@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
+import { ThemeService } from '../../../service/theme.service';
 import { ClientService } from '../../../service/Client.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { DeviceService } from '../../../service/Device.service';
@@ -21,12 +22,13 @@ export class AdminLayout {
 
   private readonly i18n            = inject(TranslationService);
   private readonly router          = inject(Router);
+  private readonly themeService    = inject(ThemeService);
   private readonly clientService   = inject(ClientService);
   private readonly resellerService = inject(ResellerService);
   private readonly deviceService   = inject(DeviceService);
 
-  isDark = false;
-  onDarkToggle(): void { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark', this.isDark); }
+  get isDark(): boolean { return this.themeService.currentTheme() === 'dark'; }
+  onDarkToggle(): void  { this.themeService.toggleTheme(); }
 
   navItems = computed<SidebarEntry[]>(() => {
     void this.i18n.lang();
@@ -35,6 +37,7 @@ export class AdminLayout {
       { label: this.i18n.t('nav_resellers'),    route: '/admin/resellers',    icon: 'building' },
       { label: this.i18n.t('nav_clients'),      route: '/admin/clients',      icon: 'users' },
       { label: this.i18n.t('nav_devices'),      route: '/admin/devices',      icon: 'cpu' },
+      { label: this.i18n.t('nav_events'),       route: '/admin/events',       icon: 'calendar' },   // <-- added
       { label: this.i18n.t('nav_transactions'), route: '/admin/transactions', icon: 'card' },
       { divider: true },
       { label: this.i18n.t('nav_profile'),      route: '/admin/profil',       icon: 'user' },

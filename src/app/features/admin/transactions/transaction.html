@@ -2,174 +2,301 @@
 
   <div class="page-header">
     <div>
-      <p class="page-eyebrow">{{ i18n.t('dash_eyebrow') }}</p>
-      <h1 class="page-title">{{ i18n.t('adm_transactions_title') }}</h1>
+      <p class="page-eyebrow">{{ t.t('dash_eyebrow') }}</p>
+      <h1 class="page-title">{{ t.t('adm_transactions_title') }}</h1>
     </div>
   </div>
 
-  <!-- KPI Strip -->
-  <div class="kpi-strip">
-    <div class="kpi-card"><p class="kpi-val">{{ fmt(totalRevenue) }}</p><p class="kpi-unit">TND</p><p class="kpi-label">{{ i18n.t('adm_tx_total_revenue') }}</p></div>
-    <div class="kpi-div"></div>
-    <div class="kpi-card"><p class="kpi-val">{{ totalTransactions }}</p><p class="kpi-label">{{ i18n.t('adm_tx_total_count') }}</p></div>
-    <div class="kpi-div"></div>
-    <div class="kpi-card"><p class="kpi-val">{{ fmt(avgTransactionVal) }}</p><p class="kpi-unit">TND</p><p class="kpi-label">{{ i18n.t('adm_tx_avg_value') }}</p></div>
-    <div class="kpi-div"></div>
-    <div class="kpi-card"><p class="kpi-val">{{ totalRenewals }}</p><p class="kpi-label">{{ i18n.t('res_type_renewal') }}</p></div>
-    <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--wide">
-      <p class="kpi-label" style="margin-bottom:0.6rem">{{ i18n.t('adm_tx_by_reseller') }}</p>
-      <div class="rev-bars">
-        @for (r of revenueByReseller; track r.name) {
-        <div class="rev-bar-item">
-          <span class="rev-bar-label">{{ r.name }}</span>
-          <div class="rev-bar-track"><div class="rev-bar-fill" [style.width.%]="r.pct"></div></div>
-          <span class="rev-bar-val">{{ fmt(r.amount) }} TND</span>
+  <div class="tx-page">
+
+    <!-- ── KPI STRIP ── -->
+    <div class="kpi-strip">
+
+      <!-- Total Revenue -->
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
         </div>
-        }
+        <div class="kpi-body">
+          <span class="kpi-label">{{ t.t('tx_kpi_revenue') }}</span>
+          <span class="kpi-value">{{ formatAmount(stats.totalRevenue) }}</span>
+          <span class="kpi-sub">{{ t.t('tx_subtitle_alltime') }}</span>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Filters panel -->
-  <div class="filters-panel">
-    <div class="filters-row">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('adm_tx_search_placeholder')"/>
+      <!-- Today's Transactions -->
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-label">{{ t.t('tx_kpi_today') }}</span>
+          <span class="kpi-value">{{ stats.todayCount }}</span>
+          <span class="kpi-sub">{{ t.t('tx_subtitle_vs_yesterday') }}</span>
+        </div>
       </div>
-      <select class="filter-select" [(ngModel)]="filterReseller">
-        @for (r of resellerOptions; track r.id) {
-        <option [value]="r.id">{{ r.name }}</option>
-        }
-      </select>
-      <select class="filter-select" [(ngModel)]="filterClient">
-        @for (c of clientOptions; track c.id) {
-        <option [value]="c.id">{{ c.name }}</option>
-        }
-      </select>
-      <select class="filter-select" [(ngModel)]="filterType">
-        <option value="all">{{ i18n.t('adm_tx_all_types') }}</option>
-        <option value="device_sale">{{ i18n.t('res_type_sale') }}</option>
-        <option value="renewal">{{ i18n.t('res_type_renewal') }}</option>
-      </select>
-    </div>
-    <div class="filters-row filters-row--secondary">
-      <div class="filter-group">
-        <label class="filter-label">{{ i18n.t('res_serial_number') }}</label>
-        <input class="filter-input" type="text" [(ngModel)]="filterDevice" placeholder="ACC-BOX-..."/>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">{{ i18n.t('adm_filter_from') }}</label>
-        <input class="filter-input" type="date" [(ngModel)]="filterDateFrom"/>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">{{ i18n.t('adm_filter_to') }}</label>
-        <input class="filter-input" type="date" [(ngModel)]="filterDateTo"/>
-      </div>
-      @if (hasActiveFilters) {
-      <button class="btn-clear" (click)="clearFilters()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        {{ i18n.t('adm_filter_clear') }}
-      </button>
-      }
-      <span class="result-count" style="margin-left:auto">{{ filtered.length }} {{ i18n.t('adm_tx_results') }}</span>
-    </div>
-  </div>
 
-  <!-- Table -->
-  <div class="table-card">
-    <div class="table-scroll">
+      <!-- Pending Payments -->
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-label">{{ t.t('tx_kpi_pending') }}</span>
+          <span class="kpi-value">{{ stats.pendingCount }}</span>
+          <span class="kpi-sub">{{ t.t('tx_subtitle_awaiting') }}</span>
+        </div>
+      </div>
+
+      <!-- Total Commissions -->
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-icon--purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0c1.1.128 1.907 1.077 1.907 2.185Z"/>
+          </svg>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-label">{{ t.t('tx_kpi_commission') }}</span>
+          <span class="kpi-value">{{ formatAmount(stats.totalCommissions) }}</span>
+          <span class="kpi-sub">{{ t.t('tx_subtitle_from_resellers') }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TOOLBAR ── -->
+    <div class="toolbar">
+
+      <div class="filter-bar">
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <i class="ti ti-search search-icon"></i>
+          <input
+            class="search-inp"
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            [placeholder]="t.t('tx_search_placeholder')"
+          />
+        </div>
+
+        <!-- Date chip -->
+        <div class="fcc" (click)="stop($event)">
+          <button class="chip" [class.chip--active]="activeDateFilter" (click)="toggle('date', $event)">
+            <span class="chip__plus" *ngIf="!activeDateFilter">+</span>
+            <span class="chip__label">{{ t.t('tx_filter_date') }}</span>
+            <ng-container *ngIf="activeDateFilter">
+              <span class="chip__sep">|</span>
+              <span class="chip__value">{{ dateChipLabel() }}</span>
+              <button class="chip__x" (click)="clearDate($event)">×</button>
+            </ng-container>
+            <span class="chip__caret" *ngIf="!activeDateFilter">›</span>
+          </button>
+
+          <div class="dropdown" *ngIf="openDropdown === 'date'" (click)="stop($event)">
+            <p class="dropdown__title">{{ t.t('tx_filter_by_date') }}</p>
+            <select class="dd-select" [(ngModel)]="dateOperator">
+              <option value="equal">{{ t.t('tx_date_equal') }}</option>
+              <option value="before">{{ t.t('tx_date_before') }}</option>
+              <option value="after">{{ t.t('tx_date_after') }}</option>
+              <option value="between">{{ t.t('tx_date_between') }}</option>
+            </select>
+            <div class="date-row">
+              <input type="date" class="date-inp" [(ngModel)]="dateFrom" />
+              <ng-container *ngIf="dateOperator === 'between'">
+                <span class="date-sep">–</span>
+                <input type="date" class="date-inp" [(ngModel)]="dateTo" />
+              </ng-container>
+            </div>
+            <div class="dropdown__foot">
+              <button class="btn-apply" [disabled]="!dateFrom" (click)="applyDate()">
+                {{ t.t('tx_filter_apply') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status chip -->
+        <div class="fcc" (click)="stop($event)">
+          <button class="chip" [class.chip--active]="activeStatus" (click)="toggle('status', $event)">
+            <span class="chip__plus" *ngIf="!activeStatus">+</span>
+            <span class="chip__label">{{ t.t('tx_filter_status') }}</span>
+            <ng-container *ngIf="activeStatus">
+              <span class="chip__sep">|</span>
+              <span class="chip__value">{{ t.t('tx_status_' + activeStatus) }}</span>
+              <button class="chip__x" (click)="clearStatus($event)">×</button>
+            </ng-container>
+            <span class="chip__caret" *ngIf="!activeStatus">›</span>
+          </button>
+
+          <div class="dropdown" *ngIf="openDropdown === 'status'" (click)="stop($event)">
+            <p class="dropdown__title">{{ t.t('tx_filter_by_status') }}</p>
+            <div class="opt-list">
+              <label class="opt-row" *ngFor="let s of STATUSES">
+                <input type="radio" name="pstatus" [(ngModel)]="pendingStatus" [value]="s" />
+                <span class="status-badge" [ngClass]="'status-badge--' + statusColor(s)">
+                  {{ t.t('tx_status_' + s) }}
+                </span>
+              </label>
+            </div>
+            <div class="dropdown__foot">
+              <button class="btn-ghost" (click)="pendingStatus = ''">{{ t.t('tx_filter_clear') }}</button>
+              <button class="btn-apply" (click)="applyStatus()">{{ t.t('tx_filter_apply') }}</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="clear-all" *ngIf="hasFilter" (click)="clearAll()">
+          {{ t.t('tx_filter_reset') }}
+        </button>
+
+      </div>
+
+      <!-- Export Dropdown -->
+      <div class="export-dropdown">
+        <button class="export-btn" (click)="toggleExportMenu($event)">
+          <i class="ti ti-download"></i>
+          {{ t.t('tx_export') }}
+          <i class="ti ti-chevron-down" style="font-size:12px; margin-left:4px;"></i>
+        </button>
+        <div class="export-menu" *ngIf="exportMenuOpen" (click)="$event.stopPropagation()">
+          <button (click)="exportCSV()">📄 CSV</button>
+          <button (click)="exportExcel()">📊 Excel (CSV)</button>
+          <button (click)="exportPDF()">📑 PDF (Print)</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── LOADING ── -->
+    <div class="state-center" *ngIf="loading">
+      <span class="spinner"></span>
+    </div>
+
+    <!-- ── EMPTY ── -->
+    <div class="state-center state-empty" *ngIf="!loading && filtered.length === 0">
+      <i class="ti ti-receipt-off"></i>
+      <p>{{ t.t('tx_empty') }}</p>
+    </div>
+
+    <!-- ── TABLE (no actions column) ── -->
+    <div class="table-wrap" *ngIf="!loading && filtered.length > 0">
       <table class="tx-table">
         <thead>
           <tr>
-            <th class="col-id">#</th>
-            <th (click)="sortBy('serial')">{{ i18n.t('res_serial_number') }} {{ sortIcon('serial') }}</th>
-            <th (click)="sortBy('model')">{{ i18n.t('res_device_model') }} {{ sortIcon('model') }}</th>
-            <th (click)="sortBy('type')">{{ i18n.t('adm_tx_type') }} {{ sortIcon('type') }}</th>
-            <th (click)="sortBy('clientName')">{{ i18n.t('nav_clients') }} {{ sortIcon('clientName') }}</th>
-            <th (click)="sortBy('resellerName')">{{ i18n.t('nav_resellers') }} {{ sortIcon('resellerName') }}</th>
-            <th (click)="sortBy('amount')">{{ i18n.t('adm_tx_amount') }} {{ sortIcon('amount') }}</th>
-            <th (click)="sortBy('date')">{{ i18n.t('adm_tx_date') }} {{ sortIcon('date') }}</th>
-            <th></th>
+            <th class="sortable" (click)="sort('id')">
+              {{ t.t('tx_col_id') }} <i class="ti" [ngClass]="sortIcon('id')"></i>
+            </th>
+            <th class="sortable" (click)="sort('clientName')">
+              {{ t.t('tx_col_client') }} <i class="ti" [ngClass]="sortIcon('clientName')"></i>
+            </th>
+            <th class="sortable" (click)="sort('resellerName')">
+              {{ t.t('tx_col_reseller') }} <i class="ti" [ngClass]="sortIcon('resellerName')"></i>
+            </th>
+            <th class="sortable" (click)="sort('amount')">
+              {{ t.t('tx_col_amount') }} <i class="ti" [ngClass]="sortIcon('amount')"></i>
+            </th>
+            <th>{{ t.t('tx_col_commission') }}</th>
+            <th class="sortable" (click)="sort('paymentStatus')">
+              {{ t.t('tx_col_status') }} <i class="ti" [ngClass]="sortIcon('paymentStatus')"></i>
+            </th>
+            <th class="sortable" (click)="sort('createdAt')">
+              {{ t.t('tx_col_date') }} <i class="ti" [ngClass]="sortIcon('createdAt')"></i>
+            </th>
           </tr>
         </thead>
         <tbody>
-          @for (t of filtered; track t.id) {
-          <tr class="table-row" (click)="openPanel(t)">
-            <td class="col-id"><span class="id-badge">#{{ t.id }}</span></td>
+          <tr
+            *ngFor="let tx of paginated"
+            [ngClass]="'row-accent--' + statusColor(tx.paymentStatus)"
+            (click)="openModal(tx)"
+          >
+            <td class="tx-id">#{{ tx.id }}</td>
+            <td><span class="cell-main">{{ tx.clientName || '—' }}</span></td>
+            <td><span class="cell-sub">{{ tx.resellerName || '—' }}</span></td>
+            <td><strong class="amount-val">{{ formatAmount(tx.amount) }}</strong></td>
             <td>
-              <div class="serial-cell">
-                <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></div>
-                <span class="serial-text">{{ t.serial }}</span>
-              </div>
+              <span class="commission-val" *ngIf="tx.commission">{{ formatAmount(tx.commission) }}</span>
+              <span class="no-val" *ngIf="!tx.commission">—</span>
             </td>
-            <td><span class="model-badge" [class]="modelColor(t.model)">{{ t.model }}</span></td>
-            <td><span class="type-badge" [class]="typeClass(t.type)">{{ typeLabel(t.type) }}</span></td>
-            <td class="name-cell">{{ t.clientName }}</td>
-            <td><span class="reseller-pill">{{ t.resellerName }}</span></td>
-            <td class="amount-cell">{{ fmt(t.amount) }} TND</td>
-            <td class="date-cell">{{ t.date }}</td>
-            <td (click)="$event.stopPropagation()">
-              <button class="row-btn" (click)="openPanel(t)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
+            <td>
+              <span class="status-badge" [ngClass]="'status-badge--' + statusColor(tx.paymentStatus)">
+                {{ t.t('tx_status_' + getDisplayStatus(tx.paymentStatus)) }}
+              </span>
+            </td>
+            <td class="td-date">
+              <span class="time-main">{{ formatTime(tx.createdAt) }}</span>
+              <span class="time-date">{{ formatDate(tx.createdAt) }}</span>
             </td>
           </tr>
-          }
-          @if (filtered.length === 0) {
-          <tr>
-            <td colspan="9" class="empty-row">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              <p>{{ i18n.t('adm_tx_empty') }}</p>
-            </td>
-          </tr>
-          }
         </tbody>
       </table>
-    </div>
-  </div>
-</div>
 
-<!-- Detail Panel -->
-@if (panelOpen) { <div class="panel-backdrop" (click)="closePanel()"></div> }
-@if (panelTx) {
-<div class="slide-panel" [class.slide-panel--open]="panelOpen">
-  <div class="panel-topbar"><button class="panel-back" (click)="closePanel()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>{{ i18n.t('btn_back') }}</button></div>
-  <div class="panel-eyebrow">{{ i18n.t('adm_tx_detail_eyebrow') }}</div>
-  <h2 class="panel-title">{{ panelTx.model }}</h2>
-  <div class="panel-body">
-    <div class="amount-hero">
-      <p class="amount-hero__val">{{ fmt(panelTx.amount) }} TND</p>
-      <p class="amount-hero__label">{{ typeLabel(panelTx.type) }}</p>
-      <span class="type-badge" style="margin-top:0.4rem" [class]="typeClass(panelTx.type)">{{ typeLabel(panelTx.type) }}</span>
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+        <span class="pg-info">{{ currentPage }} {{ t.t('tx_page_of') }} {{ totalPages }}</span>
+        <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
+      </div>
     </div>
-    <div class="detail-grid">
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_serial_number') }}</p><p class="detail-val detail-mono">{{ panelTx.serial }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_device_model') }}</p><p class="detail-val"><span class="model-badge" [class]="modelColor(panelTx.model)">{{ panelTx.model }}</span></p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelTx.clientName }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_resellers') }}</p><p class="detail-val">{{ panelTx.resellerName }}</p></div>
-      <div class="detail-item detail-item--full"><p class="detail-label">{{ i18n.t('adm_tx_date') }}</p><p class="detail-val">{{ panelTx.date }}</p></div>
-    </div>
-    @if (panelTx.notes) {
-    <div class="notes-card"><p class="detail-label">{{ i18n.t('res_notes') }}</p><p class="notes-body">{{ panelTx.notes }}</p></div>
-    }
-    @if (panelDevice) {
-    <div class="linked-device">
-      <p class="detail-label" style="margin-bottom:0.75rem">{{ i18n.t('adm_tx_linked_device') }}</p>
-      <div class="linked-device__card">
-        <div class="linked-device__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg></div>
-        <div class="linked-device__body">
-          <p class="linked-device__model">{{ panelDevice.model }}</p>
-          <p class="linked-device__serial">{{ panelDevice.serialNumber }}</p>
-          <div class="linked-device__dates">
-            <span>{{ i18n.t('res_activation_date') }}: {{ panelDevice.activationDate }}</span>
-            <span>{{ i18n.t('res_expiration_date') }}: {{ panelDevice.expirationDate }}</span>
+
+    <!-- ── MODAL ── -->
+    <div class="modal-overlay" *ngIf="selected" (click)="closeModal()">
+      <div class="modal-card" (click)="stop($event)">
+        <div class="modal-header">
+          <span class="modal-title">{{ t.t('tx_modal_title') }}</span>
+          <button class="modal-close" (click)="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-kpi">
+            <span class="modal-amount">{{ formatAmount(selected.amount) }}</span>
+            <span class="status-badge" [ngClass]="'status-badge--' + statusColor(selected.paymentStatus)">
+              {{ t.t('tx_status_' + getDisplayStatus(selected.paymentStatus)) }}
+            </span>
           </div>
+          <div class="modal-grid">
+            <div class="modal-field">
+              <span class="field-label">{{ t.t('tx_col_id') }}</span>
+              <span class="field-value">#{{ selected.id }}</span>
+            </div>
+            <div class="modal-field">
+              <span class="field-label">{{ t.t('tx_col_client') }}</span>
+              <span class="field-value">{{ selected.clientName || '—' }}</span>
+            </div>
+            <div class="modal-field">
+              <span class="field-label">{{ t.t('tx_col_reseller') }}</span>
+              <span class="field-value">{{ selected.resellerName || '—' }}</span>
+            </div>
+            <div class="modal-field">
+              <span class="field-label">{{ t.t('tx_col_amount') }}</span>
+              <span class="field-value field-value--green">{{ formatAmount(selected.amount) }}</span>
+            </div>
+            <div class="modal-field">
+              <span class="field-label">{{ t.t('tx_col_commission') }}</span>
+              <span class="field-value">{{ formatAmount(selected.commission) }}</span>
+            </div>
+            <div class="modal-field modal-field--full">
+              <span class="field-label">{{ t.t('tx_col_date') }}</span>
+              <span class="field-value">{{ formatDate(selected.createdAt) }} — {{ formatTime(selected.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-apply" (click)="closeModal()">{{ t.t('tx_modal_close') }}</button>
         </div>
       </div>
     </div>
-    }
+
   </div>
 </div>
-}

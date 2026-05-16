@@ -7,6 +7,7 @@ import { ClientService } from '../../../service/Client.service';
 import { DeviceService } from '../../../service/Device.service';
 import { AbonnementService } from '../../../service/Abonnement.service';
 import { ToastService } from '../../../service/Toast.service';
+import { DeviceRequestService } from '../../../service/DeviceRequest.service';
 import { Device } from '../../../models/device.model';
 import { Client } from '../../../models/client.model';
 import { Reseller } from '../../../models/reseller.model';
@@ -20,12 +21,13 @@ import { Reseller } from '../../../models/reseller.model';
 })
 export default class ResellerDevicesComponent implements OnInit {
 
-  readonly i18n           = inject(TranslationService);
-  private resellerService = inject(ResellerService);
-  private clientService   = inject(ClientService);
-  private deviceService   = inject(DeviceService);
-  private aboService      = inject(AbonnementService);
-  private toast           = inject(ToastService);
+  readonly i18n                = inject(TranslationService);
+  private resellerService      = inject(ResellerService);
+  private clientService        = inject(ClientService);
+  private deviceService        = inject(DeviceService);
+  private aboService           = inject(AbonnementService);
+  private toast                = inject(ToastService);
+  private deviceRequestService = inject(DeviceRequestService);
 
   reseller:     Reseller | null = null;
   devices:      Device[]        = [];
@@ -118,21 +120,16 @@ export default class ResellerDevicesComponent implements OnInit {
   showAssignModal  = false;
   assignTab: 'pick' | 'count' = 'pick';
 
-  // Step 1 — client selection
   selectedClientId: number | null = null;
 
-  // Shared fields
   assignDuration = 1;
   assignPrice    = 0;
 
-  // Tab A — multi-select
   selectedDeviceIds: Set<number> = new Set();
 
-  // Tab B — assign by count
   assignCount    = 1;
   countPreview: Device[] = [];
 
-  // Progress
   assignInProgress = false;
   assignDone       = 0;
   assignTotal      = 0;
@@ -236,12 +233,49 @@ export default class ResellerDevicesComponent implements OnInit {
     const ok   = this.assignDone - this.assignErrors;
     const fail = this.assignErrors;
 
-    if (fail === 0)       this.toast.success(`${ok} device${ok > 1 ? 's' : ''} assigned successfully`);
-    else if (ok === 0)    this.toast.error(`All ${fail} assignments failed`);
-    else                  this.toast.warning(`${ok} assigned, ${fail} failed`);
+    if (fail === 0)    this.toast.success(`${ok} device${ok > 1 ? 's' : ''} assigned successfully`);
+    else if (ok === 0) this.toast.error(`All ${fail} assignments failed`);
+    else               this.toast.warning(`${ok} assigned, ${fail} failed`);
 
     this.showAssignModal = false;
     this.loadDevices(this.reseller.idRev);
     this.loadLibreDevices(this.reseller.idRev);
+  }
+
+  // ══════════════════════════════════════════════════════
+  // DEVICE REQUEST MODAL
+  // ══════════════════════════════════════════════════════
+  showRequestModal  = false;
+  requestCount      = 1;
+  requestMessage    = '';
+  requestSubmitting = false;
+
+  openRequestModal() {
+    this.requestCount    = 1;
+    this.requestMessage  = '';
+    this.showRequestModal = true;
+  }
+
+  closeRequestModal() { this.showRequestModal = false; }
+
+  submitDeviceRequest() {
+    if (!this.reseller || this.requestCount < 1 || this.requestCount > 50) return;
+    this.requestSubmitting = true;
+
+      this.deviceRequestService.createRequest(
+      this.reseller.idRev,
+      this.requestCount,
+      this.requestMessage
+    ).subscribe({
+      next: () => {
+        this.requestSubmitting  = false;
+        this.showRequestModal   = false;
+        this.toast.success(`Request for ${this.requestCount} devices sent to admin`);
+      },
+      error: () => {
+        this.requestSubmitting = false;
+        this.toast.error('Failed to send request');
+      }
+    });
   }
 }

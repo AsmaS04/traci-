@@ -4,10 +4,12 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 
 interface LoginResponse {
-  token: string;
+  token:    string;
   username: string;
-  role: string;
-  email: string;
+  role:     string;
+  email:    string;
+  idRev?:   number;   // reseller ID — needed for WebSocket channel
+  idClient?: number;  // client ID — for future use
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,10 +23,23 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { username, password })
       .pipe(
         tap(res => {
-          localStorage.setItem('token', res.token);
+          localStorage.setItem('token',    res.token);
           localStorage.setItem('username', res.username);
-          localStorage.setItem('role', res.role);
-          localStorage.setItem('email', res.email);
+          localStorage.setItem('role',     res.role);
+          localStorage.setItem('email',    res.email);
+
+          // Store reseller ID so WebSocket can subscribe to reseller-specific channel
+          if (res.idRev) {
+            localStorage.setItem('idRev', res.idRev.toString());
+          } else {
+            localStorage.removeItem('idRev');
+          }
+
+          if (res.idClient) {
+            localStorage.setItem('idClient', res.idClient.toString());
+          } else {
+            localStorage.removeItem('idClient');
+          }
         })
       );
   }
@@ -34,43 +49,29 @@ export class AuthService {
     localStorage.removeItem('username');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
+    localStorage.removeItem('idRev');
+    localStorage.removeItem('idClient');
     this.router.navigate(['/client']);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  getToken():    string | null { return localStorage.getItem('token');    }
+  getRole():     string | null { return localStorage.getItem('role');     }
+  getUsername(): string | null { return localStorage.getItem('username'); }
+  getEmail():    string | null { return localStorage.getItem('email');    }
+  getIdRev():    number | null {
+    const v = localStorage.getItem('idRev');
+    return v ? Number(v) : null;
   }
 
-  getRole(): string | null {
-    return localStorage.getItem('role');
-  }
-
-  getUsername(): string | null {
-    return localStorage.getItem('username');
-  }
-
-  getEmail(): string | null {
-    return localStorage.getItem('email');
-  }
-
-  isLoggedIn(): boolean {
-    return !!this.getToken();
-  }
+  isLoggedIn(): boolean { return !!this.getToken(); }
 
   redirectByRole() {
     const role = this.getRole();
     switch (role) {
-      case 'ROLE_ADMIN':
-        this.router.navigate(['/admin/dashboard']);
-        break;
-      case 'ROLE_RESELLER':
-        this.router.navigate(['/reseller-dashboard/dashboard']);
-        break;
-      case 'ROLE_CLIENT':
-        this.router.navigate(['/client-dashboard/dashboard']);
-        break;
-      default:
-        this.router.navigate(['/client']);
+      case 'ROLE_ADMIN':    this.router.navigate(['/admin/dashboard']);              break;
+      case 'ROLE_RESELLER': this.router.navigate(['/reseller-dashboard/dashboard']); break;
+      case 'ROLE_CLIENT':   this.router.navigate(['/client-dashboard/dashboard']);   break;
+      default:              this.router.navigate(['/client']);
     }
   }
 }

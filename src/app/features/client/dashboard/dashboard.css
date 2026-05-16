@@ -49,6 +49,16 @@
   transition: background 0.18s, transform 0.15s;
   box-shadow: 0 4px 14px rgba(13,148,136,0.35);
 }
+
+.btn-grace--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--border, #e5e7eb);
+  color: var(--text-300, #9ca3af);
+}
+.btn-grace--disabled:hover {
+  background: transparent;
+}
 .eo-btn-primary:hover { background: #0f766e; transform: translateY(-1px); }
 .eo-btn-primary svg   { width: 16px; height: 16px; }
 
@@ -97,6 +107,12 @@
   border: 1px solid; border-top: 4px solid;
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
+
+.hero--none     { border-color: rgba(156,163,175,0.25); border-top-color: #9ca3af; }
+.chip--none     { background: rgba(156,163,175,0.12); color: #6b7280; border-color: rgba(156,163,175,0.3); }
+.chip--pending  { background: rgba(245,158,11,0.12);  color: #D97706; border-color: rgba(245,158,11,0.3); }
+.notice--info   { background: rgba(59,130,246,0.07);  color: #1E40AF; border: 1px solid rgba(59,130,246,0.2); }
+.hero-plan-name--muted { color: var(--text-300, #9ca3af); }
 .hero--safe    { border-color: rgba(13,148,136,0.25);  border-top-color: #0D9488; }
 .hero--warning { border-color: rgba(217,119,6,0.25);   border-top-color: #D97706; }
 .hero--danger  { border-color: rgba(220,38,38,0.25);   border-top-color: #DC2626; }
@@ -272,4 +288,30 @@
   .forfaits-grid    { grid-template-columns: 1fr; }
   .expiry-overlay-card { padding: 2rem 1.5rem 1.5rem; }
   .eo-title         { font-size: 1.3rem; }
+
+
+
+  /* ── Plan modal overrides ─────────────────────────────────── */
+.plan-modal { max-width: 640px; }
+
+.fc-badge {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, #0D9488, #0f766e);
+  color: #fff; font-size: 0.6rem; font-weight: 800;
+  padding: 3px 12px; border-radius: 99px; white-space: nowrap;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(13,148,136,0.4);
+}
+
+.fc-per-month {
+  font-size: 0.7rem;
+  color: var(--text-300, #9ca3af);
+  font-weight: 500;
+}
+
+.fc--popular .fc-price { color: #0D9488; }
+
+
+
 }
