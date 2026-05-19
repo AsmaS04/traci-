@@ -276,3 +276,19 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .login-container { padding: 12px; }
+  .login-card      { padding: 28px 20px; border-radius: 16px; }
+  .logo-text       { font-size: 22px; }
+  .login-header h2 { font-size: 17px; }
+  .role-selector   { flex-direction: column; gap: 8px; }
+  .role-btn        { padding: 10px; font-size: 13px; }
+  .login-btn       { padding: 12px; font-size: 14px; }
+}
+
+@media (max-width: 360px) {
+  .login-card { padding: 22px 16px; }
+  .logo-icon  { width: 46px; height: 46px; }
+}

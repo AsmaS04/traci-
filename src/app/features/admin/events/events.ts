@@ -53,11 +53,11 @@ export class EventsComponent implements OnInit {
     this.currentPage = page;
   }
 
+  // UPDATED: removed unwanted types, added RESELLER_SUSPENDED
   readonly EVENT_TYPES = [
-    'NEW_CLIENT', 'NEW_RESELLER', 'UPDATE_RESELLER', 'DELETE_RESELLER',
-    'UPDATE_CLIENT', 'DELETE_CLIENT', 'DEVICE_ASSIGNED', 'NEW_PAYMENT',
-    'NEW_DEVICE_REQUEST', 'ACCESS_REQUEST', 'COMMISSION_EARNED',
-    'INVOICE_CREATED', 'INVOICE_PAID'
+    'NEW_CLIENT', 'NEW_RESELLER', 'UPDATE_RESELLER',
+    'UPDATE_CLIENT', 'DEVICE_ASSIGNED', 'NEW_PAYMENT',
+    'NEW_DEVICE_REQUEST', 'ACCESS_REQUEST', 'RESELLER_SUSPENDED'
   ];
 
   readonly ROLES = ['ADMIN', 'RESELLER', 'CLIENT'];
@@ -188,12 +188,12 @@ export class EventsComponent implements OnInit {
     return fmt(from);
   }
 
+  // UPDATED: color mapping (removed references to deleted types, added RESELLER_SUSPENDED)
   color(type: string): string {
-    if (['NEW_CLIENT','NEW_RESELLER','NEW_PAYMENT','INVOICE_PAID'].includes(type))               return 'green';
-    if (['DEVICE_ASSIGNED','NEW_DEVICE_REQUEST'].includes(type))                                  return 'orange';
-    if (['ACCESS_REQUEST'].includes(type))                                                        return 'purple';
-    if (['UPDATE_CLIENT','UPDATE_RESELLER','COMMISSION_EARNED','INVOICE_CREATED'].includes(type)) return 'blue';
-    if (['DELETE_CLIENT','DELETE_RESELLER'].includes(type))                                       return 'red';
+    if (['NEW_CLIENT','NEW_RESELLER','NEW_PAYMENT'].includes(type))               return 'green';
+    if (['DEVICE_ASSIGNED','NEW_DEVICE_REQUEST','RESELLER_SUSPENDED'].includes(type)) return 'orange';
+    if (['ACCESS_REQUEST'].includes(type))                                        return 'purple';
+    if (['UPDATE_CLIENT','UPDATE_RESELLER'].includes(type))                       return 'blue';
     return 'gray';
   }
 

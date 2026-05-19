@@ -8,5 +8,9 @@ export interface Device {
   status: string;
   dateActivation: string | null;
   createdAt: string;
-  simProvider?: string | null;
+    simProvider?: string;   // ← add this
+
+  customName?: string;
+  
+
 }

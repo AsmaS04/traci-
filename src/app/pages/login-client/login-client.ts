@@ -12,10 +12,10 @@ import { TranslationService } from '../../service/translation.service';
   styleUrl: './login-client.css',
 })
 export class LoginClient {
-  username = '';
-  password = '';
-  error = '';
-  loading = false;
+  username     = '';
+  password     = '';
+  error        = '';
+  loading      = false;
   showPassword = false;
 
   constructor(
@@ -25,7 +25,7 @@ export class LoginClient {
   ) {}
 
   onSubmit() {
-    this.error = '';
+    this.error   = '';
     this.loading = true;
 
     this.authService.login(this.username, this.password).subscribe({
@@ -34,13 +34,13 @@ export class LoginClient {
         if (role === 'ROLE_CLIENT') {
           this.router.navigate(['/client-dashboard/dashboard']);
         } else {
-          this.error = this.ts.t('login_error_admin');
-          this.authService.logout();
+          this.error = this.ts.t('login_error_credentials');
+          this.authService.clearSession();
         }
         this.loading = false;
       },
       error: () => {
-        this.error = this.ts.t('login_error_credentials');
+        this.error   = this.ts.t('login_error_credentials');
         this.loading = false;
       }
     });

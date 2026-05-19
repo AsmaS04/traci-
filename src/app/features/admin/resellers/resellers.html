@@ -260,15 +260,19 @@
     </div>
 
     <div class="detail-stats">
-      <div class="detail-stat">
-        <p class="detail-stat-value">{{ selected.clientCount ?? 0 }}</p>
-        <p class="detail-stat-label">{{ i18n.t('total_clients') }}</p>
-      </div>
-      <div class="detail-stat">
-        <p class="detail-stat-value">{{ selected.location || '—' }}</p>
-        <p class="detail-stat-label">{{ i18n.t('form_region') }}</p>
-      </div>
-    </div>
+  <div class="detail-stat">
+    <p class="detail-stat-value">{{ selected.clientCount ?? 0 }}</p>
+    <p class="detail-stat-label">{{ i18n.t('total_clients') }}</p>
+  </div>
+  <div class="detail-stat">
+    <p class="detail-stat-value">{{ totalDevices }}</p>
+    <p class="detail-stat-label">{{ i18n.t('total_devices_assigned') }}</p>
+  </div>
+  <div class="detail-stat">
+    <p class="detail-stat-value">{{ currentMonthCommission | currency:'TND':'symbol':'1.2-2' }}</p>
+    <p class="detail-stat-label">{{ i18n.t('commission_this_month') }}</p>
+  </div>
+</div>
 
     @if (selectedClients.length > 0) {
       <div class="clients-list-section">
@@ -291,56 +295,133 @@
   }
 
   <!-- ═══════════════════ SUSPEND MODAL ═══════════════ -->
-  @if (showSuspendModal && suspendTarget) {
-  <div class="modal-backdrop" (click)="closeSuspendModal()">
-    <div class="modal modal--suspend" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">{{ i18n.t('btn_suspend') }} {{ suspendTarget.nomEntreprise }}</h2>
-        <button class="modal-close" (click)="closeSuspendModal()">✕</button>
+@if (showSuspendModal && suspendTarget) {
+<div class="modal-backdrop" (click)="closeSuspendModal()">
+  <div class="modal modal--suspend" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header modal-header--danger">
+      <div class="modal-danger-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        </svg>
       </div>
-      <div class="modal-body">
-        @if (suspendLoading) {
-          <p class="suspend-loading">{{ i18n.t('loading_client_suggestions') }}</p>
-        }
-        @if (!suspendLoading && suspendSuggestions.length === 0) {
-          <p class="suspend-empty">{{ i18n.t('suspend_no_clients_msg') }}</p>
-        }
-        @if (!suspendLoading && suspendSuggestions.length > 0) {
-          <p class="suspend-hint">{{ i18n.t('suspend_reassign_hint') }}</p>
-          <div class="suspend-bulk-row">
-            <label class="suspend-bulk-label">{{ i18n.t('suspend_bulk_label') }}</label>
-            <select [(ngModel)]="bulkResellerId" (ngModelChange)="applyBulkAssign()" class="suspend-select">
-              <option [ngValue]="null">— choose —</option>
-              @for (rv of suspendResellers; track rv.idRev) {
-                <option [ngValue]="rv.idRev">{{ rv.nomEntreprise }} ({{ rv.location || '—' }})</option>
-              }
-            </select>
-          </div>
-          <div class="suspend-client-list">
-            @for (c of suspendSuggestions; track c.clientId) {
-              <div class="suspend-client-row">
-                <div class="suspend-client-info">
-                  <span class="suspend-client-name">{{ c.clientName }}</span>
-                  <span class="suspend-client-loc">{{ c.clientLocation || '—' }}</span>
-                </div>
-                <select [(ngModel)]="suspendClientAssignments[c.clientId]" class="suspend-select">
-                  <option [ngValue]="undefined">— unassigned —</option>
-                  @for (rv of suspendResellers; track rv.idRev) {
-                    <option [ngValue]="rv.idRev">{{ rv.nomEntreprise }}</option>
-                  }
-                </select>
-              </div>
-            }
-          </div>
-        }
+      <div class="modal-header-text">
+        <h2 class="modal-title">{{ i18n.t('btn_suspend') }}: {{ suspendTarget.nomEntreprise }}</h2>
+        <p class="modal-subtitle">{{ i18n.t('suspend_reassign_hint') }}</p>
       </div>
-      <div class="modal-footer">
-        <button class="btn-ghost" (click)="closeSuspendModal()">{{ i18n.t('btn_cancel') }}</button>
-        <button class="btn-suspend" (click)="confirmSuspend()" [disabled]="suspendLoading">{{ i18n.t('btn_suspend') }}</button>
-      </div>
+      <button class="modal-close" (click)="closeSuspendModal()">✕</button>
     </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- Loading -->
+      @if (suspendLoading) {
+        <div class="state-center">
+          <span class="spinner"></span>
+          <p>{{ i18n.t('loading_client_suggestions') }}</p>
+        </div>
+      }
+
+      <!-- No clients -->
+      @if (!suspendLoading && suspendSuggestions.length === 0) {
+        <div class="state-center state-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="32" height="32">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+          </svg>
+          <p>{{ i18n.t('suspend_no_clients_msg') }}</p>
+        </div>
+      }
+
+      <!-- Client list -->
+      @if (!suspendLoading && suspendSuggestions.length > 0) {
+
+        <!-- Bulk assign -->
+        <div class="suspend-bulk-row">
+          <label class="suspend-bulk-label">{{ i18n.t('suspend_bulk_label') }}</label>
+          <select [(ngModel)]="bulkResellerId" (ngModelChange)="applyBulkAssign()" class="suspend-select">
+            <option [ngValue]="null">— {{ i18n.t('suspend_choose') }} —</option>
+            @for (rv of suspendResellers; track rv.idRev) {
+              <option [ngValue]="rv.idRev">
+                {{ rv.nomEntreprise }} ({{ rv.location || '—' }}) — {{ rv.clientCount }} {{ i18n.t('col_clients').toLowerCase() }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <!-- Per-client cards -->
+        <div class="suspend-client-list">
+          @for (c of suspendSuggestions; track c.clientId) {
+            <div class="scc">
+
+              <!-- Top row: avatar + info + score -->
+              <div class="scc-top">
+                <div class="scc-avatar">{{ (c.clientName || '?').charAt(0) }}</div>
+                <div class="scc-info">
+                  <span class="scc-name">{{ c.clientName }}</span>
+                  <span class="scc-loc">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         width="11" height="11" stroke-linecap="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    {{ c.clientLocation || '—' }}
+                  </span>
+                </div>
+                <span class="score-badge score-badge--{{ getScoreClass(c.score) }}">
+                  {{ c.score }} pts
+                </span>
+              </div>
+
+              <!-- Recommendation row -->
+              @if (c.suggestedResellerName) {
+                <div class="scc-rec">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"
+                       class="rec-star"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <span class="rec-label">{{ i18n.t('reassign_recommended') }}:</span>
+                  <span class="rec-name">{{ c.suggestedResellerName }}</span>
+                  <span class="rec-city">{{ c.suggestedResellerLocation ? '(' + c.suggestedResellerLocation + ')' : '' }}</span>
+                  <span class="score-label score-label--{{ c.scoreLabel }}">
+                    {{ i18n.t('reassign_' + c.scoreLabel) }}
+                  </span>
+                </div>
+              }
+
+              <!-- Override select -->
+              <select [(ngModel)]="suspendClientAssignments[c.clientId]" class="suspend-select suspend-select--full">
+                <option [ngValue]="undefined">— {{ i18n.t('suspend_unassigned') }} —</option>
+                @for (rv of suspendResellers; track rv.idRev) {
+                  <option [ngValue]="rv.idRev">
+                    {{ rv.nomEntreprise }} ({{ rv.location || '—' }}) — {{ rv.clientCount }} {{ i18n.t('col_clients').toLowerCase() }}
+                  </option>
+                }
+              </select>
+
+            </div>
+          }
+        </div>
+
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeSuspendModal()">{{ i18n.t('btn_cancel') }}</button>
+      <button class="btn-suspend" (click)="confirmSuspend()" [disabled]="suspendLoading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             width="15" height="15" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+        </svg>
+        {{ i18n.t('btn_confirm_suspend') }}
+      </button>
+    </div>
+
   </div>
-  }
+</div>
+}
 
   <!-- ═══════════════════ ADD / EDIT MODAL ═════════════ -->
   @if (showModal) {

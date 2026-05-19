@@ -53,7 +53,6 @@
       </div>
     </header>
 
-    <!-- KPI strip -->
     <div class="kpi-strip">
       <div class="kpi-card">
         <p class="kpi-val">{{ totalCount }}</p>
@@ -106,9 +105,13 @@
             <td class="col-id"><span class="id-badge">#{{ c.idClient }}</span></td>
             <td>
               <div class="name-cell">
-                <div class="avatar" [class.avatar--active]="isActive(c)" [class.avatar--inactive]="!isActive(c)">
-                  {{ (c.firstName || '?').charAt(0) }}
-                </div>
+                @if (c.avatarUrl) {
+                  <img class="avatar avatar--img" [src]="c.avatarUrl" alt="avatar">
+                } @else {
+                  <div class="avatar" [class.avatar--active]="isActive(c)" [class.avatar--inactive]="!isActive(c)">
+                    {{ (c.firstName || '?').charAt(0) }}
+                  </div>
+                }
                 <div>
                   <p class="name-primary">{{ fullName(c) }}</p>
                   <p class="name-secondary">{{ c.email }}</p>
@@ -171,15 +174,15 @@
           <h1 class="page-title">{{ fullName(selected) }}</h1>
         </div>
       </div>
-      <div class="detail-header-actions">
-        <button class="btn-secondary" (click)="openEdit(selected, $event)">{{ i18n.t('btn_edit') }}</button>
-      </div>
     </header>
 
-    <!-- Profile card -->
     <div class="profile-card" [class.profile-card--active]="isActive(selected)" [class.profile-card--inactive]="!isActive(selected)">
       <div class="profile-avatar" [class.avatar--active]="isActive(selected)" [class.avatar--inactive]="!isActive(selected)">
-        {{ (selected.firstName || '?').charAt(0) }}
+        @if (selected.avatarUrl) {
+          <img class="profile-avatar-img" [src]="selected.avatarUrl" alt="avatar">
+        } @else {
+          {{ (selected.firstName || '?').charAt(0) }}
+        }
       </div>
       <div class="profile-info">
         <div class="profile-name-row">
@@ -199,14 +202,12 @@
       </div>
     </div>
 
-    <!-- Grace day stats -->
     <div class="detail-stats">
       <div class="detail-stat"><p class="detail-stat-value">{{ selected.graceDaysLeft ?? 0 }}</p><p class="detail-stat-label">{{ i18n.t('grace_days_left') }}</p></div>
       <div class="detail-stat"><p class="detail-stat-value stat--red">{{ selected.graceDaysUsed ?? 0 }}</p><p class="detail-stat-label">{{ i18n.t('grace_days_used') }}</p></div>
       <div class="detail-stat"><p class="detail-stat-value stat--sm">{{ selected.resellerName || '—' }}</p><p class="detail-stat-label">{{ i18n.t('assigned_reseller') }}</p></div>
     </div>
 
-    <!-- TABS (only Devices and Subscriptions) -->
     <div class="panel-tabs">
       <button class="panel-tab" [class.panel-tab--active]="panelTab==='devices'" (click)="switchPanelTab('devices')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
@@ -221,7 +222,6 @@
     <div class="panel-body">
 
       @if (panelTab === 'devices') {
-        <!-- Devices section -->
         <div class="devices-section">
           <div class="devices-section-header">
             <p class="section-title">

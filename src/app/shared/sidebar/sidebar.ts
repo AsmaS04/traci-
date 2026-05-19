@@ -2,6 +2,9 @@ import { Component, Input, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { OnInit, OnDestroy } from '@angular/core';
+import { NotificationWebsocketService, AvatarEvent } from '../../service/notification-websocket.service';
+import { Subscription } from 'rxjs';
 
 export interface SidebarNavItem {
   label: string;
@@ -56,15 +59,32 @@ const ICONS: Record<string, string> = {
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit, OnDestroy {
   @Input() items: SidebarEntry[] = [];
   @Input() user: SidebarUser = { name: 'User', email: '' };
   @Input() logoText = 'TRACI';
 
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly notifWs = inject(NotificationWebsocketService);  // <-- add
+  private avatarSub!: Subscription;  // <-- add
+
 
   isCollapsed = signal(false);
   openMenus   = signal<Set<string>>(new Set());
+
+   ngOnInit(): void {  // <-- add
+    this.notifWs.connect();
+    this.avatarSub = this.notifWs.avatar$.subscribe((event: AvatarEvent) => {
+      if (event.avatarUrl) {
+        const fullUrl = event.avatarUrl.startsWith('http') ? event.avatarUrl : 'http://localhost:8080' + event.avatarUrl;
+        this.user = { ...this.user, avatarUrl: fullUrl };
+      }
+    });
+  }
+
+  ngOnDestroy(): void {  // <-- add
+    this.avatarSub?.unsubscribe();
+  }
 
   toggle(): void {
     const collapsing = !this.isCollapsed();

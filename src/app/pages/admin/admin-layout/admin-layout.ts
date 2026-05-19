@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal, HostListener } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ThemeService } from '../../../service/theme.service';
@@ -26,6 +26,14 @@ export class AdminLayout {
   private readonly clientService   = inject(ClientService);
   private readonly resellerService = inject(ResellerService);
   private readonly deviceService   = inject(DeviceService);
+
+  sidebarOpen = signal(false);
+
+  toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
+  closeSidebar():  void { this.sidebarOpen.set(false); }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void { this.closeSidebar(); }
 
   get isDark(): boolean { return this.themeService.currentTheme() === 'dark'; }
   onDarkToggle(): void  { this.themeService.toggleTheme(); }

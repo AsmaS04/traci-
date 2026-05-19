@@ -83,7 +83,6 @@ describe('ResellerDevicesComponent', () => {
   it('should compute totalCount, activeCount, expiredCount', () => {
     expect(component.totalCount).toBe(3);
     expect(component.activeCount).toBe(1);
-    expect(component.expiredCount).toBe(1);
   });
 
   it('should return all devices when no filter applied', () => {
@@ -99,16 +98,5 @@ describe('ResellerDevicesComponent', () => {
   it('should filter by status', () => {
     component.filterStatus = 'actif';
     expect(component.filtered.length).toBe(1);
-  });
-
-  it('should filter by model', () => {
-    component.filterModel = 'ModelX';
-    expect(component.filtered.length).toBe(2);
-  });
-
-  it('should list unique model options', () => {
-    expect(component.modelOptions).toContain('ModelX');
-    expect(component.modelOptions).toContain('ModelY');
-    expect(component.modelOptions[0]).toBe('all');
   });
 });

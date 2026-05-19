@@ -1,221 +1,164 @@
-<div class="page">
+<div class="profil-page">
 
-  <!-- ══ PROFILE HEADER ══════════════════════════════════════ -->
-  <div class="profile-header-card">
-    <div class="header-bg-pattern"></div>
-    <div class="header-content">
-      <div class="avatar-section">
-        <div class="avatar-wrap">
-          @if (avatarPreview) {
-            <img class="avatar avatar--photo" [src]="avatarPreview" alt="avatar"/>
-          } @else if (reseller.avatarUrl) {
-            <img class="avatar avatar--photo" [src]="'http://localhost:8080' + reseller.avatarUrl" alt="avatar"/>
-          } @else {
-            <div class="avatar">{{ initials }}</div>
+  <div class="page-header animate-fade-in">
+    <p class="page-eyebrow">{{ i18n.t('topbar_panel') }}</p>
+    <h1 class="page-title">{{ i18n.t('profile_title') }}</h1>
+    <p class="page-subtitle">{{ i18n.t('profile_subtitle') }}</p>
+  </div>
+
+  @if (reseller(); as r) {
+    @if (successMessage()) {
+      <div class="alert success">{{ successMessage() }}</div>
+    }
+    @if (errorMessage()) {
+      <div class="alert error">{{ errorMessage() }}</div>
+    }
+
+    <div class="profil-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="left-column">
+
+        <!-- Avatar Card -->
+        <div class="avatar-card">
+          <div class="avatar-wrapper">
+            @if (avatarPreview) {
+              <img class="avatar avatar--photo" [src]="avatarPreview" alt="avatar">
+            } @else if (r.avatarUrl) {
+              <img class="avatar avatar--photo" [src]="r.avatarUrl" alt="avatar">
+            } @else {
+              <div class="avatar">{{ initials() }}</div>
+            }
+            <label class="avatar-upload-btn">
+              <input type="file" accept="image/*" class="avatar-file-input" (change)="onAvatarChange($event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </label>
+            <span class="avatar-status"></span>
+          </div>
+
+          @if (uploadError) {
+            <p class="avatar-upload-error">{{ i18n.t(uploadError) }}</p>
           }
-          <label class="avatar-upload-btn" [title]="i18n.t('adm_upload_photo_hint')">
-            <input type="file" accept="image/*" class="avatar-file-input" (change)="onAvatarChange($event)"/>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-          </label>
-          <span class="avatar-status"></span>
+
+          <h2 class="user-name">{{ r.username }}</h2>
+          <p class="user-email">{{ r.email }}</p>
         </div>
-        @if (uploadError) {
-          <p class="avatar-upload-error">{{ i18n.t(uploadError) }}</p>
-        } @else {
-          <p class="avatar-upload-hint">{{ i18n.t('adm_upload_photo_hint') }}</p>
-        }
+
+        <!-- Save avatar button -->
         @if (avatarPreview) {
-          <button class="avatar-remove-btn" (click)="removeAvatar()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            </svg>
-            {{ i18n.t('adm_remove_photo') }}
+          <button class="btn-save-avatar" (click)="saveAvatar()" [disabled]="avatarUploading">
+            @if (avatarUploading) {
+              <span class="btn-spinner"></span>
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+            }
+            {{ avatarUploading ? i18n.t('btn_saving') : i18n.t('btn_save') }}
           </button>
         }
-      </div>
 
-      <div class="header-info">
-        <div class="header-name-row">
-          <h1 class="header-name">{{ reseller.username }}</h1>
-          <span class="role-badge">{{ i18n.t('role_RESELLER') }}</span>
-        </div>
-        <div class="header-meta">
-          <span class="meta-item">{{ i18n.t('profile_email') }}: {{ reseller.email }}</span>
-          <span class="meta-item">{{ reseller.nomEntreprise }}</span>
-          @if (reseller.phone) { <span class="meta-item">{{ reseller.phone }}</span> }
-        </div>
-        <div class="header-stats">
-          <div class="hstat">
-            <p class="hstat-val">{{ totalClients }}</p>
-            <p class="hstat-label">{{ i18n.t('res_stat_clients') }}</p>
-          </div>
-          <div class="hstat-div"></div>
-          <div class="hstat">
-            <p class="hstat-val">{{ totalDevices }}</p>
-            <p class="hstat-label">{{ i18n.t('stat_devices') }}</p>
-          </div>
-          <div class="hstat-div"></div>
-          <div class="hstat">
-            <p class="hstat-val hstat-val--teal">{{ fmt(totalRevenue) }}</p>
-            <p class="hstat-label">TND</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ MAIN BODY ════════════════════════════════════════════ -->
-  <div class="profile-body">
-
-    <!-- Left tab sidebar -->
-    <div class="tab-sidebar">
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='profile'" (click)="switchTab('profile')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span>{{ i18n.t('adm_tab_profile') }}</span>
-      </button>
-
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='notifications'" (click)="switchTab('notifications')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <span>{{ i18n.t('adm_tab_notifications') }}</span>
-      </button>
-
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='activity'" (click)="switchTab('activity')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        <span>{{ i18n.t('adm_tab_activity') }}</span>
-      </button>
-
-      <div class="tab-sidebar-spacer"></div>
-
-      <button class="tab-btn tab-btn--danger" (click)="logout()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        <span>{{ i18n.t('nav_logout') }}</span>
-      </button>
-    </div>
-
-    <!-- Content panels -->
-    <div class="tab-content">
-
-      <!-- ── PROFILE TAB ─────────────────────────────────── -->
-      @if (activeTab==='profile') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_personal') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_personal_sub') }}</p>
-        </div>
-        <div class="section-card">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>{{ i18n.t('label_username') }}</label>
-              <input type="text" [(ngModel)]="profile.username"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('form_company') }}</label>
-              <input type="text" [(ngModel)]="profile.nomEntreprise"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('profile_email') }}</label>
-              <input type="email" [(ngModel)]="profile.email" [class.input--error]="profileEmailError"/>
-              @if (profileEmailError) { <span class="field-error">{{ i18n.t(profileEmailError) }}</span> }
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('profile_phone') }}</label>
-              <input type="tel" [(ngModel)]="profile.phone" [class.input--error]="profilePhoneError"/>
-              @if (profilePhoneError) { <span class="field-error">{{ i18n.t(profilePhoneError) }}</span> }
-            </div>
-          </div>
-          <div class="form-actions">
-            <button class="btn-cancel" (click)="resetProfile()">{{ i18n.t('btn_cancel') }}</button>
-            <button class="btn-save" (click)="saveProfile()">{{ i18n.t('btn_save_changes') }}</button>
-          </div>
-        </div>
-      </div>
-      }
-      <!-- ── NOTIFICATIONS TAB ───────────────────────────── -->
-      @if (activeTab==='notifications') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_notifications') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_notifications_sub') }}</p>
-        </div>
-        <div class="section-card">
-          <p class="section-title">{{ i18n.t('profile_notifications') }}</p>
-          <div class="notif-list">
-            @for (n of notifSettings; track $index) {
-            <div class="notif-row">
-              <div class="notif-info">
-                <p class="notif-name">{{ i18n.t(n.nameKey) }}</p>
-                <p class="notif-desc">{{ i18n.t(n.descKey) }}</p>
+        <!-- Stats Card (member since) -->
+        <div class="stats-card">
+          <h3 class="stats-title">{{ i18n.t('profile_stats') }}</h3>
+          <div class="stat-items">
+            <div class="stat-item">
+              <div class="stat-item-icon green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
               </div>
-              <button class="toggle" [class.toggle--on]="n.enabled" (click)="n.enabled=!n.enabled"></button>
-            </div>
-            }
-          </div>
-        </div>
-      </div>
-      }
-
-      <!-- ── ACTIVITY TAB ────────────────────────────────── -->
-      @if (activeTab==='activity') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_activity') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_activity_sub') }}</p>
-        </div>
-        <div class="today-summary">
-          <div class="today-stat">
-            <span class="today-val">{{ totalClients }}</span>
-            <span class="today-label">{{ i18n.t('res_stat_clients') }}</span>
-          </div>
-          <div class="today-stat">
-            <span class="today-val">{{ totalDevices }}</span>
-            <span class="today-label">{{ i18n.t('stat_devices') }}</span>
-          </div>
-          <div class="today-stat">
-            <span class="today-val">{{ activeDevices }}</span>
-            <span class="today-label">{{ i18n.t('active_devices') }}</span>
-          </div>
-          <div class="today-stat">
-            <span class="today-val">{{ totalTransactions }}</span>
-            <span class="today-label">{{ i18n.t('res_total_transactions') }}</span>
-          </div>
-        </div>
-        <div class="section-card">
-          <div class="act-timeline">
-            @for (a of activityLog; track $index; let last = $last) {
-            <div class="act-entry">
-              <div class="act-dot"
-                [class.act-dot--teal]="a.icon==='teal'"
-                [class.act-dot--blue]="a.icon==='blue'"
-                [class.act-dot--red]="a.icon==='red'"
-                [class.act-dot--amber]="a.icon==='amber'">
-              </div>
-              @if (!last) { <div class="act-line"></div> }
-              <div class="act-body">
-                <p class="act-title">{{ i18n.t(a.labelKey) }} <strong>{{ a.entity }}</strong></p>
-                <p class="act-time">{{ a.date }}</p>
+              <div class="stat-item-content">
+                <p class="stat-item-label">{{ i18n.t('profile_member_since') }}</p>
+                <p class="stat-item-value">{{ memberSinceDays }} {{ i18n.t('profile_days') }}</p>
               </div>
             </div>
-            }
           </div>
         </div>
-      </div>
-      }
 
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-column">
+
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="section-title">{{ i18n.t('profile_personal_info') }}</h3>
+            <button class="btn-modify" (click)="openEditModal()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              {{ i18n.t('profile_edit') }}
+            </button>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <p class="info-label">{{ i18n.t('label_username') }}</p>
+              <p class="info-value">{{ r.username }}</p>
+            </div>
+            <div class="info-item">
+              <p class="info-label">{{ i18n.t('form_company') }}</p>
+              <p class="info-value">{{ r.nomEntreprise || '—' }}</p>
+            </div>
+            <div class="info-item">
+              <p class="info-label">{{ i18n.t('profile_email') }}</p>
+              <p class="info-value">{{ r.email }}</p>
+            </div>
+            <div class="info-item">
+              <p class="info-label">{{ i18n.t('profile_phone') }}</p>
+              <p class="info-value">{{ r.phone || '—' }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
-  </div>
+  }
+
 </div>
+
+<!-- Edit Modal -->
+@if (showEditModal() && profileEdit(); as edit) {
+  <div class="modal-backdrop" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <button class="modal-close" (click)="closeEditModal()">✕</button>
+        <h3 class="modal-title">{{ i18n.t('modal_update_profile') }}</h3>
+        <p class="modal-subtitle">{{ i18n.t('modal_update_info') }}</p>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="form-label">{{ i18n.t('label_username') }}</label>
+            <input type="text" [(ngModel)]="edit.username" class="form-input" readonly disabled>
+          </div>
+          <div class="form-field">
+            <label class="form-label">{{ i18n.t('form_company') }}</label>
+            <input type="text" [(ngModel)]="edit.nomEntreprise" class="form-input">
+          </div>
+          <div class="form-field">
+            <label class="form-label">{{ i18n.t('profile_email') }}</label>
+            <input type="email" [(ngModel)]="edit.email" class="form-input" [class.input--error]="editEmailError">
+            @if (editEmailError) { <span class="field-error">{{ i18n.t(editEmailError) }}</span> }
+          </div>
+          <div class="form-field">
+            <label class="form-label">{{ i18n.t('profile_phone') }}</label>
+            <input type="tel" [(ngModel)]="edit.phone" class="form-input" [class.input--error]="editPhoneError">
+            @if (editPhoneError) { <span class="field-error">{{ i18n.t(editPhoneError) }}</span> }
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeEditModal()">{{ i18n.t('btn_cancel') }}</button>
+          <button class="btn-save" (click)="saveProfile()">{{ i18n.t('btn_save') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

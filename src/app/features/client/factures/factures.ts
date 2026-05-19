@@ -4,22 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { TranslationService } from '../../../service/translation.service';
 import { ToastService } from '../../../service/Toast.service';
+import { ClientService, FactureDTO } from '../../../service/Client.service';
 
-export interface FactureDTO {
-  id: number;
-  odooMoveId: number;
-  invoiceNumber: string;
-  clientId: number;
-  invoiceDate: string;
-  dueDate: string;
-  amountUntaxed: number;
-  taxAmount: number;
-  total: number;
-  status: string;
-  serviceLabel: string;
-}
-
-type FilterStatut = 'ALL' | 'PAID' | 'PENDING' | 'OVERDUE';
+type FilterStatut = 'ALL' | 'PAID' | 'PENDING';
 
 @Component({
   selector: 'app-factures',
@@ -35,6 +22,7 @@ export default class FacturesComponent implements OnInit {
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
   private http   = inject(HttpClient);
+  private clientService = inject(ClientService);
 
   factures         = signal<FactureDTO[]>([]);
   loading          = signal(true);
@@ -42,10 +30,10 @@ export default class FacturesComponent implements OnInit {
   showDetailsModal = signal(false);
   filterStatut     = signal<FilterStatut>('ALL');
 
-  private statusMap(s: string): 'PAID' | 'PENDING' | 'OVERDUE' {
+  private statusMap(s: string): 'PAID' | 'PENDING' {
     if (s === 'paid')   return 'PAID';
     if (s === 'posted') return 'PENDING';
-    return 'OVERDUE';
+    return 'PENDING';
   }
 
   filteredFactures = computed(() => {
@@ -72,17 +60,26 @@ export default class FacturesComponent implements OnInit {
 
   private loadFactures() {
     this.loading.set(true);
-    this.http.get<FactureDTO[]>('http://localhost:8080/api/client/factures/my').subscribe({
-      next: (data) => { this.factures.set(data); this.loading.set(false); },
-      error: () => { this.toast.error('Failed to load invoices.'); this.loading.set(false); }
+    this.clientService.getMyFactures().subscribe({
+      next: (data) => {
+        console.log('Invoices received:', data);
+        this.factures.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load invoices:', err);
+        this.toast.error('Failed to load invoices.');
+        this.loading.set(false);
+      }
     });
   }
 
   private handleStripeReturn() {
     const status = this.route.snapshot.queryParamMap.get('payment');
     if (status === 'success') {
-      this.toast.success('Paiement confirmé — abonnement renouvelé et facture envoyée par email.');
+      this.toast.success('Payment confirmed — subscription renewed and invoice sent by email.');
       this.router.navigate([], { queryParams: {}, replaceUrl: true });
+      this.loadFactures();
     }
   }
 
@@ -93,7 +90,28 @@ export default class FacturesComponent implements OnInit {
   closeDetails()              { this.showDetailsModal.set(false); this.selectedFacture.set(null); }
 
   telechargerFacture(f: FactureDTO) {
-    this.toast.info(`Download INV-${f.id} — PDF coming soon.`);
+    if (!f.odooMoveId) {
+      this.toast.warning('No PDF available for this invoice.');
+      return;
+    }
+    this.http.get(`http://localhost:8080/api/invoices/${f.odooMoveId}/pdf`, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice_${f.invoiceNumber || f.id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.toast.success(`Downloading ${a.download}...`);
+      },
+      error: () => {
+        this.toast.error('Failed to download PDF. Please try again later.');
+      }
+    });
   }
 
   statusBadgeClass(s: string): string {
@@ -105,7 +123,6 @@ export default class FacturesComponent implements OnInit {
   statusLabel(s: string): string {
     if (s === 'paid')   return 'Paid';
     if (s === 'posted') return 'Pending';
-    if (s === 'draft')  return 'Draft';
     return s;
   }
 

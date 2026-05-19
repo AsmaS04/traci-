@@ -59,4 +59,8 @@ export class DeviceService {
   assignDevice(req: AssignDeviceRequest): Observable<any> {
     return this.http.post(`${this.aboUrl}/assign`, req);
   }
+  /** Count total devices linked to a reseller (all statuses) */
+  countByReseller(resellerId: number): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.baseUrl}/reseller/${resellerId}/count`);
+  }
 }

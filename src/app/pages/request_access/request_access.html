@@ -22,7 +22,7 @@
           </svg>
           <p>{{ ts.t('ra_success') }}</p>
           <p class="success-sub">{{ ts.t('ra_success_sub') }}</p>
-          <a class="back-link" [routerLink]="role === 'CLIENT' ? '/client' : '/bo-admin-access'">
+          <a class="back-link" [routerLink]="role === 'CLIENT' ? '/client' : '/bo-reseller-access'">
             {{ ts.t('ra_back') }}
           </a>
         </div>
@@ -54,17 +54,14 @@
             (input)="onEmailInput()"
             (blur)="onEmailBlur()"
           />
-          <!-- Checking spinner -->
           @if (emailChecking) {
             <span class="email-check-spinner"></span>
           }
-          <!-- Valid tick -->
           @if (emailValid === true && !emailChecking) {
             <span class="email-check-icon email-check-icon--ok">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
             </span>
           }
-          <!-- Invalid cross -->
           @if (emailValid === false && !emailChecking) {
             <span class="email-check-icon email-check-icon--err">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -72,7 +69,6 @@
           }
         </div>
 
-        <!-- Inline hint under email -->
         @if (emailValid === false && !emailChecking) {
           <p class="field-hint field-hint--error">
             This email is not registered as a {{ role === 'CLIENT' ? 'client' : 'reseller' }}. Contact your manager.
@@ -97,7 +93,7 @@
         </button>
 
         <p class="switch-link">
-          <a [routerLink]="role === 'CLIENT' ? '/client' : '/bo-admin-access'">{{ ts.t('ra_back') }}</a>
+          <a [routerLink]="role === 'CLIENT' ? '/client' : '/bo-reseller-access'">{{ ts.t('ra_back') }}</a>
         </p>
       }
     </div>

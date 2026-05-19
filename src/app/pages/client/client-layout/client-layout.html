@@ -1,15 +1,18 @@
-<div class="shell">
+<div class="shell" [class.sidebar-open]="sidebarOpen()">
+  <div class="sidebar-overlay" (click)="closeSidebar()"></div>
   <app-sidebar [items]="navItems()" [user]="sidebarUser" />
   <div class="right-side">
     <app-navbar
       brandKey="topbar_panel1"
+      [showHamburger]="true"
       [showNotifications]="true"
       [isDark]="isDark"
       [navbarUser]="navbarUser"
       notifPortal="client"
       (darkToggle)="onDarkToggle()"
       (profileClick)="goToProfile()"
-      (logoutClick)="logout()" />
+      (logoutClick)="logout()"
+      (hamburgerClick)="toggleSidebar()" />
     <main class="main-content">
       <router-outlet />
     </main>

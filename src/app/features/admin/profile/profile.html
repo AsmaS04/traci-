@@ -44,7 +44,7 @@
         </div>
         <div class="header-meta">
           <span class="meta-item">{{ i18n.t('profile_email') }}: {{ profile.email }}</span>
-          <span class="meta-item">{{ i18n.t('profile_last_connection') }}: 12 Mar 2026</span>
+          <!-- Last connection line REMOVED -->
           <span class="meta-item">{{ i18n.t('profile_member_since') }} Jan 2024</span>
         </div>
         <div class="header-stats">
@@ -55,167 +55,56 @@
           <div class="hstat"><p class="hstat-val">8,750</p><p class="hstat-label">{{ i18n.t('stat_devices') }}</p></div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- ══ MAIN BODY ════════════════════════════════════════════ -->
+  <!-- ══ PROFILE EDIT FORM (full width, no tabs) ═══════════ -->
   <div class="profile-body">
+    <div class="tab-content" style="grid-column: span 2;">
+      <div class="panel-header">
+        <h2 class="panel-title">{{ i18n.t('adm_profile_personal') }}</h2>
+        <p class="panel-sub">{{ i18n.t('adm_profile_personal_sub') }}</p>
+      </div>
+      <div class="section-card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>{{ i18n.t('profile_first_name') }}</label>
+            <input type="text" [(ngModel)]="profile.firstName"/>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('profile_last_name') }}</label>
+            <input type="text" [(ngModel)]="profile.lastName"/>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('profile_email') }}</label>
+            <input type="email" [(ngModel)]="profile.email" [class.input--error]="profileEmailError"/>
+            @if (profileEmailError) { <span class="field-error">{{ i18n.t(profileEmailError) }}</span> }
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('profile_phone') }}</label>
+            <input type="tel" [(ngModel)]="profile.phone" [class.input--error]="profilePhoneError"/>
+            @if (profilePhoneError) { <span class="field-error">{{ i18n.t(profilePhoneError) }}</span> }
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('form_company') }}</label>
+            <input type="text" [(ngModel)]="profile.company"/>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('adm_tab_profile') }}</label>
+            <input type="text" [(ngModel)]="profile.position"/>
+          </div>
+          <div class="form-group form-group--full">
+            <label>{{ i18n.t('label_bio') }}</label>
+            <textarea rows="3" [(ngModel)]="profile.bio"></textarea>
+          </div>
+        </div>
 
-    <!-- ── Left tab sidebar ──────────────────────────────── -->
-    <div class="tab-sidebar">
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='profile'" (click)="switchTab('profile')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span>{{ i18n.t('adm_tab_profile') }}</span>
-      </button>
-
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='notifications'" (click)="switchTab('notifications')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <span>{{ i18n.t('adm_tab_notifications') }}</span>
-        <span class="tab-badge">4</span>
-      </button>
-
-      <button class="tab-btn" [class.tab-btn--active]="activeTab==='activity'" (click)="switchTab('activity')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
-        <span>{{ i18n.t('adm_tab_activity') }}</span>
-      </button>
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="cancelEditing()">{{ i18n.t('btn_cancel') }}</button>
+          <button class="btn-save" (click)="saveProfile()">{{ i18n.t('btn_save_changes') }}</button>
+        </div>
+      </div>
     </div>
-    <!-- ── END tab-sidebar ───────────────────────────────── -->
-
-    <!-- ── Tab content ───────────────────────────────────── -->
-    <div class="tab-content">
-
-      <!-- ── PROFILE TAB ─────────────────────────────────── -->
-      @if (activeTab==='profile') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_personal') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_personal_sub') }}</p>
-        </div>
-        <div class="section-card">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>{{ i18n.t('profile_first_name') }}</label>
-              <input type="text" [(ngModel)]="profile.firstName"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('profile_last_name') }}</label>
-              <input type="text" [(ngModel)]="profile.lastName"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('profile_email') }}</label>
-              <input type="email" [(ngModel)]="profile.email" [class.input--error]="profileEmailError"/>
-              @if (profileEmailError) { <span class="field-error">{{ i18n.t(profileEmailError) }}</span> }
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('profile_phone') }}</label>
-              <input type="tel" [(ngModel)]="profile.phone" [class.input--error]="profilePhoneError"/>
-              @if (profilePhoneError) { <span class="field-error">{{ i18n.t(profilePhoneError) }}</span> }
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('form_company') }}</label>
-              <input type="text" [(ngModel)]="profile.company"/>
-            </div>
-            <div class="form-group">
-              <label>{{ i18n.t('adm_tab_profile') }}</label>
-              <input type="text" [(ngModel)]="profile.position"/>
-            </div>
-            <div class="form-group form-group--full">
-              <label>{{ i18n.t('label_bio') }}</label>
-              <textarea rows="3" [(ngModel)]="profile.bio"></textarea>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn-cancel" (click)="cancelEditing()">{{ i18n.t('btn_cancel') }}</button>
-            <button class="btn-save" (click)="saveProfile()">{{ i18n.t('btn_save_changes') }}</button>
-          </div>
-        </div>
-      </div>
-      }
-
-      <!-- ── NOTIFICATIONS TAB ───────────────────────────── -->
-      @if (activeTab==='notifications') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_notifications') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_notifications_sub') }}</p>
-        </div>
-        <div class="section-card">
-          <p class="section-title">{{ i18n.t('profile_notifications') }}</p>
-          <div class="notif-list">
-            @for (n of notifications; track $index) {
-            <div class="notif-row">
-              <div class="notif-info">
-                <p class="notif-name">{{ i18n.t(n.nameKey) }}</p>
-                <p class="notif-desc">{{ i18n.t(n.descKey) }}</p>
-              </div>
-              <button class="toggle" [class.toggle--on]="n.enabled" (click)="n.enabled=!n.enabled"></button>
-            </div>
-            }
-          </div>
-        </div>
-      </div>
-      }
-
-      <!-- ── ACTIVITY TAB ────────────────────────────────── -->
-      @if (activeTab==='activity') {
-      <div class="tab-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">{{ i18n.t('adm_profile_activity') }}</h2>
-          <p class="panel-sub">{{ i18n.t('adm_profile_activity_sub') }}</p>
-        </div>
-        <div class="today-summary">
-          <div class="today-stat">
-            <span class="today-val">{{ todayStats.clients }}</span>
-            <span class="today-label">{{ i18n.t('adm_today_clients') }}</span>
-          </div>
-          <div class="today-stat">
-            <span class="today-val">{{ todayStats.resellers }}</span>
-            <span class="today-label">{{ i18n.t('adm_today_resellers') }}</span>
-          </div>
-          <div class="today-stat">
-            <span class="today-val">{{ todayStats.alerts }}</span>
-            <span class="today-label">{{ i18n.t('adm_today_alerts') }}</span>
-          </div>
-          <div class="today-stat">
-            <span class="today-val">{{ todayStats.devices }}</span>
-            <span class="today-label">{{ i18n.t('adm_today_devices') }}</span>
-          </div>
-        </div>
-        <div class="section-card">
-          <div class="act-timeline">
-            @for (a of activityLog; track $index; let last = $last) {
-            <div class="act-entry">
-              <div class="act-dot"
-                [class.act-dot--teal]="a.icon==='teal'"
-                [class.act-dot--blue]="a.icon==='blue'"
-                [class.act-dot--red]="a.icon==='red'"
-                [class.act-dot--amber]="a.icon==='amber'">
-              </div>
-              @if (!last) { <div class="act-line"></div> }
-              <div class="act-body">
-                <p class="act-title">{{ i18n.t(a.labelKey) }} <strong>{{ a.entity }}</strong></p>
-                <p class="act-time">{{ a.date }}</p>
-              </div>
-            </div>
-            }
-          </div>
-        </div>
-      </div>
-      }
-
-    </div>
-    <!-- ── END tab-content ───────────────────────────────── -->
-
   </div>
-  <!-- ── END profile-body ──────────────────────────────── -->
 
 </div>

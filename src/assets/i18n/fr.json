@@ -9,7 +9,7 @@
   "nav_profile": "Profil",
   "nav_logout": "Déconnexion",
 
-  "topbar_panel": "Panneau Admin",
+  "topbar_panel": "Panneau Revendeur",
   "topbar_panel1": "Panneau Client",
   "topbar_reseller": "Panneau Revendeur",
   "notif_title": "Notifications",
@@ -20,7 +20,7 @@
   "page_clients": "Clients",
   "page_resellers": "Revendeurs",
 
-  "dash_eyebrow": "Panneau Admin",
+  "dash_eyebrow": "management",
 
   "filter_all": "Tous",
   "filter_active": "Actifs",
@@ -104,7 +104,6 @@
   "res_serial_number": "Numéro de série",
   "res_device_model": "Modèle",
   "res_activation_date": "Date d'activation",
-  "res_expiration_date": "Date d'expiration",
   "res_notes": "Notes",
   "res_sim_provider": "Opérateur",
   "res_type_sale": "Vente appareil",
@@ -158,7 +157,7 @@
   "adm_tx_linked_device": "Appareil lié",
 
   "sub_title": "Mes Abonnements",
-  "sub_subtitle": "Gérez vos abonnements IoT",
+  "sub_subtitle": "Gérez vos abonnements",
   "sub_stat_total": "Total",
   "sub_stat_active": "Actifs",
   "sub_stat_expired": "Expirés",
@@ -193,12 +192,11 @@
   "inv_download_pdf": "Télécharger PDF",
   "inv_after_payment": "après paiement",
 
-  "dev_title": "Mes Appareils IoT",
-  "dev_subtitle": "Gérez vos appareils connectés",
+  "dev_title": "Mes Appareils",
+  "dev_subtitle": "Gérez vos appareils",
   "dev_search_placeholder": "Rechercher par série, modèle, client...",
   "dev_all_models": "Tous les modèles",
   "dev_detail_eyebrow": "Détail appareil",
-  "dev_expired": "Expirés",
 
   "profile_title": "Mon Profil",
   "profile_subtitle": "Gérez vos informations personnelles",
@@ -208,7 +206,6 @@
   "profile_days": "jours",
   "profile_last_connection": "Dernière connexion",
   "profile_account": "Compte",
-  "profile_verified": "Vérifié",
   "profile_personal_info": "Informations personnelles",
   "profile_modify": "Modifier",
   "profile_first_name": "Prénom",
@@ -217,17 +214,9 @@
   "profile_phone": "Téléphone",
   "profile_address": "Adresse",
   "profile_city": "Ville",
-  "profile_postal_code": "Code postal",
-  "profile_preferences": "Préférences",
   "profile_notifications": "Notifications",
   "profile_receive_notifications": "Recevoir les notifications push",
   "profile_newsletter": "Newsletter",
-  "profile_receive_newsletter": "Recevoir les actualités par email",
-  "profile_language": "Langue",
-  "profile_interface_language": "Langue de l'interface",
-  "profile_french": "Français",
-  "profile_english": "English",
-
   "msg_error_email_taken": "Cet email est déjà utilisé",
   "nav_superadmin": "Super Administrateur",
   "stat_resellers": "Revendeurs",
@@ -418,7 +407,7 @@
   "label_devices_to_assign": "Nombre d'appareils à assigner",
   "label_devices_count_range": "Nombre d'appareils (1 – 50)",
   "label_duration_months": "Durée (mois)",
-  "label_price_per_device": "Prix / appareil / mois (TND)",
+  "label_price_per_device": "Prix (TND)",
   "label_summary": "Récapitulatif",
   "label_assigning": "assigné…",
   "label_selected": "sélectionné(s)",
@@ -514,17 +503,57 @@
   "events_col_datetime": "Date & Heure",
   "events_col_event": "Événement",
   "events_col_details": "Détails",
-  "events_col_role": "Rôle utilisateur",
+  "reassign_recommended": "Recommandé",
+  "reassign_same_city": "Même ville",
+  "reassign_same_region": "Même région",
+  "reassign_different_region": "Autre région",
+  "btn_confirm_suspend": "Confirmer la suspension",
+  "suspend_choose": "choisir",
+  "suspend_unassigned": "non assigné",
+  "total_devices_assigned": "Total appareils assignés",
+  "commission_this_month": "Commission ce mois",
+  "events_control_tower": "Événements",
+  "events_eyebrow": "management",
+  "event_type_RESELLER_SUSPENDED": "Revendeur suspendu",
   "login_traci": "TRACI",
   "login_admin_title": "Portail Admin",
   "login_admin_subtitle": "Connectez-vous à votre compte",
+  "login_client_title": "Portail Client",
+  "login_client_subtitle": "Accédez à vos appareils et abonnements",
+  "login_reseller_title": "Portail Revendeur",
+  "login_reseller_subtitle": "Gérez vos clients et appareils",
   "login_email": "Email",
+  "login_email_placeholder": "Entrez votre adresse email",
   "login_password": "Mot de passe",
-  "login_submit": "Se connecter",
+  "login_password_placeholder": "Entrez votre mot de passe",
+  "login_username": "Nom d'utilisateur",
+  "login_email_or_phone": "Email ou téléphone",
+  "login_client_placeholder": "Entrez votre email ou téléphone",
+  "login_reseller_placeholder": "Entrez votre nom d'utilisateur",
   "login_remember_me": "Se souvenir de moi",
   "login_forgot_password": "Mot de passe oublié ?",
-  "login_error_credentials": "Identifiants invalides",
-  "login_switch_client": "Pas un admin ?",
-  "login_switch_client_link": "Connexion client"
+  "login_submit": "Se connecter",
+  "login_loading": "Connexion...",
+  "login_switch_client": "Vous n'êtes pas revendeur ?",
+  "login_switch_client_link": "Connexion client",
+  "login_switch_admin": "Vous n'êtes pas client ?",
+  "login_switch_admin_link": "Connexion admin",
+  "login_error_credentials": "Email ou mot de passe incorrect",
+  "login_error_admin": "Accès refusé : rôle Admin requis",
+  "login_error_reseller_credentials": "Nom d'utilisateur ou mot de passe incorrect",
+  "dev_custom_name": "Nom personnalisé",
+  "btn_rename": "Renommer",
+  "login_switch_reseller": "Vous êtes revendeur ?",
+  "login_switch_reseller_link": "Connexion revendeur",
+  "res_subscriptions": "Abonnements"
+
+
+
+  
+
+  
+
+
+
 
 }

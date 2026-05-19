@@ -66,8 +66,7 @@ export default class ResellerDevicesComponent implements OnInit {
 
   // ── Search & filter ────────────────────────────────────
   search        = '';
-  filterStatus: 'all' | 'actif' | 'expiré' | 'inactif' | 'libre' = 'all';
-  filterModel   = 'all';
+  filterStatus: 'all' | 'actif' | 'inactif' | 'libre' = 'all';
 
   get filtered(): Device[] {
     const q = this.search.toLowerCase().trim();
@@ -78,22 +77,14 @@ export default class ResellerDevicesComponent implements OnInit {
         (d.model ?? '').toLowerCase().includes(q) ||
         (d.clientName ?? '').toLowerCase().includes(q);
       const matchStatus = this.filterStatus === 'all' || (d.status ?? '').toLowerCase() === this.filterStatus;
-      const matchModel  = this.filterModel  === 'all' || d.model === this.filterModel;
-      return matchQ && matchStatus && matchModel;
+      return matchQ && matchStatus;
     });
   }
 
   get totalCount()    { return this.devices.length; }
   get activeCount()   { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'actif').length; }
-  get expiredCount()  { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'expiré').length; }
   get inactiveCount() { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'inactif').length; }
   get libreCount()    { return this.libreDevices.length; }
-
-  get modelOptions(): string[] {
-    const models = new Set<string>();
-    this.devices.forEach(d => { if (d.model) models.add(d.model); });
-    return ['all', ...Array.from(models)];
-  }
 
   modelColor(model: string): string {
     const m = (model ?? '').toLowerCase();
@@ -115,15 +106,14 @@ export default class ResellerDevicesComponent implements OnInit {
   closePanel()         { this.panelOpen = false; }
 
   // ══════════════════════════════════════════════════════
-  // HYBRID ASSIGN MODAL
+  // HYBRID ASSIGN MODAL (no duration, price is one‑time)
   // ══════════════════════════════════════════════════════
   showAssignModal  = false;
   assignTab: 'pick' | 'count' = 'pick';
 
   selectedClientId: number | null = null;
 
-  assignDuration = 1;
-  assignPrice    = 0;
+  assignPrice    = 0;  // one‑time price per device (TND)
 
   selectedDeviceIds: Set<number> = new Set();
 
@@ -138,7 +128,6 @@ export default class ResellerDevicesComponent implements OnInit {
   openAssignModal() {
     this.selectedClientId  = null;
     this.assignTab         = 'pick';
-    this.assignDuration    = 1;
     this.assignPrice       = 0;
     this.selectedDeviceIds = new Set();
     this.assignCount       = 1;
@@ -194,7 +183,6 @@ export default class ResellerDevicesComponent implements OnInit {
     return !this.assignInProgress &&
            !!this.selectedClientId &&
            !!this.reseller &&
-           this.assignDuration >= 1 &&
            this.assignPrice >= 0 &&
            this.devicesToAssign.length > 0;
   }
@@ -215,11 +203,12 @@ export default class ResellerDevicesComponent implements OnInit {
 
     for (const device of devices) {
       try {
+        // Duration is set to 0 (not used); price is one‑time per device.
         await this.aboService.assignDevice(
           this.reseller.idRev,
           this.selectedClientId,
           device.idDevice,
-          this.assignDuration,
+          0,
           this.assignPrice
         ).toPromise();
         this.assignDone++;
@@ -262,7 +251,7 @@ export default class ResellerDevicesComponent implements OnInit {
     if (!this.reseller || this.requestCount < 1 || this.requestCount > 50) return;
     this.requestSubmitting = true;
 
-      this.deviceRequestService.createRequest(
+    this.deviceRequestService.createRequest(
       this.reseller.idRev,
       this.requestCount,
       this.requestMessage

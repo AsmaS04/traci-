@@ -86,7 +86,7 @@
   </div>
   }
 
-  <!-- KPI strip -->
+  <!-- KPI strip (Expired removed) -->
   <div class="kpi-strip">
     <div class="kpi-card">
       <p class="kpi-val">{{ totalCount }}</p>
@@ -96,11 +96,6 @@
     <div class="kpi-card kpi-card--active">
       <p class="kpi-val">{{ activeCount }}</p>
       <p class="kpi-label">{{ i18n.t('filter_active') }}</p>
-    </div>
-    <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--expired">
-      <p class="kpi-val">{{ expiredCount }}</p>
-      <p class="kpi-label">{{ i18n.t('dev_expired') }}</p>
     </div>
     <div class="kpi-div"></div>
     <div class="kpi-card kpi-card--inactive">
@@ -119,7 +114,7 @@
     </div>
   </div>
 
-  <!-- Toolbar -->
+  <!-- Toolbar (Expired tab removed) -->
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -128,7 +123,6 @@
     <div class="filter-tabs">
       <button [class.active]="filterStatus==='all'"        (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
       <button [class.active]="filterStatus==='actif'"      (click)="filterStatus='actif'">{{ i18n.t('filter_active') }}</button>
-      <button [class.active]="filterStatus==='expiré'"     (click)="filterStatus='expiré'">{{ i18n.t('dev_expired') }}</button>
       <button [class.active]="filterStatus==='inactif'"    (click)="filterStatus='inactif'">{{ i18n.t('filter_inactive') }}</button>
       <button [class.active]="filterStatus==='libre'"      (click)="filterStatus='libre'">{{ i18n.t('kpi_libre') }}</button>
       <button [class.active]="filterStatus==='unassigned'" (click)="filterStatus='unassigned'">{{ i18n.t('kpi_unassigned') }}</button>
@@ -141,7 +135,7 @@
     <span class="result-count">{{ filtered.length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
   </div>
 
-  <!-- Table -->
+  <!-- Table (SIM Provider column removed) -->
   <div class="table-card">
     <div class="table-scroll">
       <table class="dev-table">
@@ -153,7 +147,6 @@
             <th>IMEI</th>
             <th>{{ i18n.t('res_device_model') }}</th>
             <th>{{ i18n.t('nav_clients') }}</th>
-            <th>{{ i18n.t('res_sim_provider') }}</th>
             <th>{{ i18n.t('res_activation_date') }}</th>
             <th>{{ i18n.t('col_status') }}</th>
             <th></th>
@@ -186,16 +179,6 @@
             <td class="serial-text">{{ d.imei || '—' }}</td>
             <td><span class="model-badge" [class]="modelColor(d.model)">{{ d.model || '—' }}</span></td>
             <td class="name-cell">{{ d.clientName || '—' }}</td>
-            <td>
-              @if (d.simProvider) {
-                <span class="sim-cell">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/></svg>
-                  {{ d.simProvider }}
-                </span>
-              } @else {
-                <span class="no-sim-cell">—</span>
-              }
-            </td>
             <td class="serial-text">{{ formatDate(d.dateActivation) }}</td>
             <td>
               <span class="status-pill" [class]="statusClass(d.status)">
@@ -210,7 +193,7 @@
           </tr>
           }
           @if (filtered.length === 0) {
-            <tr><td colspan="10" class="empty-row">
+            <tr><td colspan="9" class="empty-row">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
               <p>{{ i18n.t('res_no_devices') }}</p>
             </td></tr>
@@ -252,7 +235,6 @@
       <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice.imei || '—' }}</p></div>
       <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelDevice.clientName || '—' }}</p></div>
       <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ formatDate(panelDevice.dateActivation) }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val">{{ panelDevice.simProvider || '—' }}</p></div>
     </div>
   </div>
 </div>

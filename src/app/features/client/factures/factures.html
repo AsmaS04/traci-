@@ -16,7 +16,7 @@
       }
     </div>
     <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1rem 1.3rem;margin-bottom:1.3rem;display:flex;gap:0.6rem">
-      @for (i of [1,2,3,4]; track i) { <div class="sk" style="height:32px;width:80px;border-radius:8px"></div> }
+      @for (i of [1,2,3]; track i) { <div class="sk" style="height:32px;width:80px;border-radius:8px"></div> }
     </div>
     <div class="empty-state sk" style="height:280px;border:none"></div>
   </div>
@@ -26,7 +26,7 @@
 <div class="page">
 
   <div class="page-header">
-    <p class="page-eyebrow">{{ i18n.t('topbar_panel') }}</p>
+    <p class="page-eyebrow">{{ i18n.t('topbar_panel1') }}</p>
     <h1 class="page-title">{{ i18n.t('inv_title') || 'My Invoices' }}</h1>
     <p class="page-sub">{{ i18n.t('inv_subtitle') || 'View and download your invoices' }}</p>
   </div>
@@ -58,11 +58,11 @@
     </div>
   </div>
 
+  <!-- Filter bar – Overdue removed -->
   <div class="filter-bar">
-    <button class="filter-btn" [class.filter-btn--active]="isFilterActive('ALL')"           (click)="setFilter('ALL')">{{ i18n.t('inv_filter_all') }}</button>
+    <button class="filter-btn" [class.filter-btn--active]="isFilterActive('ALL')"     (click)="setFilter('ALL')">{{ i18n.t('inv_filter_all') }}</button>
     <button class="filter-btn" [class.filter-btn--active-green]="isFilterActive('PAID')"    (click)="setFilter('PAID')">{{ i18n.t('inv_filter_paid') }}</button>
     <button class="filter-btn" [class.filter-btn--active-amber]="isFilterActive('PENDING')" (click)="setFilter('PENDING')">{{ i18n.t('inv_filter_pending') }}</button>
-    <button class="filter-btn" [class.filter-btn--active-red]="isFilterActive('OVERDUE')"   (click)="setFilter('OVERDUE')">{{ i18n.t('inv_filter_overdue') }}</button>
   </div>
 
   @if (filteredFactures().length === 0) {
@@ -115,7 +115,7 @@
 </div>
 }
 
-<!-- ── Details modal ────────────────────────────────────────────────────── -->
+<!-- ── Details modal (unchanged) ────────────────────────────────────── -->
 @if (showDetailsModal() && selectedFacture()) {
 <div class="modal-backdrop" (click)="closeDetails()">
   <div class="modal" (click)="$event.stopPropagation()">

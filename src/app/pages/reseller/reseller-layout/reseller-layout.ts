@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal, HostListener } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ThemeService } from '../../../service/theme.service';
@@ -11,7 +11,7 @@ import { NavbarComponent, NavbarSearchItem, NavbarUser } from '../../../shared/n
 import { Reseller } from '../../../models/reseller.model';
 import { forkJoin, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, Subject, switchMap } from 'rxjs';
-import { NotificationWebsocketService } from '../../../service/notification-websocket.service';
+import { NotificationWebsocketService, AvatarEvent } from '../../../service/notification-websocket.service';  // <-- import AvatarEvent
 
 @Component({
   selector: 'app-reseller-layout',
@@ -30,12 +30,21 @@ export default class ResellerLayout implements OnInit {
   private readonly themeService        = inject(ThemeService);
   private readonly notificationService = inject(NotificationWebsocketService);
 
+  sidebarOpen = signal(false);
+
+  toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
+  closeSidebar():  void { this.sidebarOpen.set(false); }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void { this.closeSidebar(); }
+
   get isDark(): boolean { return this.themeService.currentTheme() === 'dark'; }
   onDarkToggle(): void  { this.themeService.toggleTheme(); }
 
   reseller: Reseller = {
     idRev: 0, username: '', email: '', nomEntreprise: 'TRACI',
     deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0, createdAt: '',
+    avatarUrl: '',   // <-- add this field (ensure your Reseller model interface includes it)
   };
 
   navItems = computed<SidebarEntry[]>(() => {
@@ -49,12 +58,28 @@ export default class ResellerLayout implements OnInit {
     ];
   });
 
+  // Sidebar user with avatarUrl
   get sidebarUser(): SidebarUser {
-    return { name: this.reseller.username || 'Reseller', email: this.reseller.email, status: 'online' };
+    return {
+      name: this.reseller.username || 'Reseller',
+      email: this.reseller.email,
+      avatarUrl: this.reseller.avatarUrl ? this.buildFullUrl(this.reseller.avatarUrl) : undefined,
+      status: 'online'
+    };
   }
 
+  // Navbar user with avatarUrl
   get navbarUser(): NavbarUser {
-    return { name: this.reseller.username || 'Reseller', email: this.reseller.email };
+    return {
+      name: this.reseller.username || 'Reseller',
+      email: this.reseller.email,
+      avatarUrl: this.reseller.avatarUrl ? this.buildFullUrl(this.reseller.avatarUrl) : undefined
+    };
+  }
+
+  private buildFullUrl(url: string): string {
+    if (!url) return '';
+    return url.startsWith('http') ? url : 'http://localhost:8080' + url;
   }
 
   searchResults: NavbarSearchItem[] = [];
@@ -128,25 +153,33 @@ export default class ResellerLayout implements OnInit {
     );
   }
 
-  ngOnInit(): void {
-    this.resellerService.getMyProfile().subscribe({
-      next:  (r: Reseller) => {
-        this.reseller = r;
-        // Store idRev in localStorage for WebSocket subscription
-        if (r.idRev) {
-          localStorage.setItem('idRev', r.idRev.toString());
+ ngOnInit(): void {
+  this.notificationService.connect(); // connect early (global channel)
+
+  this.resellerService.getMyProfile().subscribe({
+    next: (r: Reseller) => {
+      this.reseller = { ...r, avatarUrl: r.avatarUrl ?? '' };
+      if (this.reseller.idRev) {
+        localStorage.setItem('idRev', this.reseller.idRev.toString());
+        // Subscribe to reseller-specific topics now that we have the ID
+        this.notificationService.subscribeToReseller(this.reseller.idRev);
+      }
+
+      this.notificationService.avatar$.subscribe((event: AvatarEvent) => {
+        if (event.avatarUrl && this.reseller.idRev === event.resellerId) {
+          const fullUrl = event.avatarUrl.startsWith('http')
+            ? event.avatarUrl
+            : 'http://localhost:8080' + event.avatarUrl;
+          this.reseller = { ...this.reseller, avatarUrl: fullUrl };
         }
-        // Connect WebSocket after we have the reseller ID
-        this.notificationService.connect();
-      },
-      error: () => {
-        this.reseller.username = localStorage.getItem('username') ?? 'Reseller';
-        this.reseller.email    = localStorage.getItem('email') ?? '';
-        // Still attempt to connect with existing idRev if any
-        this.notificationService.connect();
-      },
-    });
-  }
+      });
+    },
+    error: () => {
+      this.reseller.username = localStorage.getItem('username') ?? 'Reseller';
+      this.reseller.email    = localStorage.getItem('email') ?? '';
+    },
+  });
+}
 
   goToProfile(): void { this.router.navigate(['/reseller-dashboard/profile']); }
   openSupport(): void { alert('Support: contact@traci.tn'); }

@@ -59,13 +59,11 @@
     </div>
   </div>
 
-  <!-- KPI Strip -->
+  <!-- KPI Strip (Expired removed) -->
   <div class="kpi-strip">
     <div class="kpi-card"><p class="kpi-val">{{ totalCount }}</p><p class="kpi-label">{{ i18n.t('filter_all') }}</p></div>
     <div class="kpi-div"></div>
     <div class="kpi-card kpi-card--active"><p class="kpi-val">{{ activeCount }}</p><p class="kpi-label">{{ i18n.t('filter_active') }}</p></div>
-    <div class="kpi-div"></div>
-    <div class="kpi-card kpi-card--expired"><p class="kpi-val">{{ expiredCount }}</p><p class="kpi-label">{{ i18n.t('dev_expired') }}</p></div>
     <div class="kpi-div"></div>
     <div class="kpi-card kpi-card--inactive"><p class="kpi-val">{{ inactiveCount }}</p><p class="kpi-label">{{ i18n.t('filter_inactive') }}</p></div>
     <div class="kpi-div"></div>
@@ -82,14 +80,8 @@
       <select class="filter-select" [(ngModel)]="filterStatus">
         <option value="all">{{ i18n.t('filter_all') }}</option>
         <option value="actif">{{ i18n.t('filter_active') }}</option>
-        <option value="expiré">{{ i18n.t('dev_expired') }}</option>
         <option value="inactif">{{ i18n.t('filter_inactive') }}</option>
         <option value="libre">{{ i18n.t('kpi_libre') }}</option>
-      </select>
-      <select class="filter-select" [(ngModel)]="filterModel">
-        @for (m of modelOptions; track m) {
-          <option [value]="m">{{ m === 'all' ? i18n.t('dev_all_models') : m }}</option>
-        }
       </select>
     </div>
     <span class="result-count">{{ filtered.length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
@@ -107,7 +99,6 @@
             <th>IMEI</th>
             <th>{{ i18n.t('res_device_model') }}</th>
             <th>{{ i18n.t('nav_clients') }}</th>
-            <th>{{ i18n.t('res_sim_provider') }}</th>
             <th>{{ i18n.t('res_activation_date') }}</th>
             <th>{{ i18n.t('col_status') }}</th>
             <th></th>
@@ -116,20 +107,18 @@
         <tbody>
           @for (d of filtered; track d.idDevice) {
           <tr class="table-row"
-            [class.row--actif]="d.status.toLowerCase()==='actif'"
-            [class.row--libre]="d.status.toLowerCase()==='libre'"
-            [class.row--expiré]="d.status.toLowerCase()==='expiré'"
-            [class.row--inactif]="d.status.toLowerCase()==='inactif'"
+            [class.row--actif]="d.status === 'actif'"
+            [class.row--libre]="d.status === 'libre'"
+            [class.row--inactif]="d.status === 'inactif'"
             (click)="openPanel(d)">
             <td class="row-accent"></td>
             <td class="col-id"><span class="id-badge">#{{ d.idDevice }}</span></td>
             <td>
               <div class="serial-cell">
                 <div class="device-icon"
-                  [class.device-icon--actif]="d.status.toLowerCase()==='actif'"
-                  [class.device-icon--libre]="d.status.toLowerCase()==='libre'"
-                  [class.device-icon--expiré]="d.status.toLowerCase()==='expiré'"
-                  [class.device-icon--inactif]="d.status.toLowerCase()==='inactif'">
+                  [class.device-icon--actif]="d.status === 'actif'"
+                  [class.device-icon--libre]="d.status === 'libre'"
+                  [class.device-icon--inactif]="d.status === 'inactif'">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
                 </div>
                 <span class="serial-text">{{ d.numDevice || '—' }}</span>
@@ -138,21 +127,12 @@
             <td class="serial-text">{{ d.imei || '—' }}</td>
             <td><span class="model-badge" [class]="modelColor(d.model)">{{ d.model || '—' }}</span></td>
             <td class="name-cell">{{ d.clientName || '—' }}</td>
-            <td>
-              @if (d.simProvider) {
-                <span class="sim-cell">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M15 2v5H9V2"/></svg>
-                  {{ d.simProvider }}
-                </span>
-              } @else { <span class="no-sim-cell">—</span> }
-            </td>
             <td class="serial-text">{{ d.dateActivation || '—' }}</td>
             <td>
               <span class="status-pill"
-                [class.status--active]="d.status.toLowerCase()==='actif'"
-                [class.status--libre]="d.status.toLowerCase()==='libre'"
-                [class.status--expired]="d.status.toLowerCase()==='expiré'"
-                [class.status--inactive]="d.status.toLowerCase()==='inactif'">
+                [class.status--active]="d.status === 'actif'"
+                [class.status--libre]="d.status === 'libre'"
+                [class.status--inactive]="d.status === 'inactif'">
                 <span class="status-dot"></span>{{ d.status || '—' }}
               </span>
             </td>
@@ -164,7 +144,7 @@
           </tr>
           }
           @if (filtered.length === 0) {
-            <tr><td colspan="10" class="empty-row">{{ i18n.t('res_no_devices') }}</td></tr>
+            <tr><td colspan="9" class="empty-row">{{ i18n.t('res_no_devices') }}<\/td></tr>
           }
         </tbody>
       </table>
@@ -193,10 +173,9 @@
       <p class="dev-identity-model">{{ panelDevice.model || '—' }}</p>
       <p class="dev-identity-serial">{{ panelDevice.numDevice || '—' }}</p>
       <span class="status-pill"
-        [class.status--active]="panelDevice.status.toLowerCase()==='actif'"
-        [class.status--libre]="panelDevice.status.toLowerCase()==='libre'"
-        [class.status--expired]="panelDevice.status.toLowerCase()==='expiré'"
-        [class.status--inactive]="panelDevice.status.toLowerCase()==='inactif'">
+        [class.status--active]="panelDevice.status === 'actif'"
+        [class.status--libre]="panelDevice.status === 'libre'"
+        [class.status--inactive]="panelDevice.status === 'inactif'">
         <span class="status-dot"></span>{{ panelDevice.status || '—' }}
       </span>
     </div>
@@ -205,12 +184,11 @@
     <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice.imei || '—' }}</p></div>
     <div class="detail-item"><p class="detail-label">{{ i18n.t('nav_clients') }}</p><p class="detail-val">{{ panelDevice.clientName || '—' }}</p></div>
     <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ panelDevice.dateActivation || '—' }}</p></div>
-    <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val">{{ panelDevice.simProvider || '—' }}</p></div>
   </div>
 </div>
 }
 
-<!-- ══ HYBRID ASSIGN MODAL ═══════════════════════════════ -->
+<!-- ══ HYBRID ASSIGN MODAL (updated: removed duration, one-time price) ═══════ -->
 @if (showAssignModal) {
 <div class="modal-backdrop" (click)="closeAssignModal()">
 <div class="assign-modal" (click)="$event.stopPropagation()">
@@ -239,11 +217,11 @@
 
   <div class="am-tabs">
     <button class="am-tab" [class.am-tab--active]="assignTab==='pick'" (click)="switchAssignTab('pick')" [disabled]="assignInProgress">
-      ☑ {{ i18n.t('assign_pick_devices') }}
+      ✓ {{ i18n.t('assign_pick_devices') }}
       @if (selectedDeviceIds.size > 0 && assignTab==='pick') { <span class="am-tab-badge">{{ selectedDeviceIds.size }}</span> }
     </button>
     <button class="am-tab" [class.am-tab--active]="assignTab==='count'" (click)="switchAssignTab('count')" [disabled]="assignInProgress">
-      🔢 {{ i18n.t('assign_by_count') }}
+      # {{ i18n.t('assign_by_count') }}
     </button>
   </div>
 
@@ -347,10 +325,6 @@
   <div class="am-config">
     <div class="am-config-row">
       <div class="am-field">
-        <label class="am-field-label">{{ i18n.t('label_duration_months') }}</label>
-        <input class="am-field-input" type="number" [(ngModel)]="assignDuration" min="1" max="24" [disabled]="assignInProgress"/>
-      </div>
-      <div class="am-field">
         <label class="am-field-label">{{ i18n.t('label_price_per_device') }}</label>
         <input class="am-field-input" type="number" [(ngModel)]="assignPrice" min="0" step="0.5" [disabled]="assignInProgress"/>
       </div>
@@ -358,8 +332,7 @@
         <label class="am-field-label">{{ i18n.t('label_summary') }}</label>
         <p class="am-summary">
           <strong>{{ devicesToAssign.length }}</strong> device{{ devicesToAssign.length !== 1 ? 's' : '' }}
-          · <strong>{{ assignDuration }}</strong> month{{ assignDuration !== 1 ? 's' : '' }}
-          · <strong>{{ assignPrice * assignDuration * devicesToAssign.length | number:'1.2-2' }} TND</strong> total
+          · <strong>{{ assignPrice * devicesToAssign.length | number:'1.2-2' }} TND</strong> total
         </p>
       </div>
     </div>

@@ -1,8 +1,10 @@
-<div class="shell">
+<div class="shell" [class.sidebar-open]="sidebarOpen()">
+  <div class="sidebar-overlay" (click)="closeSidebar()"></div>
   <app-sidebar [items]="navItems()" [user]="sidebarUser" />
   <div class="right-side">
     <app-navbar
       [showSearch]="true"
+      [showHamburger]="true"
       [searchResults]="searchResults"
       [isDark]="isDark"
       [navbarUser]="navbarUser"
@@ -11,7 +13,8 @@
       (searchNavigate)="onSearchNavigate($event)"
       (darkToggle)="onDarkToggle()"
       (profileClick)="goToProfile()"
-      (logoutClick)="logout()" />
+      (logoutClick)="logout()"
+      (hamburgerClick)="toggleSidebar()" />
     <main class="main-content">
       <router-outlet />
     </main>

@@ -4,12 +4,12 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 
 interface LoginResponse {
-  token:    string;
-  username: string;
-  role:     string;
-  email:    string;
-  idRev?:   number;   // reseller ID — needed for WebSocket channel
-  idClient?: number;  // client ID — for future use
+  token:     string;
+  username:  string;
+  role:      string;
+  email:     string;
+  idRev?:    number;
+  idClient?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +28,6 @@ export class AuthService {
           localStorage.setItem('role',     res.role);
           localStorage.setItem('email',    res.email);
 
-          // Store reseller ID so WebSocket can subscribe to reseller-specific channel
           if (res.idRev) {
             localStorage.setItem('idRev', res.idRev.toString());
           } else {
@@ -44,13 +43,19 @@ export class AuthService {
       );
   }
 
-  logout() {
+  // Clears session without redirecting — use when rejecting wrong role on login page
+  clearSession() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
     localStorage.removeItem('idRev');
     localStorage.removeItem('idClient');
+  }
+
+  // Full logout — clears session AND redirects
+  logout() {
+    this.clearSession();
     this.router.navigate(['/client']);
   }
 
@@ -68,9 +73,9 @@ export class AuthService {
   redirectByRole() {
     const role = this.getRole();
     switch (role) {
-      case 'ROLE_ADMIN':    this.router.navigate(['/admin/dashboard']);              break;
-      case 'ROLE_RESELLER': this.router.navigate(['/reseller-dashboard/dashboard']); break;
-      case 'ROLE_CLIENT':   this.router.navigate(['/client-dashboard/dashboard']);   break;
+      case 'ROLE_ADMIN':    this.router.navigate(['/admin/dashboard']);               break;
+      case 'ROLE_RESELLER': this.router.navigate(['/reseller-dashboard/dashboard']);  break;
+      case 'ROLE_CLIENT':   this.router.navigate(['/client-dashboard/dashboard']);    break;
       default:              this.router.navigate(['/client']);
     }
   }

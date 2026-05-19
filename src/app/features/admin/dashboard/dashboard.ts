@@ -157,7 +157,7 @@ export class Dashboard implements OnInit, OnDestroy {
         this.devActive         = stats['activeDevices']     ?? 0;
         this.devOffline        = stats['offlineDevices']    ?? 0;
         this.devExpiring       = stats['expiringDevices']   ?? 0;
-        this.criticalIssues    = this.devOffline;
+        // Critical issues will be set in loadResellers() based on real alerts
         this.newResellersMonth = stats['newResellersMonth'] ?? 0;
         this.newClientsMonth   = stats['newClientsMonth']   ?? 0;
         this.loading           = false;
@@ -269,8 +269,13 @@ export class Dashboard implements OnInit, OnDestroy {
                 route:    '/admin/devices',
               });
             }
+            // Update critical issues count based on all collected alerts
+            this.criticalIssues = this.alertEntries.length;
           },
-          error: () => {}
+          error: () => {
+            // Even if pending requests fails, update with current alerts
+            this.criticalIssues = this.alertEntries.length;
+          }
         });
       },
       error: (err) => console.error('Failed to load resellers', err)

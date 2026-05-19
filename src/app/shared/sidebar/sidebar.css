@@ -399,3 +399,30 @@
 .user-more svg { width: 14px; height: 14px; }
 .user-more:hover { color: var(--sb-text); }
 .sidebar.collapsed .user-more { opacity: 0; pointer-events: none; }
+
+/* ═══════════════════════════════════════════════════
+   MOBILE — always show fully expanded even if isCollapsed
+   The shell handles positioning as a fixed drawer
+═══════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .sidebar,
+  .sidebar.collapsed {
+    width: var(--sb-width);
+    min-width: var(--sb-width);
+  }
+
+  /* Un-collapse all hidden elements */
+  .sidebar.collapsed .nav-label      { opacity: 1; max-width: 160px; pointer-events: auto; }
+  .sidebar.collapsed .nav-badge      { opacity: 1; pointer-events: auto; }
+  .sidebar.collapsed .nav-chevron    { opacity: 1; pointer-events: auto; }
+  .sidebar.collapsed .nav-external   { opacity: 1; pointer-events: auto; }
+  .sidebar.collapsed .toggle-label   { opacity: 1; max-width: 120px; pointer-events: auto; }
+  .sidebar.collapsed .user-info      { opacity: 1; max-width: 160px; pointer-events: auto; }
+  .sidebar.collapsed .user-more      { opacity: 1; pointer-events: auto; }
+
+  /* Re-align items to left-aligned row */
+  .sidebar.collapsed .nav-item       { justify-content: flex-start; padding: 8px 10px; }
+  .sidebar.collapsed .user-row       { justify-content: flex-start; padding: 6px 8px; }
+  .sidebar.collapsed .toggle-btn     { justify-content: flex-start; padding: 8px 10px; }
+  .sidebar.collapsed .sidebar-header { padding: 0 18px; justify-content: flex-start; }
+}

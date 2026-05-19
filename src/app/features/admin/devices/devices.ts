@@ -27,7 +27,7 @@ export class AdminDevices implements OnInit {
   loading = true;
 
   search = '';
-  filterStatus: 'all' | 'actif' | 'expiré' | 'inactif' | 'libre' | 'unassigned' = 'all';
+  filterStatus: 'all' | 'actif' | 'inactif' | 'libre' | 'unassigned' = 'all';
   filterModel = 'all';
 
   panelOpen = false;
@@ -90,7 +90,6 @@ export class AdminDevices implements OnInit {
 
   get totalCount()       { return this.devices.length; }
   get activeCount()      { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'actif').length; }
-  get expiredCount()     { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'expiré').length; }
   get inactiveCount()    { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'inactif').length; }
   get libreCount()       { return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'libre').length; }
   get unassignedDbCount(){ return this.devices.filter(d => (d.status ?? '').toLowerCase() === 'unassigned').length; }
@@ -98,7 +97,7 @@ export class AdminDevices implements OnInit {
   statusClass(status: string | null | undefined): string {
     const s = (status ?? '').toLowerCase();
     if (s === 'actif')      return 'status--active';
-    if (s === 'expiré')     return 'status--expired';
+    if (s === 'expiré')     return 'status--expired'; // keep for existing devices
     if (s === 'libre')      return 'status--libre';
     if (s === 'unassigned') return 'status--unassigned';
     return 'status--inactive';

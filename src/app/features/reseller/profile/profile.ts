@@ -1,15 +1,14 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { ClientService } from '../../../service/Client.service';
-import { NotificationWebsocketService } from '../../../service/notification-websocket.service';
+import { DeviceService } from '../../../service/Device.service';
+import { NotificationWebsocketService, AvatarEvent } from '../../../service/notification-websocket.service';
 import { Reseller } from '../../../models/reseller.model';
 import { Subscription } from 'rxjs';
-
-type TabName = 'profile'  | 'notifications' | 'activity';
 
 @Component({
   selector: 'app-reseller-profile',
@@ -22,29 +21,70 @@ export default class ResellerProfileComponent implements OnInit, OnDestroy {
 
   private resellerService = inject(ResellerService);
   private clientService   = inject(ClientService);
+  private deviceService   = inject(DeviceService);
   private wsService       = inject(NotificationWebsocketService);
   private router          = inject(Router);
   public  i18n            = inject(TranslationService);
 
-  reseller: Reseller = {
-    idRev: 0, username: '', email: '', nomEntreprise: '',
-    deviceCostByDay: 0, daysCount: 0, phone: '', clientCount: 0,
-    createdAt: '', avatarUrl: ''
-  };
+  reseller = signal<Reseller | null>(null);
+  profileEdit = signal<any>(null);
+  showEditModal = signal(false);
+  successMessage = signal<string | null>(null);
+  errorMessage = signal<string | null>(null);
 
-  profile = { username: '', nomEntreprise: '', email: '', phone: '' };
-
-  // ── Avatar ────────────────────────────────────────────
-  avatarPreview: string | null = null;
-  avatarFile: File | null = null;
+  avatarPreview:  string | null = null;
+  avatarFile:     File | null   = null;
   uploadError = '';
+  avatarUploading = false;
 
+  private avatarSub?: Subscription;
+
+  ngOnInit() {
+    this.loadProfile();
+    this.wsService.connect();
+    this.avatarSub = this.wsService.avatar$.subscribe((event: AvatarEvent) => {
+      if (event.avatarUrl) {
+        const fullUrl = event.avatarUrl.startsWith('http')
+          ? event.avatarUrl
+          : 'http://localhost:8080' + event.avatarUrl;
+        this.reseller.update(r => {
+          if (!r) return r;
+          return { ...r, avatarUrl: fullUrl };
+        });
+        this.avatarPreview = null;
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.avatarSub?.unsubscribe();
+  }
+
+  loadProfile() {
+    this.resellerService.getMyProfile().subscribe({
+      next: (r: Reseller) => {
+        const avatarFullUrl = r.avatarUrl
+          ? (r.avatarUrl.startsWith('http') ? r.avatarUrl : 'http://localhost:8080' + r.avatarUrl)
+          : '';
+        this.reseller.set({ ...r, avatarUrl: avatarFullUrl });
+      },
+      error: () => this.showError('Failed to load profile')
+    });
+  }
+
+  // Avatar
   onAvatarChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
     const file = input.files[0];
-    if (!file.type.startsWith('image/')) { this.uploadError = 'adm_upload_type_error'; return; }
-    if (file.size > 2 * 1024 * 1024)    { this.uploadError = 'adm_upload_size_error'; return; }
+    if (!file.type.startsWith('image/')) {
+      this.uploadError = 'adm_upload_type_error';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      this.uploadError = 'adm_upload_size_error';
+      return;
+    }
     this.uploadError = '';
     this.avatarFile = file;
     const reader = new FileReader();
@@ -52,103 +92,111 @@ export default class ResellerProfileComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  removeAvatar(): void { this.avatarPreview = null; this.avatarFile = null; }
-
-  get initials(): string {
-    return (this.reseller.username || 'R')
-      .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  saveAvatar(): void {
+    if (!this.avatarFile) return;
+    this.avatarUploading = true;
+    this.resellerService.uploadAvatar(this.avatarFile).subscribe({
+      next: () => {
+        this.avatarPreview = null;
+        this.avatarFile = null;
+        this.avatarUploading = false;
+        this.showSuccess('Avatar updated');
+        this.loadProfile(); // reload to get persisted URL
+      },
+      error: () => {
+        this.avatarUploading = false;
+        this.showError('Failed to upload avatar');
+      }
+    });
   }
 
-  // ── Tabs ──────────────────────────────────────────────
-  activeTab: TabName = 'profile';
-  switchTab(t: TabName) { this.activeTab = t; }
+  // Edit profile modal
+  openEditModal() {
+    const r = this.reseller();
+    if (!r) return;
+    this.profileEdit.set({
+      username: r.username,
+      nomEntreprise: r.nomEntreprise,
+      email: r.email,
+      phone: r.phone ?? '',
+    });
+    this.showEditModal.set(true);
+  }
 
-  // ── Stats ─────────────────────────────────────────────
-  totalClients      = 0;
-  totalDevices      = 0;
-  activeDevices     = 0;
-  totalRevenue      = 0;
-  totalTransactions = 0;
-  fmt(n: number) { return new Intl.NumberFormat().format(n); }
+  closeEditModal() {
+    this.showEditModal.set(false);
+    this.profileEdit.set(null);
+  }
 
-  // ── Validation ────────────────────────────────────────
-  isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
-  isValidPhone(p: string) { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
-  get profileEmailError() { return (this.profile.email && !this.isValidEmail(this.profile.email)) ? 'msg_error_invalid_email' : ''; }
-  get profilePhoneError() { return (this.profile.phone && !this.isValidPhone(this.profile.phone)) ? 'msg_error_invalid_phone' : ''; }
+  isValidEmail(e: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+  }
 
-  resetProfile() {
-    this.profile = {
-      username:      this.reseller.username,
-      nomEntreprise: this.reseller.nomEntreprise,
-      email:         this.reseller.email,
-      phone:         this.reseller.phone ?? '',
-    };
+  isValidPhone(p: string): boolean {
+    return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, ''));
+  }
+
+  get editEmailError(): string {
+    const e = this.profileEdit()?.email ?? '';
+    return e && !this.isValidEmail(e) ? 'msg_error_invalid_email' : '';
+  }
+
+  get editPhoneError(): string {
+    const p = this.profileEdit()?.phone ?? '';
+    return p && !this.isValidPhone(p) ? 'msg_error_invalid_phone' : '';
   }
 
   saveProfile() {
-    if (this.profileEmailError || this.profilePhoneError) return;
-
-    if (this.avatarFile) {
-      this.resellerService.uploadAvatar(this.avatarFile).subscribe({
-        next: (res: Reseller) => {
-          this.reseller.avatarUrl = res.avatarUrl ?? '';
-          this.avatarPreview = null;
-          this.avatarFile = null;
-        },
-        error: () => { this.uploadError = 'adm_upload_size_error'; }
-      });
+    const edit = this.profileEdit();
+    if (!edit) return;
+    if (!this.isValidEmail(edit.email) || !this.isValidPhone(edit.phone)) {
+      this.showError(this.i18n.t('msg_error_invalid_email'));
+      return;
     }
-
-    this.resellerService.updateMyProfile(this.profile).subscribe({
-      next: (updated: Reseller) => { this.reseller = { ...this.reseller, ...updated }; },
-      error: (err) => console.error('Failed to update profile', err)
-    });
-  }
-
-
-
-  // ── Notifications ─────────────────────────────────────
-  notifSettings = [
-    { nameKey: 'adm_notif_new_client',     descKey: 'adm_notif_new_client_desc',     enabled: true  },
-    { nameKey: 'adm_notif_device_offline', descKey: 'adm_notif_device_offline_desc', enabled: true  },
-    { nameKey: 'adm_notif_reports',        descKey: 'adm_notif_reports_desc',        enabled: false },
-  ];
-
-  // ── Activity ──────────────────────────────────────────
-  activityLog: { icon: string; labelKey: string; entity: string; date: string }[] = [];
-
-  // ── Lifecycle ─────────────────────────────────────────
-  private avatarSub?: Subscription;
-
-  ngOnInit() {
-    this.resellerService.getMyProfile().subscribe({
-      next: (r: Reseller) => {
-        this.reseller = r;
-        this.totalClients = r.clientCount ?? 0;
-        this.profile = {
-          username:      r.username,
-          nomEntreprise: r.nomEntreprise,
-          email:         r.email,
-          phone:         r.phone ?? '',
-        };
+    const payload = {
+      username: edit.username,
+      nomEntreprise: edit.nomEntreprise,
+      email: edit.email,
+      phone: edit.phone,
+    };
+    this.resellerService.updateMyProfile(payload).subscribe({
+      next: () => {
+        this.closeEditModal();
+        this.showSuccess('Profile updated');
+        this.loadProfile();
       },
-      error: (err) => console.error('Failed to load profile', err)
-    });
-
-    this.clientService.getMyClients().subscribe({
-      next: (clients) => { this.totalClients = clients.length; },
-      error: () => {}
-    });
-
-    this.wsService.connect();
-    this.avatarSub = this.wsService.avatar$.subscribe(event => {
-      this.reseller.avatarUrl = event.avatarUrl;
-      this.avatarPreview = null;
+      error: () => this.showError('Failed to update profile')
     });
   }
 
-  ngOnDestroy() { this.avatarSub?.unsubscribe(); }
+  // Member since
+  get memberSinceDays(): number {
+    const r = this.reseller();
+    if (!r || !r.createdAt) return 0;
+    const created = new Date(r.createdAt);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+    return diff;
+  }
 
-  logout(): void { localStorage.clear(); this.router.navigate(['/bo-reseller-access']); }
+  initials(): string {
+    const r = this.reseller();
+    if (!r) return 'R';
+    return (r.username || 'R').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  showSuccess(msg: string) {
+    this.successMessage.set(msg);
+    setTimeout(() => this.successMessage.set(null), 3000);
+  }
+
+  showError(msg: string) {
+    this.errorMessage.set(msg);
+    setTimeout(() => this.errorMessage.set(null), 3000);
+  }
+
+  logout(): void {
+    localStorage.clear();
+    this.router.navigate(['/bo-reseller-access']);
+  }
 }

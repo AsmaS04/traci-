@@ -9,6 +9,7 @@ export class ResellerService {
   private http = inject(HttpClient);
   private adminUrl = 'http://localhost:8080/api/admin/resellers';
   private portalUrl = 'http://localhost:8080/api/reseller';
+   private baseUrl = 'http://localhost:8080/api/resellers'; // for public endpoints
   // ── Admin scope ─────────────────────────────────────
   getAll() {
     return this.http.get<Reseller[]>(this.adminUrl);
@@ -48,6 +49,11 @@ export class ResellerService {
     { params: { email } }
   );
 }
+
+ /** Get current month commission for a reseller (admin) */
+  getCurrentMonthCommission(resellerId: number) {
+    return this.http.get<{ commission: number }>(`${this.baseUrl}/${resellerId}/commission/current`);
+  }
   // ── Reseller portal scope ───────────────────────────
   getMyProfile() {
     return this.http.get<Reseller>(`${this.portalUrl}/profile`);

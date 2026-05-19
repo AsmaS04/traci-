@@ -40,6 +40,14 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   formEmailExists  = false;
   private originalEmail = '';
 
+  // List of Tunisian governorates for the region dropdown
+  readonly governorates = [
+    'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
+    'Kairouan', 'Kasserine', 'Kébili', 'Kef', 'Mahdia', 'Manouba', 'Médenine',
+    'Monastir', 'Nabeul', 'Sfax', 'Sidi Bouzid', 'Siliana', 'Sousse',
+    'Tataouine', 'Tozeur', 'Tunis', 'Zaghouan'
+  ];
+
   ngOnInit() {
     this.resellerService.getMyProfile().subscribe({
       next: (r) => { this.reseller = r; },
@@ -81,7 +89,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   // ── Slide Panel ──────────────────────────────────────────
   panelOpen   = false;
   panelClient: Client | null = null;
-  panelTab: 'profile' | 'devices' | 'operations' = 'profile';
+  panelTab: 'profile' | 'devices' | 'subscriptions' = 'profile';
   panelDevices: Device[] = [];
   panelAbos: AbonnementDTO[] = [];
   panelDevicesLoading  = false;
@@ -123,7 +131,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     });
   }
 
-  switchPanelTab(t: 'profile' | 'devices' | 'operations') {
+  switchPanelTab(t: 'profile' | 'devices' | 'subscriptions') {
     this.panelTab = t;
     if (!this.panelClient) return;
     if (t === 'devices' && this.panelDevices.length === 0) {
@@ -133,7 +141,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
         error: () => { this.panelDevicesLoading = false; }
       });
     }
-    if (t === 'operations' && this.panelAbos.length === 0) {
+    if (t === 'subscriptions' && this.panelAbos.length === 0) {
       this.panelAbosLoading = true;
       this.aboService.getByClient(this.panelClient.idClient).subscribe({
         next: (data) => { this.panelAbos = data; this.panelAbosLoading = false; },
@@ -255,168 +263,17 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     return Math.min((a.joursRestants / (a.dureeMois * 30)) * 100, 100);
   }
 
-  // ══════════════════════════════════════════════════════════
-  // HYBRID ASSIGN MODAL
-  // ══════════════════════════════════════════════════════════
-  showAssignModal  = false;
-  assignTab: 'pick' | 'count' = 'pick';
-  assignTargetClient: Client | null = null;
-
-  assignDuration  = 1;
-  assignPrice     = 0;
-
-  libreDevices: Device[]         = [];
-  libreLoading                   = false;
-  selectedDeviceIds: Set<number> = new Set();
-
-  assignCount    = 1;
-  countPreview: Device[] = [];
-
-  assignInProgress = false;
-  assignDone       = 0;
-  assignTotal      = 0;
-  assignErrors     = 0;
-
-  openAssignModal(c: Client) {
-    this.assignTargetClient   = c;
-    this.assignTab            = 'pick';
-    this.assignDuration       = 1;
-    this.assignPrice          = 0;
-    this.selectedDeviceIds    = new Set();
-    this.assignCount          = 1;
-    this.countPreview         = [];
-    this.assignDone           = 0;
-    this.assignTotal          = 0;
-    this.assignErrors         = 0;
-    this.assignInProgress     = false;
-    this.showAssignModal      = true;
-    this.loadLibreDevices();
-  }
-
-  closeAssignModal() {
-    if (this.assignInProgress) return;
-    this.showAssignModal = false;
-    this.assignTargetClient = null;
-  }
-
-  loadLibreDevices() {
-    this.libreLoading = true;
-    this.deviceService.getLibreByReseller(this.reseller.idRev).subscribe({
-      next: (data) => {
-        this.libreDevices = data;
-        this.libreLoading = false;
-        this.updateCountPreview();
-      },
-      error: () => {
-        this.libreLoading = false;
-        this.toastService.error('Failed to load available devices');
-      }
-    });
-  }
-
-  switchAssignTab(t: 'pick' | 'count') {
-    this.assignTab = t;
-    if (t === 'count') this.updateCountPreview();
-  }
-
-  toggleDevice(id: number) {
-    if (this.selectedDeviceIds.has(id)) this.selectedDeviceIds.delete(id);
-    else                                this.selectedDeviceIds.add(id);
-  }
-
-  isSelected(id: number) { return this.selectedDeviceIds.has(id); }
-
-  toggleSelectAll() {
-    if (this.selectedDeviceIds.size === this.libreDevices.length) {
-      this.selectedDeviceIds = new Set();
-    } else {
-      this.selectedDeviceIds = new Set(this.libreDevices.map(d => d.idDevice));
-    }
-  }
-
-  get allSelected()  { return this.libreDevices.length > 0 && this.selectedDeviceIds.size === this.libreDevices.length; }
-  get someSelected() { return this.selectedDeviceIds.size > 0 && !this.allSelected; }
-
-  updateCountPreview() {
-    this.countPreview = this.libreDevices.slice(0, Math.max(0, this.assignCount));
-  }
-
-  get devicesToAssign(): Device[] {
-    if (this.assignTab === 'pick') {
-      return this.libreDevices.filter(d => this.selectedDeviceIds.has(d.idDevice));
-    } else {
-      return this.countPreview;
-    }
-  }
-
-  get canAssign(): boolean {
-    if (this.assignInProgress)    return false;
-    if (!this.assignTargetClient) return false;
-    if (this.assignDuration < 1)  return false;
-    if (this.assignPrice < 0)     return false;
-    return this.devicesToAssign.length > 0;
-  }
-
-  async runBulkAssign() {
-    const devices = this.devicesToAssign;
-    if (!devices.length || !this.assignTargetClient) return;
-
-    this.assignInProgress = true;
-    this.assignTotal      = devices.length;
-    this.assignDone       = 0;
-    this.assignErrors     = 0;
-
-    for (const device of devices) {
-      try {
-        await this.aboService.assignDevice(
-          this.reseller.idRev,
-          this.assignTargetClient.idClient,
-          device.idDevice,
-          this.assignDuration,
-          this.assignPrice
-        ).toPromise();
-        this.assignDone++;
-      } catch {
-        this.assignErrors++;
-        this.assignDone++;
-      }
-    }
-
-    this.assignInProgress = false;
-
-    const ok   = this.assignDone - this.assignErrors;
-    const fail = this.assignErrors;
-
-    if (fail === 0)      this.toastService.success(`${ok} device${ok > 1 ? 's' : ''} assigned successfully`);
-    else if (ok === 0)   this.toastService.error(`All ${fail} assignments failed`);
-    else                 this.toastService.warning(`${ok} assigned, ${fail} failed`);
-
-    if (this.panelClient?.idClient === this.assignTargetClient?.idClient) {
-      this.panelDevices = [];
-      this.switchPanelTab('devices');
-    }
-    this.showAssignModal = false;
-    this.assignTargetClient = null;
-  }
-
-  get assignProgress(): number {
-    if (!this.assignTotal) return 0;
-    return Math.round((this.assignDone / this.assignTotal) * 100);
-  }
-
-  // ══════════════════════════════════════════════════════════
-  // DEVICE REQUEST MODAL
-  // ══════════════════════════════════════════════════════════
+  // ── Device Request Modal (keep) ──────────────────────────────────
   showRequestModal   = false;
   requestCount       = 1;
   requestMessage     = '';
   requestSubmitting  = false;
 
   openRequestModal() {
-  this.requestCount    = 1;
-  this.requestMessage  = '';
-  this.showRequestModal = true;
-}
+    this.requestCount    = 1;
+    this.requestMessage  = '';
+    this.showRequestModal = true;
+  }
 
   closeRequestModal() { this.showRequestModal = false; }
 

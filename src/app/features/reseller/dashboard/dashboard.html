@@ -52,7 +52,7 @@
 @if (!loading()) {
 <div class="page">
 
-  <!-- ══ HEADER ══════════════════════════════════════════════ -->
+  <!-- HEADER -->
   <div class="page-header">
     <div>
       <p class="page-eyebrow">{{ i18n.t('res_eyebrow') }}</p>
@@ -66,7 +66,7 @@
         </svg>
         {{ i18n.t('res_add_client') }}
       </button>
-      <button class="btn-secondary" (click)="navigateTo('/reseller-dashboard/devices')">
+      <button class="btn-secondary" (click)="openAssignModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
           <rect x="5" y="2" width="14" height="20" rx="2"/>
           <line x1="12" y1="8" x2="12" y2="12"/><line x1="10" y1="10" x2="14" y2="10"/>
@@ -76,21 +76,17 @@
     </div>
   </div>
 
-  <!-- ══ ROW 1 — KPI CARDS (Clients + Devices) ══════════════ -->
-  <div class="kpi-row" style="grid-template-columns: repeat(2, 1fr);">
-    <!-- Clients -->
+  <!-- ROW 1: KPI CARDS -->
+  <div class="kpi-row">
     <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/clients')">
       <div class="kpi-icon kpi-icon--teal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
       <div class="kpi-body">
         <p class="kpi-label">{{ i18n.t('res_stat_clients') }}</p>
         <p class="kpi-value">{{ fmtInt(totalClients) }}</p>
-        @if (mostActiveClient !== '—') {
-          <p class="kpi-sub">{{ i18n.t('label_latest') }}: {{ mostActiveClient }}</p>
+        @if (latestClientName !== '—') {
+          <p class="kpi-sub">{{ i18n.t('label_latest') }}: {{ latestClientName }}</p>
         } @else {
           <p class="kpi-sub kpi-sub--muted">{{ i18n.t('empty_no_clients_yet') }}</p>
         }
@@ -98,12 +94,9 @@
       <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
 
-    <!-- Devices -->
     <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="kpi-icon kpi-icon--blue">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
-        </svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
       </div>
       <div class="kpi-body">
         <p class="kpi-label">{{ i18n.t('res_stat_devices') }}</p>
@@ -117,28 +110,26 @@
     </div>
   </div>
 
-  <!-- ══ ROW 2 — ACTION ROW (Commission | Health | Attention) ══ -->
+  <!-- ROW 2: COMMISSION + REVENUE + ATTENTION -->
   <div class="action-row">
-    <!-- Commission Earned card with filters -->
+
+    <!-- Commission Card -->
     <div class="card commission-card" (click)="navigateToInvoices()">
       <div class="card-head">
         <p class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="title-icon">
-            <line x1="12" y1="1" x2="12" y2="23"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="title-icon"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           {{ i18n.t('kpi_commission_earned') }}
         </p>
         <div class="commission-filters" (click)="$event.stopPropagation()">
           <button class="filter-chip" [class.active]="commissionRange === 'today'" (click)="setCommissionRange('today')">{{ i18n.t('dashboard_today') }}</button>
-          <button class="filter-chip" [class.active]="commissionRange === 'week'" (click)="setCommissionRange('week')">{{ i18n.t('res_filter_week') }}</button>
+          <button class="filter-chip" [class.active]="commissionRange === 'week'"  (click)="setCommissionRange('week')">{{ i18n.t('res_filter_week') }}</button>
           <button class="filter-chip" [class.active]="commissionRange === 'month'" (click)="setCommissionRange('month')">{{ i18n.t('res_filter_month') }}</button>
-          <button class="filter-chip" [class.active]="commissionRange === 'all'" (click)="setCommissionRange('all')">{{ i18n.t('filter_all') }}</button>
+          <button class="filter-chip" [class.active]="commissionRange === 'all'"   (click)="setCommissionRange('all')">{{ i18n.t('filter_all') }}</button>
         </div>
       </div>
       <div class="health-main" style="justify-content: space-between; align-items: center;">
         <div>
-          <p class="kpi-value" style="font-size: 1.6rem;">{{ fmt(totalCommission()) }} TND</p>
+          <p class="kpi-value" style="font-size:1.6rem;">{{ fmt(totalCommission()) }} TND</p>
           <p class="kpi-sub">
             @switch (commissionRange) {
               @case ('today') { <span>{{ i18n.t('label_todays_earnings') }}</span> }
@@ -148,101 +139,82 @@
             }
           </p>
         </div>
-        <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5; width:20px;">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
+        <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;width:20px;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
 
-    <!-- Client Health card -->
-    <div class="card health-card">
-      <p class="card-title">{{ i18n.t('section_client_health') }}</p>
-      <div class="health-main">
-        <div class="health-donut-wrap">
-          <svg width="80" height="80" viewBox="0 0 72 72">
-            <circle cx="36" cy="36" r="28" fill="none" stroke="var(--border)" stroke-width="8"/>
-            <circle cx="36" cy="36" r="28" fill="none" stroke="#16A34A" stroke-width="8"
-              stroke-linecap="round"
-              [attr.stroke-dasharray]="healthCircumference"
-              [attr.stroke-dashoffset]="clientHealthOffset"
-              transform="rotate(-90 36 36)"/>
-          </svg>
-          <div class="health-donut-center"><p class="health-pct">{{ clientHealthPct }}%</p></div>
+    <!-- Revenue Card -->
+    <div class="card revenue-card">
+      <div class="card-head">
+        <p class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="title-icon" style="color:#16A34A"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue
+        </p>
+        <div class="commission-filters" (click)="$event.stopPropagation()">
+          <button class="filter-chip filter-chip--green" [class.active-green]="revenueRange === 'today'" (click)="setRevenueRange('today')">{{ i18n.t('dashboard_today') }}</button>
+          <button class="filter-chip filter-chip--green" [class.active-green]="revenueRange === 'week'"  (click)="setRevenueRange('week')">{{ i18n.t('res_filter_week') }}</button>
+          <button class="filter-chip filter-chip--green" [class.active-green]="revenueRange === 'month'" (click)="setRevenueRange('month')">{{ i18n.t('res_filter_month') }}</button>
+          <button class="filter-chip filter-chip--green" [class.active-green]="revenueRange === 'all'"   (click)="setRevenueRange('all')">{{ i18n.t('filter_all') }}</button>
         </div>
-        <div class="health-stats">
-          <p class="health-headline">{{ clientHealthPct }}% {{ i18n.t('res_health_stable') }}</p>
-          <div class="health-row health-row--ok" (click)="navigateTo('/reseller-dashboard/clients')">
-            <span class="health-dot health-dot--ok"></span>
-            <span>{{ stableClients }} {{ i18n.t('res_health_all_active') }}</span>
-          </div>
-          <div class="health-row health-row--warn" (click)="navigateTo('/reseller-dashboard/clients')">
-            <span class="health-dot health-dot--warn"></span>
-            <span>{{ issueClients }} {{ i18n.t('res_health_need_attention') }}</span>
-          </div>
+      </div>
+      <div class="health-main" style="justify-content: space-between; align-items: center;">
+        <div>
+          <p class="kpi-value kpi-value--green" style="font-size:1.6rem;">{{ fmt(totalRevenue()) }} TND</p>
+          <p class="kpi-sub">
+            @switch (revenueRange) {
+              @case ('today') { <span>{{ i18n.t('label_todays_earnings') }}</span> }
+              @case ('week')  { <span>{{ i18n.t('label_last_7_days') }}</span> }
+              @case ('month') { <span>{{ i18n.t('dashboard_this_month') }}</span> }
+              @default        { <span>Total collected from clients</span> }
+            }
+          </p>
         </div>
+        @if (isRevenueLoading()) {
+          <div class="mini-spinner"></div>
+        }
       </div>
     </div>
 
-    <!-- Attention Needed card -->
+    <!-- Attention Card -->
     <div class="card attention-card">
       <div class="card-head">
         <p class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon title-icon--warn">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="title-icon title-icon--warn"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           {{ i18n.t('section_attention_needed') }}
         </p>
       </div>
-
       @if (issueClients === 0 && offlineDevices() === 0 && totalClients > 0 && pendingRequests().length === 0) {
-        <div class="attention-ok">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-          <p>{{ i18n.t('attention_all_good') }}</p>
-        </div>
+        <div class="attention-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><p>{{ i18n.t('attention_all_good') }}</p></div>
       }
       @if (issueClients > 0) {
-        <div class="attention-item attention-item--warn" (click)="navigateTo('/reseller-dashboard/clients')">
-          <div class="attention-dot attention-dot--warn"></div>
-          <span>{{ issueClients }} {{ i18n.t('attention_expired_subs') }}</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <div class="attention-item attention-item--warn" (click)="navigateToExpiredClients()">
+          <div class="attention-dot attention-dot--warn"></div><span>{{ issueClients }} {{ i18n.t('attention_expired_subs') }}</span><svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       }
       @if (offlineDevices() > 0) {
         <div class="attention-item attention-item--red" (click)="navigateTo('/reseller-dashboard/devices')">
-          <div class="attention-dot attention-dot--red"></div>
-          <span>{{ offlineDevices() }} {{ i18n.t('attention_offline_devices') }}</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="attention-dot attention-dot--red"></div><span>{{ offlineDevices() }} {{ i18n.t('attention_offline_devices') }}</span><svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       }
       @if (pendingRequests().length > 0) {
         <div class="attention-item attention-item--warn" (click)="scrollToRequests()">
-          <div class="attention-dot attention-dot--warn"></div>
-          <span>{{ pendingRequests().length }} {{ i18n.t('attention_password_requests') }}</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="attention-dot attention-dot--warn"></div><span>{{ pendingRequests().length }} {{ i18n.t('attention_password_requests') }}</span><svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       }
       @if (totalClients === 0) {
         <div class="attention-item attention-item--blue" (click)="openAddClient()">
-          <div class="attention-dot attention-dot--blue"></div>
-          <span>{{ i18n.t('attention_add_first_client') }}</span>
-          <svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="attention-dot attention-dot--blue"></div><span>{{ i18n.t('attention_add_first_client') }}</span><svg class="att-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       }
     </div>
   </div>
 
-  <!-- ══ ROW 3 — BOTTOM (Chart + Recent Clients) ═════════════ -->
+  <!-- ROW 3: CHART + RECENT CLIENTS -->
   <div class="bottom-row">
-
     <div class="card spark-card">
       <div class="card-head">
         <p class="card-title">{{ i18n.t('section_client_status') }}</p>
-        <span class="trend-badge" [class.trend-badge--red]="issueClients > 0">
-          {{ issueClients > 0 ? issueClients + ' expired' : '✓ All active' }}
-        </span>
+        <span class="trend-badge" [class.trend-badge--red]="issueClients > 0">{{ issueClients > 0 ? issueClients + ' expired' : '✓ All active' }}</span>
       </div>
       <div id="client-status-chart"></div>
       <p class="chart-note">{{ i18n.t('chart_note_accounts_expire') }}</p>
@@ -253,44 +225,30 @@
         <p class="card-title">{{ i18n.t('section_recent_clients') }}</p>
         <button class="view-all" (click)="navigateTo('/reseller-dashboard/clients')">{{ i18n.t('dashboard_view_all') }}</button>
       </div>
-
       @if (clients().length === 0) {
         <div class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           <p>{{ i18n.t('empty_no_clients_added') }}</p>
           <button class="empty-cta" (click)="openAddClient()">{{ i18n.t('btn_add_first_client') }}</button>
         </div>
       }
-
       @for (c of clients().slice(0, 5); track c.idClient) {
         <div class="client-row" (click)="navigateTo('/reseller-dashboard/clients')">
           <div class="client-avatar">{{ initials(c) }}</div>
-          <div class="client-info">
-            <p class="client-name">{{ fullName(c) }}</p>
-            <p class="client-email">{{ c.email }}</p>
-          </div>
-          <span class="client-status" [class.status--active]="isActive(c)" [class.status--inactive]="!isActive(c)">
-            {{ isActive(c) ? i18n.t('status_active') : i18n.t('status_inactive') }}
-          </span>
+          <div class="client-info"><p class="client-name">{{ fullName(c) }}</p><p class="client-email">{{ c.email }}</p></div>
+          <span class="client-status" [class.status--active]="isActive(c)" [class.status--inactive]="!isActive(c)">{{ isActive(c) ? i18n.t('status_active') : i18n.t('status_inactive') }}</span>
         </div>
       }
     </div>
-
   </div>
 
-  <!-- ══ ACCESS REQUESTS WIDGET (if any) ════════════════════ -->
+  <!-- ACCESS REQUESTS WIDGET -->
   @if (pendingRequests().length > 0) {
     <div id="access-requests-section" style="margin-top:1rem">
       <div class="card ar-card">
         <div class="card-head">
           <p class="card-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                 stroke-linecap="round" style="width:13px;height:13px;color:#DC2626">
-              <rect x="3" y="11" width="18" height="11" rx="2"/>
-              <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px;color:#DC2626"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
             {{ i18n.t('dashboard_access_requests') }}
             <span class="ar-count-badge">{{ pendingRequests().length }} {{ i18n.t('dashboard_pending') }}</span>
           </p>
@@ -299,25 +257,14 @@
           @for (req of pendingRequests(); track req.id) {
             <div class="ar-item">
               <div class="ar-avatar">{{ req.email.charAt(0).toUpperCase() }}</div>
-              <div class="ar-info">
-                <p class="ar-email">{{ req.email }}</p>
-                <p class="ar-date">{{ i18n.t('label_requested') }} {{ formatReqDate(req.requestDate) }}</p>
-              </div>
+              <div class="ar-info"><p class="ar-email">{{ req.email }}</p><p class="ar-date">{{ i18n.t('label_requested') }} {{ formatReqDate(req.requestDate) }}</p></div>
               <span class="ar-role-badge">{{ i18n.t('role_CLIENT') }}</span>
               <button class="ar-btn" [disabled]="processingRequest() === req.id" (click)="regeneratePassword(req)">
                 @if (processingRequest() === req.id) {
-                  <svg style="width:13px;height:13px;animation:spin 1s linear infinite"
-                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
+                  <svg style="width:13px;height:13px;animation:spin 1s linear infinite" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                   {{ i18n.t('dashboard_sending') }}
                 } @else {
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2" stroke-linecap="round" style="width:13px;height:13px">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                  </svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
                   {{ i18n.t('dashboard_regenerate_password') }}
                 }
               </button>
@@ -329,9 +276,9 @@
   }
 
 </div>
-}
+} <!-- end of if(!loading) -->
 
-<!-- ══ ADD CLIENT MODAL ══════════════════════════════════════ -->
+<!-- ADD CLIENT MODAL -->
 @if (showAddModal) {
 <div class="modal-backdrop" (click)="closeAddModal()">
   <div class="modal" (click)="$event.stopPropagation()">
@@ -343,16 +290,15 @@
       <div class="form-grid">
         <div class="form-group">
           <label>{{ i18n.t('profile_first_name') }}</label>
-          <input type="text" [(ngModel)]="addForm.firstName" [placeholder]="i18n.t('profile_first_name')"/>
+          <input type="text" [(ngModel)]="addForm.firstName" placeholder="{{ i18n.t('profile_first_name') }}"/>
         </div>
         <div class="form-group">
           <label>{{ i18n.t('profile_last_name') }}</label>
-          <input type="text" [(ngModel)]="addForm.lastName" [placeholder]="i18n.t('profile_last_name')"/>
+          <input type="text" [(ngModel)]="addForm.lastName" placeholder="{{ i18n.t('profile_last_name') }}"/>
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_email') }}</label>
-          <input type="email" [(ngModel)]="addForm.email" (ngModelChange)="onAddEmailChange()"
-                 placeholder="email@example.com" [class.input--error]="addEmailError"/>
+          <input type="email" [(ngModel)]="addForm.email" (ngModelChange)="onAddEmailChange()" placeholder="email@example.com" [class.input--error]="addEmailError"/>
           @if (addEmailError) { <span class="field-error">{{ i18n.t(addEmailError) }}</span> }
         </div>
         <div class="form-group">
@@ -362,7 +308,12 @@
         </div>
         <div class="form-group form-group--full">
           <label>{{ i18n.t('form_region') }}</label>
-          <input type="text" [(ngModel)]="addForm.region" placeholder="e.g. Tunis"/>
+          <select [(ngModel)]="addForm.region" class="form-select">
+            <option value="" disabled>{{ i18n.t('dashboard_select_governorate') }}</option>
+            @for (gov of governorates; track gov) {
+              <option [value]="gov">{{ gov }}</option>
+            }
+          </select>
         </div>
       </div>
     </div>
@@ -371,5 +322,118 @@
       <button class="btn-save" (click)="saveNewClient()">{{ i18n.t('btn_save') }}</button>
     </div>
   </div>
+</div>
+}
+
+<!-- REQUEST MORE DEVICES MODAL -->
+@if (showRequestModal) {
+<div class="modal-backdrop" (click)="closeRequestModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header"><h2 class="modal-title">{{ i18n.t('btn_request_more_devices') }}</h2><button class="modal-close" (click)="closeRequestModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:0.82rem;color:var(--text-500);margin-bottom:1.2rem;line-height:1.6">{{ i18n.t('request_devices_notice') }}</p>
+      <div class="form-grid">
+        <div class="form-group"><label>{{ i18n.t('label_devices_count_range') }}</label><input type="number" [(ngModel)]="requestCount" min="1" max="50" placeholder="e.g. 10"/><span class="field-error" *ngIf="requestCount < 1 || requestCount > 50">{{ i18n.t('error_devices_range') }}</span></div>
+        <div class="form-group"><label>{{ i18n.t('label_message_optional') }}</label><input type="text" [(ngModel)]="requestMessage" placeholder="e.g. For new clients in Sousse"/></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancel" (click)="closeRequestModal()">{{ i18n.t('btn_cancel') }}</button><button class="btn-save" [disabled]="requestCount < 1 || requestCount > 50 || requestSubmitting" (click)="submitDeviceRequest()">{{ requestSubmitting ? i18n.t('btn_sending') : i18n.t('btn_send_request') }}</button></div>
+  </div>
+</div>
+}
+
+<!-- ASSIGN MODAL -->
+@if (showAssignModal) {
+<div class="modal-backdrop" (click)="closeAssignModal()">
+<div class="assign-modal" (click)="$event.stopPropagation()">
+  <div class="am-header">
+    <div><h2 class="am-title">{{ i18n.t('res_assign_device') }}</h2><p class="am-sub">{{ libreDevices.length }} {{ i18n.t('kpi_libre') }} {{ i18n.t('label_available') }}</p></div>
+    <button class="am-close" (click)="closeAssignModal()" [disabled]="assignInProgress">✕</button>
+  </div>
+  <div class="am-client-select">
+    <label class="am-field-label">{{ i18n.t('label_select_client') }}</label>
+    @if (clients().length === 0) {
+      <p class="am-warn">{{ i18n.t('empty_no_clients_yet') }}</p>
+    } @else {
+      <select class="am-select" [(ngModel)]="selectedClientId" [disabled]="assignInProgress">
+        <option [ngValue]="null" disabled>{{ i18n.t('placeholder_select_client') }}</option>
+        @for (c of clients(); track c.idClient) {
+          <option [ngValue]="c.idClient">{{ fullName(c) }}</option>
+        }
+      </select>
+    }
+  </div>
+  <div class="am-tabs">
+    <button class="am-tab" [class.am-tab--active]="assignTab==='pick'" (click)="switchAssignTab('pick')" [disabled]="assignInProgress">✓ {{ i18n.t('assign_pick_devices') }} @if (selectedDeviceIds.size > 0 && assignTab==='pick') { <span class="am-tab-badge">{{ selectedDeviceIds.size }}</span> }</button>
+    <button class="am-tab" [class.am-tab--active]="assignTab==='count'" (click)="switchAssignTab('count')" [disabled]="assignInProgress"># {{ i18n.t('assign_by_count') }}</button>
+  </div>
+  @if (assignTab === 'pick') {
+    <div class="am-body">
+      @if (libreDevices.length === 0) {
+        <div class="no-devices-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;color:var(--text-300);margin-bottom:.5rem"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+          <p style="font-size:0.82rem;color:var(--text-300);margin-bottom:.75rem">{{ i18n.t('dev_no_libre') }}</p>
+          <button class="btn-request-devices" (click)="closeAssignModal(); openRequestModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>{{ i18n.t('btn_request_more_devices') }}</button>
+        </div>
+      } @else {
+        <div class="am-select-all" (click)="toggleSelectAll()">
+          <div class="am-checkbox" [class.am-checkbox--checked]="allSelected" [class.am-checkbox--partial]="someSelected">@if (allSelected) { <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg> }@if (someSelected) { <span>—</span> }</div>
+          <span class="am-select-all-label">@if (allSelected) { {{ i18n.t('btn_deselect_all') }} } @else { {{ i18n.t('btn_select_all') }} ({{ libreDevices.length }}) }</span>
+          @if (selectedDeviceIds.size > 0) { <span class="am-selected-count">{{ selectedDeviceIds.size }} {{ i18n.t('label_selected') }}</span> }
+        </div>
+        <div class="am-device-list">
+          @for (d of libreDevices; track d.idDevice) {
+            <div class="am-device-row" [class.am-device-row--checked]="isSelected(d.idDevice)" (click)="toggleDevice(d.idDevice)">
+              <div class="am-checkbox" [class.am-checkbox--checked]="isSelected(d.idDevice)">@if (isSelected(d.idDevice)) { <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round"/></svg> }</div>
+              <div class="am-device-icon">📡</div>
+              <div class="am-device-info"><p class="am-device-model">{{ d.model || '—' }}</p><p class="am-device-serial">{{ d.numDevice || '—' }}</p></div>
+              <p class="am-device-imei">{{ d.imei || '—' }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+  @if (assignTab === 'count') {
+    <div class="am-body">
+      <div class="am-count-section">
+        <label class="am-field-label">{{ i18n.t('label_devices_to_assign') }}</label>
+        <div class="am-count-row">
+          <button class="am-count-btn" (click)="assignCount = assignCount > 1 ? assignCount-1 : 1; updateCountPreview()" [disabled]="assignCount <= 1">−</button>
+          <input class="am-count-input" type="number" [(ngModel)]="assignCount" min="1" [max]="libreDevices.length" (ngModelChange)="updateCountPreview()"/>
+          <button class="am-count-btn" (click)="assignCount = assignCount < libreDevices.length ? assignCount+1 : libreDevices.length; updateCountPreview()" [disabled]="assignCount >= libreDevices.length">+</button>
+          <span class="am-count-hint">{{ i18n.t('label_of') }} {{ libreDevices.length }} {{ i18n.t('label_available') }}</span>
+        </div>
+        @if (countPreview.length > 0) {
+          <div class="am-preview"><p class="am-preview-label">{{ i18n.t('label_preview_devices') }} {{ countPreview.length }}:</p><div class="am-preview-list">@for (d of countPreview; track d.idDevice) { <div class="am-preview-row"><span class="am-preview-num">#{{ $index + 1 }}</span><span class="am-preview-model">{{ d.model || '—' }}</span><span class="am-preview-serial">{{ d.numDevice || '—' }}</span></div> }</div></div>
+        }
+        @if (libreDevices.length === 0) {
+          <div class="no-devices-state" style="margin-top:1rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;color:var(--text-300);margin-bottom:.5rem"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
+            <p style="font-size:0.82rem;color:var(--text-300);margin-bottom:.75rem">{{ i18n.t('dev_no_libre') }}</p>
+            <button class="btn-request-devices" (click)="closeAssignModal(); openRequestModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>{{ i18n.t('btn_request_more_devices') }}</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  <div class="am-config">
+    <div class="am-config-row">
+      <div class="am-field"><label class="am-field-label">{{ i18n.t('label_price_per_device') }}</label><input class="am-field-input" type="number" [(ngModel)]="assignPrice" min="0" step="0.5" [disabled]="assignInProgress"/></div>
+      <div class="am-field am-field--summary"><label class="am-field-label">{{ i18n.t('label_summary') }}</label><p class="am-summary"><strong>{{ devicesToAssign.length }}</strong> device{{ devicesToAssign.length !== 1 ? 's' : '' }} · <strong>{{ assignPrice * devicesToAssign.length | number:'1.2-2' }} TND</strong> total</p></div>
+    </div>
+  </div>
+  @if (assignInProgress) {
+    <div class="am-progress"><div class="am-progress-bar"><div class="am-progress-fill" [style.width.%]="assignProgress"></div></div><p class="am-progress-label">{{ assignDone }} / {{ assignTotal }} {{ i18n.t('label_assigning') }}</p></div>
+  }
+  <div class="am-footer">
+    <button class="am-btn-cancel" (click)="closeAssignModal()" [disabled]="assignInProgress">{{ i18n.t('btn_cancel') }}</button>
+    <button class="am-btn-assign" (click)="runBulkAssign()" [disabled]="!canAssign">
+      @if (assignInProgress) { <span class="spinner-sm"></span> {{ i18n.t('label_assigning') }} }
+      @else { <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> {{ i18n.t('btn_assign') }}{{ devicesToAssign.length > 0 ? ' ' + devicesToAssign.length : '' }}
+      }
+    </button>
+  </div>
+</div>
 </div>
 }

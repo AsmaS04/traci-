@@ -212,6 +212,22 @@
 .avatar-menu-item--danger svg { color: #DC2626; }
 .avatar-menu-item--danger:hover { background: rgba(239,68,68,0.06); }
 
+/* ── Hamburger ────────────────────────────────────────────── */
+.hamburger-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-500); cursor: pointer; flex-shrink: 0;
+  transition: background var(--t), color var(--t);
+}
+.hamburger-btn:hover { background: var(--teal-lt); color: var(--teal); border-color: rgba(13,148,136,0.25); }
+.hamburger-btn svg { width: 18px; height: 18px; }
+
+@media (max-width: 767px) {
+  .hamburger-btn { display: flex; }
+}
+
 /* ── Global search ────────────────────────────────────────── */
 .global-search { position: relative; flex: 1; max-width: 460px; margin: 0 1.5rem; }
 .search-box {
@@ -252,3 +268,74 @@
 .sr-status { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
 .sr-status--active   { background: rgba(13,148,136,0.1); color: var(--teal); }
 .sr-status--inactive { background: rgba(107,114,128,0.1); color: var(--text-500); }
+
+/* ── Mobile search back-arrow — hidden on desktop ─────────── */
+.search-back-btn {
+  display: none;
+  align-items: center; justify-content: center;
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: transparent; border: none;
+  color: var(--text-500); cursor: pointer;
+}
+.search-back-btn svg { width: 20px; height: 20px; }
+.search-back-btn:hover { color: var(--teal); }
+
+/* ── Mobile search trigger — hidden on desktop ─────────────── */
+.mobile-search-btn { display: none; }
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .topbar {
+    padding: 0 1rem; gap: 0.5rem;
+    position: relative; /* anchor for the absolute overlay */
+  }
+  .topbar-brand          { display: none; }
+  .global-search         { display: none; }
+  .topbar-right          { gap: 0.35rem; }
+  .topbar-avatar__name   { display: none; }
+  .notif-dropdown        { width: min(320px, 94vw); right: -0.5rem; }
+  .avatar-dropdown       { width: min(240px, 94vw); right: -0.5rem; }
+  .mobile-search-btn     { display: flex; }
+
+  /* ── Expanded search overlay ──────────────────────────── */
+  .topbar.search-expanded {
+    padding: 0 0.75rem;
+  }
+  /* Show the search bar as a full-width overlay */
+  .topbar.search-expanded .global-search {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    inset: 0;
+    padding: 0 0.75rem;
+    background: var(--card);
+    z-index: 10;
+    margin: 0;
+    max-width: none;
+    gap: 0.5rem;
+  }
+  /* Search box fills remaining space */
+  .topbar.search-expanded .global-search .search-box {
+    flex: 1;
+    height: 44px;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+  }
+  /* Results dropdown spans full viewport width */
+  .topbar.search-expanded .search-results {
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+  /* Back arrow visible only when expanded */
+  .topbar.search-expanded .search-back-btn { display: flex; }
+  /* Hide everything else while search is open */
+  .topbar.search-expanded .hamburger-btn,
+  .topbar.search-expanded .topbar-brand,
+  .topbar.search-expanded .topbar-right    { display: none; }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .topbar        { padding: 0 1.25rem; }
+  .global-search { max-width: 280px; margin: 0 0.75rem; }
+  .topbar-brand  { display: none; }
+}

@@ -102,7 +102,6 @@
 @if (!isLoading()) {
 <div class="dash-page">
 
-  <!-- Greeting -->
   <div class="greeting">
     <h1 class="greeting-title">Hello, {{ user.prenom }}! 👋</h1>
     <p class="greeting-sub">{{ i18n.t('client_greeting_subtitle') }}</p>
@@ -119,7 +118,6 @@
 
     <div class="hero-left">
 
-      <!-- Chip row -->
       <div class="plan-row">
         <span class="plan-eyebrow">{{ i18n.t('client_current_plan') }}</span>
         <span class="plan-chip"
@@ -132,13 +130,11 @@
         </span>
       </div>
 
-      <!-- Plan name -->
       <h2 class="hero-plan-name"
           [class.hero-plan-name--muted]="subscriptionState==='none'">
         {{ planLabel }}
       </h2>
 
-      <!-- Dates + progress — only when paid and active -->
       @if (subscriptionState !== 'none' && subscriptionState !== 'pending') {
         <div class="hero-dates">
           <div class="hero-date-item">
@@ -186,7 +182,6 @@
         </div>
       }
 
-      <!-- Notice: no plan -->
       @if (subscriptionState === 'none') {
         <div class="hero-notice notice--info">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -198,7 +193,6 @@
         </div>
       }
 
-      <!-- Notice: pending payment -->
       @if (subscriptionState === 'pending') {
         <div class="hero-notice notice--warn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -210,7 +204,6 @@
         </div>
       }
 
-      <!-- Notice: expiring / expired -->
       @if (subscriptionState === 'warning' || subscriptionState === 'danger' || subscriptionState === 'expired') {
         <div class="hero-notice"
           [class.notice--warn]="subscriptionState==='warning'"
@@ -228,7 +221,6 @@
         </div>
       }
 
-      <!-- Actions -->
       <div class="hero-actions">
         <button class="btn-renew" (click)="openRenewModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
@@ -252,7 +244,6 @@
       </div>
     </div>
 
-    <!-- Ring — only when paid and active -->
     @if (subscriptionState !== 'none' && subscriptionState !== 'pending') {
       <div class="hero-right">
         <div class="ring-wrap">
@@ -278,7 +269,7 @@
   <!-- Second row -->
   <div class="second-row">
 
-    <!-- Devices card -->
+    <!-- Your Devices Card -->
     <div class="section-card">
       <div class="section-head">
         <div class="sh-left">
@@ -309,10 +300,9 @@
         <div class="device-list">
           @for (d of clientDevices.slice(0,4); track d.idDevice) {
             <div class="device-row">
-              <span class="device-icon-em">{{ getDeviceIcon(d.model) }}</span>
               <div class="device-info">
-                <p class="device-name">{{ d.model || '—' }}</p>
-                <p class="device-serial">{{ d.numDevice || '—' }}</p>
+                <p class="device-name">{{ d.customName || d.model || '—' }}</p>
+                <p class="device-serial">{{ d.customName ? d.model : (d.numDevice || '—') }}</p>
               </div>
               <span class="dev-pill"
                 [class.dp--actif]="['actif','active','attribué'].includes((d.status||'').toLowerCase())"
@@ -330,7 +320,7 @@
       }
     </div>
 
-    <!-- Invoices card -->
+    <!-- My Invoices Card (fixed) -->
     <div class="section-card">
       <div class="section-head">
         <div class="sh-left">
@@ -349,15 +339,47 @@
         </div>
         <button class="link-btn" (click)="navigateTo('/client-dashboard/factures')">{{ i18n.t('dashboard_view_all') }}</button>
       </div>
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-        <p class="empty-title">{{ i18n.t('inv_no_invoices') }}</p>
-        <p class="empty-hint">{{ i18n.t('inv_after_payment') }}</p>
-        <button class="empty-btn" (click)="navigateTo('/client-dashboard/factures')">{{ i18n.t('btn_view_invoices') }}</button>
-      </div>
+
+      @if (invoicesLoading()) {
+        <div class="empty-state">
+          <p>Loading invoices...</p>
+        </div>
+      } @else if (recentInvoices().length === 0) {
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p class="empty-title">{{ i18n.t('inv_no_invoices') }}</p>
+          <p class="empty-hint">{{ i18n.t('inv_after_payment') }}</p>
+          <button class="empty-btn" (click)="navigateTo('/client-dashboard/factures')">{{ i18n.t('btn_view_invoices') }}</button>
+        </div>
+      } @else {
+        <div class="device-list">
+          @for (inv of recentInvoices(); track inv.id) {
+            <div class="device-row" (click)="navigateTo('/client-dashboard/factures')" style="cursor: pointer;">
+              <div class="device-info">
+                <p class="device-name">{{ inv.invoiceNumber || ('INV-' + inv.id) }}</p>
+                <p class="device-serial">{{ inv.serviceLabel }}</p>
+              </div>
+              <div class="device-info" style="text-align: right;">
+                <p class="device-name" style="color: #0D9488;">{{ inv.total | number:'1.2-2' }} TND</p>
+                <p class="device-serial">
+                  <span class="badge" [class.badge--paid]="inv.status === 'paid'" [class.badge--pending]="inv.status === 'posted'">
+                    <span class="badge-dot"></span>
+                    {{ inv.status === 'paid' ? 'Paid' : 'Pending' }}
+                  </span>
+                </p>
+              </div>
+            </div>
+          }
+          @if (invoices().length > 4) {
+            <button class="more-btn" (click)="navigateTo('/client-dashboard/factures')">
+              +{{ invoices().length - 4 }} more invoices →
+            </button>
+          }
+        </div>
+      }
     </div>
 
   </div>
@@ -393,7 +415,78 @@
 </div>
 }
 
-<!-- ══ RENEWAL MODAL ═══════════════════════════════════════ -->
+<!-- ══ DEVICE SELECTION MODAL ═══════════════════════════════ -->
+<!-- ✅ FIX: removed `&& abonnement()` so it opens for new clients -->
+@if (showDeviceSelectModal()) {
+<div class="modal-backdrop" (click)="closeDeviceSelectModal()">
+  <div class="modal plan-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Select Your Devices</h2>
+        <p class="modal-sub">Choose which devices to activate · unchosen ones go offline</p>
+      </div>
+      <button class="modal-close" (click)="closeDeviceSelectModal()">&#x2715;</button>
+    </div>
+
+    <div class="device-select-body">
+      @if (clientDevices.length === 0) {
+        <div class="ds-empty">No devices found on your account.</div>
+      } @else {
+        <div class="ds-list">
+          @for (d of clientDevices; track d.idDevice) {
+            <div class="ds-row"
+                 [class.ds-row--selected]="isDeviceSelected(d.idDevice)"
+                 (click)="toggleDevice(d.idDevice)">
+              <div class="ds-checkbox" [class.ds-checkbox--checked]="isDeviceSelected(d.idDevice)">
+                @if (isDeviceSelected(d.idDevice)) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                }
+              </div>
+              <div class="ds-device-info">
+                <p class="ds-device-name">{{ getDeviceDisplayName(d) }}</p>
+                <p class="ds-device-imei">IMEI {{ d.imei || d.numDevice || '—' }}</p>
+              </div>
+              <span class="ds-status-pill"
+                    [class.ds-pill--actif]="(d.status || '').toLowerCase() === 'actif'"
+                    [class.ds-pill--inactive]="(d.status || '').toLowerCase() !== 'actif'">
+                {{ d.status || '—' }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="ds-footer">
+      <div class="ds-summary">
+        <div class="ds-count-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14">
+            <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>
+          </svg>
+          <span>{{ selectedDeviceCount }} device{{ selectedDeviceCount !== 1 ? 's' : '' }} selected</span>
+        </div>
+      </div>
+      <div class="ds-actions">
+        <button class="btn-ghost-inline" (click)="closeDeviceSelectModal()">Cancel</button>
+        <button class="btn-confirm-devices"
+                [disabled]="selectedDeviceCount === 0"
+                (click)="confirmDeviceSelection()">
+          Continue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="13" height="13">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+}
+
+<!-- ══ RENEWAL / PLANS MODAL ════════════════════════════════ -->
 @if (showForfaitsModal()) {
 <div class="modal-backdrop" (click)="closeForfaitsModal()">
   <div class="modal plan-modal" (click)="$event.stopPropagation()">
@@ -401,7 +494,10 @@
     <div class="modal-header">
       <div>
         <h2 class="modal-title">{{ i18n.t('plan_modal_title') }}</h2>
-        <p class="modal-sub">{{ i18n.t('plan_modal_subtitle') }}</p>
+        <p class="modal-sub">
+          {{ i18n.t('plan_modal_subtitle') }} &nbsp;·&nbsp;
+          <strong>{{ selectedDeviceCount }} device{{ selectedDeviceCount !== 1 ? 's' : '' }}</strong>
+        </p>
       </div>
       <button class="modal-close" (click)="closeForfaitsModal()">&#x2715;</button>
     </div>
@@ -413,10 +509,9 @@
     } @else {
       <div class="forfaits-grid">
         @for (plan of plans(); track plan.id) {
+          <!-- ✅ FIX: click handler moved from div to button -->
           <div class="forfait-card"
-               [class.fc--popular]="plan.popular"
-               (click)="selectPlan(plan)">
-
+               [class.fc--popular]="plan.popular">
             @if (plan.popular) {
               <div class="fc-badge">
                 <svg viewBox="0 0 24 24" fill="currentColor" style="width:10px;height:10px;flex-shrink:0">
@@ -425,23 +520,23 @@
                 {{ i18n.t('plan_popular') }}
               </div>
             }
-
-            @if (renewLoading()) {
-              <div class="fc-loading"><div class="spinner-sm"></div></div>
-            }
-
             <p class="fc-duration">{{ plan.label }}</p>
             <div class="fc-price-row">
-              <span class="fc-price">{{ plan.totalTtc | number:'1.0-0' }}</span>
+              <span class="fc-price">{{ getPlanTotal(plan) | number:'1.0-0' }}</span>
               <span class="fc-currency">TND</span>
             </div>
-            <p class="fc-per-month">
-              ~{{ (plan.totalTtc / plan.dureeMois) | number:'1.0-0' }} TND {{ i18n.t('plan_per_month') }}
+            <p class="fc-device-info">
+              {{ selectedDeviceCount }} × {{ (plan.prixUnitaire * plan.dureeMois) | number:'1.0-2' }} TND/device
             </p>
-            <button class="fc-btn" [disabled]="renewLoading()">
+            <p class="fc-per-month">
+              ~{{ (getPlanTotal(plan) / plan.dureeMois) | number:'1.0-0' }} TND {{ i18n.t('plan_per_month') }}
+            </p>
+            <!-- ✅ click handler on the button -->
+            <button class="fc-btn" 
+                    [disabled]="renewLoading()"
+                    (click)="selectPlan(plan)">
               {{ renewLoading() ? i18n.t('plan_redirecting') : i18n.t('plan_select') }}
             </button>
-
           </div>
         }
       </div>

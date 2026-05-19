@@ -12,10 +12,10 @@ import { TranslationService } from '../../service/translation.service';
   styleUrl: './login-reseller.css',
 })
 export class LoginReseller {
-  username = '';
-  password = '';
-  error = '';
-  loading = false;
+  username     = '';
+  password     = '';
+  error        = '';
+  loading      = false;
   showPassword = false;
 
   constructor(
@@ -25,7 +25,7 @@ export class LoginReseller {
   ) {}
 
   onSubmit() {
-    this.error = '';
+    this.error   = '';
     this.loading = true;
 
     this.authService.login(this.username, this.password).subscribe({
@@ -33,16 +33,14 @@ export class LoginReseller {
         const role = this.authService.getRole();
         if (role === 'ROLE_RESELLER') {
           this.router.navigate(['/reseller-dashboard/dashboard']);
-        } else if (role === 'ROLE_ADMIN') {
-          this.router.navigate(['/admin/dashboard']);
         } else {
-          this.error = this.ts.t('login_error_admin');
-          this.authService.logout();
+          this.error = this.ts.t('login_error_reseller_credentials');
+          this.authService.clearSession();
         }
         this.loading = false;
       },
       error: () => {
-        this.error = this.ts.t('login_error_reseller_credentials');
+        this.error   = this.ts.t('login_error_reseller_credentials');
         this.loading = false;
       }
     });

@@ -6,7 +6,7 @@
       <div class="sk" style="height:32px;width:180px;border-radius:8px"></div>
     </div>
     <div class="kpi-strip">
-      @for (i of [1,2,3,4]; track i) {
+      @for (i of [1,2,3]; track i) {
         <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1.2rem 1.3rem">
           <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem">
             <div class="sk" style="height:9px;width:70px;border-radius:5px"></div>
@@ -17,7 +17,7 @@
       }
     </div>
     <div style="background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:14px;padding:1rem 1.3rem;margin-bottom:1.3rem;display:flex;gap:0.6rem">
-      @for (i of [1,2,3,4]; track i) { <div class="sk" style="height:32px;width:80px;border-radius:8px"></div> }
+      @for (i of [1,2,3]; track i) { <div class="sk" style="height:32px;width:80px;border-radius:8px"></div> }
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem">
       @for (i of [1,2,3,4,5,6]; track i) {
@@ -47,12 +47,11 @@
 <div class="page">
 
   <div class="page-header">
-    <p class="page-eyebrow">{{ i18n.t('topbar_panel') }}</p>
+    <p class="page-eyebrow">{{ i18n.t('topbar_panel1') }}</p>
     <h1 class="page-title">{{ i18n.t('dev_title') || 'My Devices' }}</h1>
     <p class="page-sub">{{ i18n.t('dev_subtitle') || 'Manage your connected IoT devices' }}</p>
   </div>
 
-  <!-- KPI strip -->
   <div class="kpi-strip">
     <div class="kpi-card">
       <div class="kpi-card-head">
@@ -74,15 +73,6 @@
     </div>
     <div class="kpi-card">
       <div class="kpi-card-head">
-        <span class="kpi-label">{{ i18n.t('dev_expired') }}</span>
-        <div class="kpi-icon kpi-icon--red">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-      </div>
-      <p class="kpi-val">{{ expiredDevices }}</p>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-card-head">
         <span class="kpi-label">{{ i18n.t('filter_inactive') }}</span>
         <div class="kpi-icon kpi-icon--gray">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
@@ -92,20 +82,19 @@
     </div>
   </div>
 
-  <!-- Filter bar -->
   <div class="filter-bar">
-    <button class="filter-btn" [class.filter-btn--active]="filterStatus()==='all'"      (click)="filterStatus.set('all')">{{ i18n.t('filter_all') }}</button>
+    <button class="filter-btn" [class.filter-btn--active]="filterStatus()==='all'"     (click)="filterStatus.set('all')">{{ i18n.t('filter_all') }}</button>
     <button class="filter-btn" [class.filter-btn--active-green]="filterStatus()==='actif'"   (click)="filterStatus.set('actif')">{{ i18n.t('filter_active') }}</button>
-    <button class="filter-btn" [class.filter-btn--active-red]="filterStatus()==='expiré'"   (click)="filterStatus.set('expiré')">{{ i18n.t('dev_expired') }}</button>
-    <button class="filter-btn" [class.filter-btn--active-gray]="filterStatus()==='inactif'" (click)="filterStatus.set('inactif')">{{ i18n.t('filter_inactive') }}</button>
+    <button class="filter-btn" [class.filter-btn--active-gray]="filterStatus()==='inactif'"  (click)="filterStatus.set('inactif')">{{ i18n.t('filter_inactive') }}</button>
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input class="search-input" type="text" [value]="search()" (input)="search.set($any($event.target).value)" [placeholder]="i18n.t('dev_search_placeholder')"/>
     </div>
-    <span style="font-size:0.72rem;font-weight:600;color:var(--text-300,#9ca3af);margin-left:auto;white-space:nowrap">{{ filteredDevices().length }} {{ i18n.t('nav_devices').toLowerCase() }}</span>
+    <span style="font-size:0.72rem;font-weight:600;color:var(--text-300,#9ca3af);margin-left:auto;white-space:nowrap">
+      {{ filteredDevices().length }} {{ i18n.t('nav_devices').toLowerCase() }}
+    </span>
   </div>
 
-  <!-- Device cards grid -->
   @if (filteredDevices().length === 0) {
     <div class="empty-state">
       <div class="empty-icon">
@@ -117,14 +106,14 @@
   } @else {
     <div class="devices-grid">
       @for (d of filteredDevices(); track d.idDevice) {
-        <div class="device-card" [class.device-card--actif]="d.status.toLowerCase()==='actif'" [class.device-card--expired]="d.status.toLowerCase()==='expiré'" [class.device-card--inactive]="d.status.toLowerCase()==='inactif'" (click)="openPanel(d)">
+        <div class="device-card"
+             [class.device-card--actif]="(d.status || '').toLowerCase()==='actif'"
+             [class.device-card--inactive]="(d.status || '').toLowerCase()==='inactif'"
+             (click)="openPanel(d)">
           <div class="dc-header">
-            <div class="dc-icon" [class.dci--actif]="d.status.toLowerCase()==='actif'" [class.dci--expired]="d.status.toLowerCase()==='expiré'" [class.dci--inactive]="d.status.toLowerCase()==='inactif'">
-              <span>{{ getDeviceIcon(d.model) }}</span>
-            </div>
             <div class="dc-info">
-              <p class="dc-model">{{ d.model || '—' }}</p>
-              <p class="dc-serial">{{ d.numDevice || '—' }}</p>
+              <p class="dc-model">{{ getDisplayName(d) }}</p>
+              <p class="dc-serial">{{ d.customName ? d.model : (d.numDevice || '—') }}</p>
             </div>
             <span class="badge" [class]="statusClass(d.status)">
               <span class="badge-dot"></span>{{ d.status || '—' }}
@@ -133,7 +122,6 @@
           <div class="dc-body">
             <div class="dc-row"><span>IMEI</span><span>{{ d.imei || '—' }}</span></div>
             <div class="dc-row"><span>{{ i18n.t('label_activation') }}</span><span>{{ formatDate(d.dateActivation) }}</span></div>
-            @if (d.simProvider) { <div class="dc-row"><span>SIM</span><span class="dc-sim">{{ d.simProvider }}</span></div> }
           </div>
           <div class="dc-footer">
             <button class="btn-secondary" (click)="openPanel(d);$event.stopPropagation()">
@@ -145,7 +133,6 @@
       }
     </div>
   }
-
 </div>
 }
 
@@ -153,24 +140,77 @@
 @if (panelOpen()) { <div class="panel-backdrop" (click)="closePanel()"></div> }
 @if (panelDevice()) {
   <div class="slide-panel" [class.slide-panel--open]="panelOpen()">
+
     <div class="panel-topbar">
       <button class="panel-back" (click)="closePanel()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         {{ i18n.t('btn_back') }}
       </button>
     </div>
+
     <p class="panel-eyebrow">{{ i18n.t('dev_detail_eyebrow') }}</p>
     <h2 class="panel-title">{{ panelDevice()!.model || '—' }}</h2>
+
+    <!-- Custom Name / Rename -->
+    <div class="panel-name-section">
+      @if (!editingName()) {
+        <div class="panel-name-display">
+          <div>
+            <p class="panel-name-label">{{ i18n.t('dev_custom_name') || 'Custom Name' }}</p>
+            <p class="panel-name-value">{{ panelDevice()!.customName || panelDevice()!.model || '—' }}</p>
+          </div>
+          <button class="btn-rename" (click)="startRename()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="12" height="12">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+            {{ i18n.t('btn_rename') || 'Rename' }}
+          </button>
+        </div>
+      } @else {
+        <div class="panel-rename-form">
+          <p class="panel-name-label">{{ i18n.t('dev_custom_name') || 'Custom Name' }}</p>
+          <input class="rename-input"
+                 type="text"
+                 [value]="editNameValue()"
+                 (input)="editNameValue.set($any($event.target).value)"
+                 [placeholder]="panelDevice()!.model || 'Enter a name...'"
+                 (keydown.enter)="saveDeviceName()"
+                 (keydown.escape)="cancelRename()" />
+          <div class="rename-actions">
+            <button class="btn-rename-cancel" (click)="cancelRename()">{{ i18n.t('btn_cancel') || 'Cancel' }}</button>
+            <button class="btn-rename-save" (click)="saveDeviceName()" [disabled]="renameLoading()">
+              @if (renameLoading()) { Saving... } @else { {{ i18n.t('btn_save') || 'Save' }} }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Details -->
     <div class="panel-body">
       <div class="detail-item">
         <p class="detail-label">{{ i18n.t('col_status') }}</p>
-        <span class="badge" [class]="statusClass(panelDevice()!.status)"><span class="badge-dot"></span>{{ panelDevice()!.status || '—' }}</span>
+        <span class="badge" [class]="statusClass(panelDevice()!.status)">
+          <span class="badge-dot"></span>{{ panelDevice()!.status || '—' }}
+        </span>
       </div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_serial_number') }}</p><p class="detail-val">{{ panelDevice()!.numDevice || '—' }}</p></div>
-      <div class="detail-item"><p class="detail-label">IMEI</p><p class="detail-val">{{ panelDevice()!.imei || '—' }}</p></div>
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('res_activation_date') }}</p><p class="detail-val">{{ formatDate(panelDevice()!.dateActivation) }}</p></div>
-      @if (panelDevice()!.simProvider) { <div class="detail-item"><p class="detail-label">{{ i18n.t('res_sim_provider') }}</p><p class="detail-val" style="color:#0D9488">{{ panelDevice()!.simProvider }}</p></div> }
-      <div class="detail-item"><p class="detail-label">{{ i18n.t('label_added_on') }}</p><p class="detail-val">{{ formatDate(panelDevice()!.createdAt) }}</p></div>
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('res_serial_number') }}</p>
+        <p class="detail-val">{{ panelDevice()!.numDevice || '—' }}</p>
+      </div>
+      <div class="detail-item">
+        <p class="detail-label">IMEI</p>
+        <p class="detail-val">{{ panelDevice()!.imei || '—' }}</p>
+      </div>
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('res_activation_date') }}</p>
+        <p class="detail-val">{{ formatDate(panelDevice()!.dateActivation) }}</p>
+      </div>
+      <div class="detail-item">
+        <p class="detail-label">{{ i18n.t('label_added_on') }}</p>
+        <p class="detail-val">{{ formatDate(panelDevice()!.createdAt) }}</p>
+      </div>
     </div>
+
   </div>
 }

@@ -9,6 +9,7 @@ import { Client } from '../../../models/client.model';
 import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { ClientService } from '../../../service/Client.service';
+import { DeviceService } from '../../../service/Device.service';  // <-- ADD THIS IMPORT
 
 @Component({
   selector: 'app-resellers',
@@ -25,7 +26,8 @@ export class Resellers implements OnInit, OnDestroy {
     private clientService: ClientService,
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private deviceService: DeviceService   // <-- ADD THIS DEPENDENCY
   ) {}
 
   private emailCheckTimeout: any = null;
@@ -56,6 +58,10 @@ export class Resellers implements OnInit, OnDestroy {
   resellers: Reseller[] = [];
   formEmailExists = false;
   private originalEmail = '';
+
+  // ── NEW: KPI data for detail view ─────────────────────
+  totalDevices: number = 0;
+  currentMonthCommission: number = 0;
 
   readonly governorates = [
     'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
@@ -121,8 +127,10 @@ export class Resellers implements OnInit, OnDestroy {
 
   openDetail(r: Reseller): void {
     this.selected = r;
-    this.view     = 'detail';
+    this.view = 'detail';
     this.loadResellerClients(r.idRev);
+    this.loadResellerDevicesCount(r.idRev);
+    this.loadResellerCurrentMonthCommission(r.idRev);
   }
 
   private loadResellerClients(resellerId: number) {
@@ -132,7 +140,25 @@ export class Resellers implements OnInit, OnDestroy {
     });
   }
 
-  backToTable(): void { this.view = 'table'; this.selected = null; this.selectedClients = []; }
+  private loadResellerDevicesCount(resellerId: number) {
+    this.deviceService.countByReseller(resellerId).subscribe({
+      next: (res) => this.totalDevices = res.count,
+      error: () => this.totalDevices = 0
+    });
+  }
+
+  private loadResellerCurrentMonthCommission(resellerId: number) {
+    this.resellerService.getCurrentMonthCommission(resellerId).subscribe({
+      next: (res) => this.currentMonthCommission = res.commission,
+      error: () => this.currentMonthCommission = 0
+    });
+  }
+
+  backToTable(): void {
+    this.view = 'table';
+    this.selected = null;
+    this.selectedClients = [];
+  }
 
   openAdd(): void {
     this.formData       = {};
@@ -278,6 +304,12 @@ export class Resellers implements OnInit, OnDestroy {
     } else {
       doSuspend();
     }
+  }
+
+  getScoreClass(score: number): string {
+    if (score >= 120) return 'high';
+    if (score >= 50)  return 'medium';
+    return 'low';
   }
 
   openReactivate(r: Reseller, e: Event): void {

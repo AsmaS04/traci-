@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { TranslationService } from '../../../service/translation.service';
 import { ClientService, AbonnementDTO } from '../../../service/Client.service';
 import { ToastService } from '../../../service/Toast.service';
-
 type FilterStatut = 'ALL' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
 
 @Component({
@@ -24,6 +23,8 @@ export default class AbonnementsComponent implements OnInit {
   selectedAbonnement = signal<AbonnementDTO | null>(null);
   showDetailsModal   = signal(false);
   filterStatut       = signal<FilterStatut>('ALL');
+  invoicesLoading    = signal(false);
+
 
   private statusMap(status: string): 'ACTIVE' | 'EXPIRED' | 'CANCELLED' {
     const s = (status ?? '').toLowerCase();
@@ -54,6 +55,7 @@ export default class AbonnementsComponent implements OnInit {
     this.clientService.getMyAbonnements().subscribe({
       next: (data: AbonnementDTO[]) => { this.abonnements.set(data); this.loading.set(false); },
       error: () => { this.toast.error('Failed to load subscriptions.'); this.loading.set(false); }
+      
     });
   }
 
@@ -103,4 +105,5 @@ export default class AbonnementsComponent implements OnInit {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
+
 }

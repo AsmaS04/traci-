@@ -13,4 +13,6 @@ export interface Client {
   createdAt: string;
   region: string;
   status?: string;
+  avatarUrl?: string;
+  subscriptionStatus?: 'active' | 'expired' | 'pending' | 'none';
 }
