@@ -137,7 +137,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     if (this.notifPortal === 'client') {
-      const allowed = ['PAYMENT_SUCCESS', 'SUBSCRIPTION_EXPIRING', 'DEVICE_ASSIGNED'];
+      const allowed = ['PAYMENT_SUCCESS', 'SUBSCRIPTION_EXPIRING', 'DEVICE_ASSIGNED', 'RESELLER_REASSIGNED'];
       if (!allowed.includes(type)) return;
     }
 
@@ -236,9 +236,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     if (this.notifPortal === 'client') {
-      if (t === 'PAYMENT_SUCCESS')       return { icon: 'receipt', text: detail,                                                      time: 'just now', isRead: false };
-      if (t === 'DEVICE_ASSIGNED')       return { icon: 'cpu',     text: detail,                                                      time: 'just now', isRead: false };
-      if (t === 'SUBSCRIPTION_EXPIRING') return { icon: 'receipt', text: detail,                                                      time: 'just now', isRead: false };
+      if (t === 'PAYMENT_SUCCESS')       return { icon: 'receipt',  text: detail, time: 'just now', isRead: false };
+      if (t === 'DEVICE_ASSIGNED')       return { icon: 'cpu',      text: detail, time: 'just now', isRead: false };
+      if (t === 'SUBSCRIPTION_EXPIRING') return { icon: 'receipt',  text: detail, time: 'just now', isRead: false };
+      if (t === 'RESELLER_REASSIGNED')   return { icon: 'reseller', text: detail, time: 'just now', isRead: false };
       return { icon: 'cpu', text: detail, time: 'just now', isRead: false };
     }
 
@@ -303,6 +304,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.searchQuery    = '';
     this.searchOpen     = false;
   }
+
   closeNotif(): void   { this.notifOpen = false; }
   toggleAvatar(): void { this.avatarOpen = !this.avatarOpen; this.notifOpen = false; }
 

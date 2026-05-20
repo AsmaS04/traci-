@@ -75,9 +75,9 @@
     <div class="filters-row">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('dev_search_placeholder')"/>
+        <input class="search-input" type="text" [ngModel]="search" (ngModelChange)="search=$event; currentPage=1" [placeholder]="i18n.t('dev_search_placeholder')"/>
       </div>
-      <select class="filter-select" [(ngModel)]="filterStatus">
+      <select class="filter-select" [ngModel]="filterStatus" (ngModelChange)="filterStatus=$event; currentPage=1">
         <option value="all">{{ i18n.t('filter_all') }}</option>
         <option value="actif">{{ i18n.t('filter_active') }}</option>
         <option value="inactif">{{ i18n.t('filter_inactive') }}</option>
@@ -105,7 +105,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (d of filtered; track d.idDevice) {
+          @for (d of paginated; track d.idDevice) {
           <tr class="table-row"
             [class.row--actif]="d.status === 'actif'"
             [class.row--libre]="d.status === 'libre'"
@@ -144,11 +144,31 @@
           </tr>
           }
           @if (filtered.length === 0) {
-            <tr><td colspan="9" class="empty-row">{{ i18n.t('res_no_devices') }}<\/td></tr>
+            <tr><td colspan="9" class="empty-row">{{ i18n.t('res_no_devices') }}</td></tr>
           }
         </tbody>
       </table>
     </div>
+    @if (totalPages > 1) {
+    <div class="pagination-bar">
+      <div class="pagination-info">
+        Showing {{ (currentPage-1)*pageSize+1 }}–{{ currentPage*pageSize > filtered.length ? filtered.length : currentPage*pageSize }} of {{ filtered.length }}
+      </div>
+      <div class="pagination-controls">
+        <select class="page-size-select" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage===1">‹</button>
+        @for (p of pageNumbers; track $index) {
+          @if (p === '...') { <span class="page-ellipsis">…</span> }
+          @else { <button class="page-btn" [class.page-btn--active]="p===currentPage" (click)="goToPage(p)">{{ p }}</button> }
+        }
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage===totalPages">›</button>
+      </div>
+    </div>
+    }
   </div>
 </div>
 }

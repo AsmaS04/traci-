@@ -57,6 +57,7 @@ export class Resellers implements OnInit, OnDestroy {
 
   resellers: Reseller[] = [];
   formEmailExists = false;
+  formTouched     = false;
   private originalEmail = '';
 
   // ── NEW: KPI data for detail view ─────────────────────
@@ -161,20 +162,22 @@ export class Resellers implements OnInit, OnDestroy {
   }
 
   openAdd(): void {
-    this.formData       = {};
+    this.formData        = {};
     this.formEmailExists = false;
-    this.originalEmail  = '';
-    this.modalMode      = 'add';
-    this.showModal      = true;
+    this.formTouched     = false;
+    this.originalEmail   = '';
+    this.modalMode       = 'add';
+    this.showModal       = true;
   }
 
   openEdit(r: Reseller, e: Event): void {
     e.stopPropagation();
-    this.formData       = { ...r };
-    this.originalEmail  = r.email ?? '';
+    this.formData        = { ...r };
+    this.originalEmail   = r.email ?? '';
     this.formEmailExists = false;
-    this.modalMode      = 'edit';
-    this.showModal      = true;
+    this.formTouched     = false;
+    this.modalMode       = 'edit';
+    this.showModal       = true;
   }
 
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
@@ -193,6 +196,15 @@ export class Resellers implements OnInit, OnDestroy {
       ? 'msg_error_invalid_phone' : '';
   }
 
+  isFormValid(): boolean {
+    return !!(this.formData.username?.trim())
+        && !!(this.formData.nomEntreprise?.trim())
+        && this.isValidEmail(this.formData.email ?? '')
+        && !this.formEmailExists
+        && this.isValidPhone(this.formData.phone ?? '')
+        && !!(this.formData.location);
+  }
+
   onEmailChange(): void {
     this.formEmailExists = false;
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
@@ -208,11 +220,8 @@ export class Resellers implements OnInit, OnDestroy {
   }
 
   saveForm(): void {
-    if (
-      !this.isValidEmail(this.formData.email ?? '') ||
-      !this.isValidPhone(this.formData.phone ?? '') ||
-      this.formEmailExists
-    ) return;
+    this.formTouched = true;
+    if (!this.isFormValid()) return;
 
     if (this.modalMode === 'add') {
       this.resellerService.create(this.formData).subscribe({
@@ -241,10 +250,11 @@ export class Resellers implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
-    this.showModal      = false;
-    this.formData       = {};
+    this.showModal       = false;
+    this.formData        = {};
     this.formEmailExists = false;
-    this.originalEmail  = '';
+    this.formTouched     = false;
+    this.originalEmail   = '';
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
 
@@ -350,4 +360,28 @@ export class Resellers implements OnInit, OnDestroy {
       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
     });
   }
+
+  // ── Pagination ──────────────────────────────────────────
+  currentPage = 1;
+  pageSize    = 10;
+
+  get totalPages(): number { return Math.ceil(this.filtered.length / this.pageSize); }
+
+  get paginated(): Reseller[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get pageNumbers(): (number | '...')[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (this.currentPage <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (this.currentPage >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
+    return [1, '...', this.currentPage-1, this.currentPage, this.currentPage+1, '...', total];
+  }
+
+  goToPage(p: number | '...'): void { if (p !== '...') this.currentPage = p as number; }
+  prevPage(): void { if (this.currentPage > 1) this.currentPage--; }
+  nextPage(): void { if (this.currentPage < this.totalPages) this.currentPage++; }
+  onPageSizeChange(): void { this.currentPage = 1; }
 }

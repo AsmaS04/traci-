@@ -290,30 +290,53 @@
       <div class="form-grid">
         <div class="form-group">
           <label>{{ i18n.t('profile_first_name') }}</label>
-          <input type="text" [(ngModel)]="addForm.firstName" placeholder="{{ i18n.t('profile_first_name') }}"/>
+          <input type="text" [(ngModel)]="addForm.firstName" placeholder="{{ i18n.t('profile_first_name') }}"
+                 [class.input--error]="addFormTouched && !addForm.firstName?.trim()"/>
+          @if (addFormTouched && !addForm.firstName?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('profile_last_name') }}</label>
-          <input type="text" [(ngModel)]="addForm.lastName" placeholder="{{ i18n.t('profile_last_name') }}"/>
+          <input type="text" [(ngModel)]="addForm.lastName" placeholder="{{ i18n.t('profile_last_name') }}"
+                 [class.input--error]="addFormTouched && !addForm.lastName?.trim()"/>
+          @if (addFormTouched && !addForm.lastName?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_email') }}</label>
-          <input type="email" [(ngModel)]="addForm.email" (ngModelChange)="onAddEmailChange()" placeholder="email@example.com" [class.input--error]="addEmailError"/>
-          @if (addEmailError) { <span class="field-error">{{ i18n.t(addEmailError) }}</span> }
+          <input type="email" [(ngModel)]="addForm.email" (ngModelChange)="onAddEmailChange()"
+                 placeholder="email@example.com"
+                 [class.input--error]="(addFormTouched && !addForm.email?.trim()) || !!addEmailError"/>
+          @if (addFormTouched && !addForm.email?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          } @else if (addEmailError) {
+            <span class="field-error">{{ i18n.t(addEmailError) }}</span>
+          }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_phone') }}</label>
-          <input type="tel" [(ngModel)]="addForm.phone" placeholder="+216 XX XXX XXX" [class.input--error]="addPhoneError"/>
-          @if (addPhoneError) { <span class="field-error">{{ i18n.t(addPhoneError) }}</span> }
+          <input type="tel" [(ngModel)]="addForm.phone" placeholder="+216 XX XXX XXX"
+                 [class.input--error]="(addFormTouched && !addForm.phone?.trim()) || !!addPhoneError"/>
+          @if (addFormTouched && !addForm.phone?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          } @else if (addPhoneError) {
+            <span class="field-error">{{ i18n.t(addPhoneError) }}</span>
+          }
         </div>
         <div class="form-group form-group--full">
           <label>{{ i18n.t('form_region') }}</label>
-          <select [(ngModel)]="addForm.region" class="form-select">
+          <select [(ngModel)]="addForm.region" class="form-select"
+                  [class.input--error]="addFormTouched && !addForm.region">
             <option value="" disabled>{{ i18n.t('dashboard_select_governorate') }}</option>
             @for (gov of governorates; track gov) {
               <option [value]="gov">{{ gov }}</option>
             }
           </select>
+          @if (addFormTouched && !addForm.region) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          }
         </div>
       </div>
     </div>

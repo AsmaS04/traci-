@@ -275,9 +275,10 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Add Client modal ──────────────────────────────────────────
-  showAddModal   = false;
-  addForm: any   = {};
-  addEmailExists = false;
+  showAddModal    = false;
+  addForm: any    = {};
+  addEmailExists  = false;
+  addFormTouched  = false;
 
   isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
@@ -293,6 +294,15 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   get addPhoneError(): string {
     return (this.addForm.phone ?? '') && !this.isValidPhone(this.addForm.phone)
       ? 'msg_error_invalid_phone' : '';
+  }
+
+  isAddFormValid(): boolean {
+    return !!(this.addForm.firstName?.trim())
+        && !!(this.addForm.lastName?.trim())
+        && this.isValidEmail(this.addForm.email ?? '')
+        && !this.addEmailExists
+        && this.isValidPhone(this.addForm.phone ?? '')
+        && !!(this.addForm.region);
   }
 
   onAddEmailChange() {
@@ -311,12 +321,14 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   openAddClient() {
     this.addForm        = { firstName: '', lastName: '', email: '', phone: '', region: '' };
     this.addEmailExists = false;
+    this.addFormTouched = false;
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
     this.showAddModal   = true;
   }
 
   saveNewClient() {
-    if (!this.isValidEmail(this.addForm.email) || !this.isValidPhone(this.addForm.phone) || this.addEmailExists) return;
+    this.addFormTouched = true;
+    if (!this.isAddFormValid()) return;
     this.clientService.createMyClient({
       firstName: this.addForm.firstName, lastName: this.addForm.lastName,
       email: this.addForm.email, phone: this.addForm.phone, region: this.addForm.region,
@@ -333,6 +345,7 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   closeAddModal() {
     this.showAddModal   = false;
     this.addEmailExists = false;
+    this.addFormTouched = false;
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
 

@@ -61,7 +61,6 @@ export class Dashboard implements OnInit, OnDestroy {
 
   totalResellers    = 0;
   totalClients      = 0;
-  criticalIssues    = 0;
   loading           = true;
 
   devActive         = 0;
@@ -148,36 +147,41 @@ export class Dashboard implements OnInit, OnDestroy {
     this.loadActiveSubscriptions();
   }
 
-  private loadDashboard() {
-    this.adminService.getDashboardStats().subscribe({
-      next: (stats) => {
-        this.totalResellers    = stats['totalResellers']    ?? 0;
-        this.totalClients      = stats['totalClients']      ?? 0;
-        this.devTotal          = stats['totalDevices']      ?? 0;
-        this.devActive         = stats['activeDevices']     ?? 0;
-        this.devOffline        = stats['offlineDevices']    ?? 0;
-        this.devExpiring       = stats['expiringDevices']   ?? 0;
-        // Critical issues will be set in loadResellers() based on real alerts
-        this.newResellersMonth = stats['newResellersMonth'] ?? 0;
-        this.newClientsMonth   = stats['newClientsMonth']   ?? 0;
-        this.loading           = false;
-        this.renderDonutChart();
-      },
-      error: () => { this.loading = false; }
-    });
+ private loadDashboard() {
+  this.adminService.getDashboardStats().subscribe({
+    next: (stats) => {
+      this.totalResellers    = stats['totalResellers']    ?? 0;
+      this.totalClients      = stats['totalClients']      ?? 0;
+      this.devTotal          = stats['totalDevices']      ?? 0;
+      this.devActive         = stats['activeDevices']     ?? 0;
+      this.devOffline        = stats['offlineDevices']    ?? 0;
+      this.devExpiring       = stats['expiringDevices']   ?? 0;
+      this.newResellersMonth = stats['newResellersMonth'] ?? 0;
+      this.newClientsMonth   = stats['newClientsMonth']   ?? 0;
+      this.loading           = false;
+      this.renderDonutChart();
+    },
+    error: () => { this.loading = false; }
+  });
 
-    this.adminService.getEvents().subscribe({
-      next: (events) => {
-        this.systemEvents = events.map(e => ({
-          time:   new Date(e.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-          type:   this.evtTypeMap(e.type),
-          label:  e.label,
-          detail: e.detail ?? '',
-        }));
-      },
-      error: (err) => console.error('Failed to load events', err)
-    });
-  }
+  this.adminService.getEvents().subscribe({
+    next: (events) => {
+      const today = new Date().toDateString();
+      const filtered = events.filter(e => new Date(e.createdAt).toDateString() === today);
+      this.systemEvents = filtered.map(e => ({
+        time:   new Date(e.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        type:   this.evtTypeMap(e.type),
+        label:  e.label,
+        detail: e.detail ?? '',
+      }));
+    },
+    error: (err) => console.error('Failed to load events', err)
+  });
+}
+
+get criticalIssues(): number {
+  return this.alertEntries.length + this.pendingRequests().length;
+}
 
   private loadRevenueStats() {
     this.adminService.getRevenueStats().subscribe({
@@ -235,8 +239,7 @@ export class Dashboard implements OnInit, OnDestroy {
           rank:    i + 1,
           name:    r.nomEntreprise || r.username || '—',
           clients: r.clientCount ?? 0,
-          devices: (r as any).deviceCount ?? 0,
-        }));
+          devices: r.deviceCount ?? 0,        }));
 
         const inactiveCount = resellers.filter(r => (r.clientCount ?? 0) === 0).length;
         this.alertEntries = [];
@@ -270,11 +273,11 @@ export class Dashboard implements OnInit, OnDestroy {
               });
             }
             // Update critical issues count based on all collected alerts
-            this.criticalIssues = this.alertEntries.length;
+          
           },
           error: () => {
             // Even if pending requests fails, update with current alerts
-            this.criticalIssues = this.alertEntries.length;
+            
           }
         });
       },

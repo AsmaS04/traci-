@@ -153,34 +153,30 @@ export default class ResellerLayout implements OnInit {
     );
   }
 
- ngOnInit(): void {
-  this.notificationService.connect(); // connect early (global channel)
+ngOnInit(): void {
+  this.notificationService.connect();
 
   this.resellerService.getMyProfile().subscribe({
     next: (r: Reseller) => {
       this.reseller = { ...r, avatarUrl: r.avatarUrl ?? '' };
       if (this.reseller.idRev) {
         localStorage.setItem('idRev', this.reseller.idRev.toString());
-        // Subscribe to reseller-specific topics now that we have the ID
         this.notificationService.subscribeToReseller(this.reseller.idRev);
       }
-
-      this.notificationService.avatar$.subscribe((event: AvatarEvent) => {
-        if (event.avatarUrl && this.reseller.idRev === event.resellerId) {
-          const fullUrl = event.avatarUrl.startsWith('http')
-            ? event.avatarUrl
-            : 'http://localhost:8080' + event.avatarUrl;
-          this.reseller = { ...this.reseller, avatarUrl: fullUrl };
-        }
-      });
     },
     error: () => {
       this.reseller.username = localStorage.getItem('username') ?? 'Reseller';
       this.reseller.email    = localStorage.getItem('email') ?? '';
     },
   });
-}
 
+  // ← moved outside profile callback
+  this.notificationService.avatar$.subscribe((event: AvatarEvent) => {
+    if (event.avatarUrl && this.reseller.idRev === event.resellerId) {
+      this.reseller = { ...this.reseller, avatarUrl: this.buildFullUrl(event.avatarUrl) };
+    }
+  });
+}
   goToProfile(): void { this.router.navigate(['/reseller-dashboard/profile']); }
   openSupport(): void { alert('Support: contact@traci.tn'); }
   logout():      void { localStorage.clear(); this.router.navigate(['/bo-reseller-access']); }

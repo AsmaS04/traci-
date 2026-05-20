@@ -193,6 +193,50 @@
 .delete-msg { text-align: center; padding: 0.5rem 1.6rem 0; font-size: 0.82rem; color: var(--text-500); line-height: 1.6; font-weight: 500; }
 .delete-msg strong { color: var(--text-900); font-weight: 700; }
 
+
+
+/* ── Card ────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.card-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-300);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.view-all {
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.view-all:hover { opacity: 0.7; }
+
 /* Suspension modal */
 /* ── Suspend modal upgrades ───────────────────────────────── */
 .modal--suspend {
@@ -432,12 +476,161 @@
 .btn-suspend:hover:not(:disabled) { background: #b91c1c; }
 .btn-suspend:disabled { opacity: 0.45; cursor: not-allowed; }
 
+
+/* ── Access Requests ─────────────────────────────────── */
+.access-requests-section {
+  margin-top: 1.5rem;
+}
+
+.ar-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  background: rgba(220, 38, 38, 0.12);
+  color: #DC2626;
+  border-radius: 99px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  margin-left: 0.4rem;
+}
+
+.title-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.ar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.ar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  transition: background var(--t);
+}
+
+.ar-item:hover {
+  background: rgba(13, 148, 136, 0.04);
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+.ar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(13, 148, 136, 0.12);
+  color: #0D9488;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+}
+
+.ar-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ar-email {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ar-date {
+  font-size: 0.68rem;
+  color: var(--text-300);
+  margin-top: 0.1rem;
+}
+
+.ar-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  background: rgba(13, 148, 136, 0.08);
+  color: #0D9488;
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  border-radius: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--t);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ar-btn:hover:not(:disabled) {
+  background: rgba(13, 148, 136, 0.15);
+  border-color: #0D9488;
+}
+
+.ar-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ar-item { flex-wrap: wrap; gap: 0.5rem; }
+  .ar-info { flex: 1 1 calc(100% - 50px); }
+}
+
+@media (max-width: 480px) {
+  .ar-btn { width: 100%; justify-content: center; }
+  .ar-role-badge { margin-left: auto; }
+}
+
 /* ── Dark mode ───────────────────────────────────────── */
 :host-context(.dark) {
   --bg: #0F172A; --card: #1E293B; --border: #334155; --border-dk: #475569;
   --text-900: #F1F5F9; --text-500: #94A3B8; --text-300: #64748B;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 12px 40px rgba(0,0,0,0.6);
   --teal-lt: rgba(13,148,136,0.15); --red-lt: rgba(239,68,68,0.12); --green-lt: rgba(16,185,129,0.12);
+}
+
+:host-context(.dark) .ar-item {
+  background: #0F172A;
+  border-color: #334155;
+}
+:host-context(.dark) .ar-avatar {
+  background: rgba(13, 148, 136, 0.2);
 }
 :host-context(.dark) .table-row:hover { background: rgba(255,255,255,0.03); }
 :host-context(.dark) .search-input, :host-context(.dark) .form-group input, :host-context(.dark) .form-group select { background: #0F172A; }
@@ -482,3 +675,30 @@
   outline: none;
   border-color: var(--orange);
 }
+
+/* ── Pagination ─────────────────────────────────────────── */
+.pagination-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1.1rem; border-top: 1px solid var(--border);
+  flex-wrap: wrap; gap: 0.5rem;
+}
+.pagination-info { font-size: 0.74rem; font-weight: 600; color: var(--text-300); }
+.pagination-controls { display: flex; align-items: center; gap: 0.3rem; }
+.page-size-select {
+  padding: 0.3rem 0.55rem; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--text-500);
+  font-family: 'Manrope', sans-serif; font-size: 0.74rem; font-weight: 600;
+  margin-right: 0.4rem; cursor: pointer;
+}
+.page-btn {
+  min-width: 30px; height: 30px; padding: 0 0.4rem;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--card); color: var(--text-500);
+  font-family: 'Manrope', sans-serif; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-btn:hover:not(:disabled) { border-color: #0D9488; color: #0D9488; }
+.page-btn--active { background: #0D9488; color: #fff; border-color: #0D9488; }
+.page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.page-ellipsis { min-width: 24px; text-align: center; color: var(--text-300); font-size: 0.8rem; }

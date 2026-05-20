@@ -83,6 +83,7 @@
   "no_clients": "Aucun client trouvé",
   "no_resellers": "Aucun revendeur trouvé",
 
+  "msg_error_required": "Ce champ est obligatoire",
   "msg_error_invalid_email": "Format d'email invalide",
   "msg_error_invalid_phone": "Le téléphone doit contenir exactement 8 chiffres",
 

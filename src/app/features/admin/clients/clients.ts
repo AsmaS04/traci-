@@ -55,6 +55,7 @@ export class Clients implements OnInit {
 
   resellers: Reseller[] = [];
   clients: Client[] = [];
+  formTouched = false;
 
   ngOnInit() {
     this.loadClients();
@@ -76,7 +77,7 @@ export class Clients implements OnInit {
     });
   }
 
-  isActive(c: Client): boolean    { return (c.graceDaysLeft ?? 0) > 0; }
+  isActive(c: Client): boolean    {  return c.subscriptionStatus === 'active';  }
   isSuspended(c: Client): boolean { return c.status === 'SUSPENDED'; }
   fullName(c: Client): string     { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
 
@@ -139,9 +140,10 @@ export class Clients implements OnInit {
 
   openEdit(c: Client, e: Event): void {
     e.stopPropagation();
-    this.formData  = { ...c };
-    this.modalMode = 'edit';
-    this.showModal = true;
+    this.formData    = { ...c };
+    this.formTouched = false;
+    this.modalMode   = 'edit';
+    this.showModal   = true;
   }
 
   onResellerChange(): void {
@@ -154,8 +156,17 @@ export class Clients implements OnInit {
   get formEmailError(): string { return (this.formData.email ?? '') && !this.isValidEmail(this.formData.email ?? '') ? 'msg_error_invalid_email' : ''; }
   get formPhoneError(): string { return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '') ? 'msg_error_invalid_phone' : ''; }
 
+  isFormValid(): boolean {
+    return !!(this.formData.firstName?.trim())
+        && !!(this.formData.lastName?.trim())
+        && this.isValidEmail(this.formData.email ?? '')
+        && this.isValidPhone(this.formData.phone ?? '')
+        && !!(this.formData.location);
+  }
+
   saveForm(): void {
-    if (!this.isValidEmail(this.formData.email ?? '') || !this.isValidPhone(this.formData.phone ?? '')) return;
+    this.formTouched = true;
+    if (!this.isFormValid()) return;
     if (!this.formData.idClient) return;
     this.clientService.update(this.formData.idClient, this.formData).subscribe({
       next: (updated) => {
@@ -167,7 +178,7 @@ export class Clients implements OnInit {
     });
   }
 
-  closeModal(): void { this.showModal = false; this.formData = {}; }
+  closeModal(): void { this.showModal = false; this.formData = {}; this.formTouched = false; }
 
   suspendClient(c: Client, e: Event): void {
     e.stopPropagation();
@@ -239,4 +250,28 @@ export class Clients implements OnInit {
   get totalCount(): number   { return this.clients.length; }
   get activeCount(): number  { return this.clients.filter(c => this.isActive(c)).length; }
   get inactiveCount(): number { return this.clients.filter(c => !this.isActive(c)).length; }
+
+  // ── Pagination ──────────────────────────────────────────
+  currentPage = 1;
+  pageSize    = 10;
+
+  get totalPages(): number { return Math.ceil(this.filtered.length / this.pageSize); }
+
+  get paginated(): Client[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get pageNumbers(): (number | '...')[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (this.currentPage <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (this.currentPage >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
+    return [1, '...', this.currentPage-1, this.currentPage, this.currentPage+1, '...', total];
+  }
+
+  goToPage(p: number | '...'): void { if (p !== '...') this.currentPage = p as number; }
+  prevPage(): void { if (this.currentPage > 1) this.currentPage--; }
+  nextPage(): void { if (this.currentPage < this.totalPages) this.currentPage++; }
+  onPageSizeChange(): void { this.currentPage = 1; }
 }

@@ -1,4 +1,4 @@
-import { Component, Input, signal, inject } from '@angular/core';
+import { Component, Input, signal, inject, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -71,6 +71,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   isCollapsed = signal(false);
   openMenus   = signal<Set<string>>(new Set());
+
+  @HostBinding('class.collapsed')
+get hostCollapsed(): boolean { return this.isCollapsed(); }
 
    ngOnInit(): void {  // <-- add
     this.notifWs.connect();

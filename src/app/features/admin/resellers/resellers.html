@@ -76,8 +76,8 @@
     <div class="toolbar">
       <div class="search-wrap">
         <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="search-input" type="text" [placeholder]="i18n.t('search_resellers')" [(ngModel)]="searchQuery"/>
-        @if (searchQuery) { <button class="search-clear" (click)="searchQuery=''">✕</button> }
+        <input class="search-input" type="text" [placeholder]="i18n.t('search_resellers')" [ngModel]="searchQuery" (ngModelChange)="searchQuery=$event; currentPage=1"/>
+        @if (searchQuery) { <button class="search-clear" (click)="searchQuery=''; currentPage=1">✕</button> }
       </div>
       <span class="result-count">{{ filtered.length }} {{ i18n.t('page_resellers').toLowerCase() }}</span>
     </div>
@@ -98,7 +98,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (r of filtered; track r.idRev) {
+          @for (r of paginated; track r.idRev) {
             <tr (click)="openDetail(r)" class="table-row"
               [class.row--healthy]="(r.clientCount ?? 0) > 0 && !isSuspended(r)"
               [class.row--inactive]="(r.clientCount ?? 0) === 0 && !isSuspended(r)"
@@ -154,6 +154,26 @@
           }
         </tbody>
       </table>
+      @if (totalPages > 1) {
+      <div class="pagination-bar">
+        <div class="pagination-info">
+          Showing {{ (currentPage-1)*pageSize+1 }}–{{ currentPage*pageSize > filtered.length ? filtered.length : currentPage*pageSize }} of {{ filtered.length }}
+        </div>
+        <div class="pagination-controls">
+          <select class="page-size-select" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+          <button class="page-btn" (click)="prevPage()" [disabled]="currentPage===1">‹</button>
+          @for (p of pageNumbers; track $index) {
+            @if (p === '...') { <span class="page-ellipsis">…</span> }
+            @else { <button class="page-btn" [class.page-btn--active]="p===currentPage" (click)="goToPage(p)">{{ p }}</button> }
+          }
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage===totalPages">›</button>
+        </div>
+      </div>
+      }
     </div>
 
     <!-- ── Access Requests widget (only when there are pending) ── -->
@@ -435,34 +455,58 @@
         <div class="form-row">
           <div class="form-group">
             <label>{{ i18n.t('label_username') }}</label>
-            <input type="text" [(ngModel)]="formData.username" placeholder="e.g. khalil.mansour" [disabled]="modalMode === 'edit'"/>
+            <input type="text" [(ngModel)]="formData.username" placeholder="e.g. khalil.mansour"
+                   [disabled]="modalMode === 'edit'"
+                   [class.input--error]="formTouched && !formData.username?.trim()"/>
+            @if (formTouched && !formData.username?.trim()) {
+              <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+            }
           </div>
           <div class="form-group">
             <label>{{ i18n.t('form_company') }}</label>
-            <input type="text" [(ngModel)]="formData.nomEntreprise" placeholder="e.g. TechVision SARL"/>
+            <input type="text" [(ngModel)]="formData.nomEntreprise" placeholder="e.g. TechVision SARL"
+                   [class.input--error]="formTouched && !formData.nomEntreprise?.trim()"/>
+            @if (formTouched && !formData.nomEntreprise?.trim()) {
+              <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+            }
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>{{ i18n.t('form_email') }}</label>
-            <input type="email" [(ngModel)]="formData.email" (ngModelChange)="onEmailChange()" placeholder="email@company.tn" [class.input--error]="formEmailError"/>
-            @if (formEmailError) { <span class="field-error">{{ i18n.t(formEmailError) }}</span> }
+            <input type="email" [(ngModel)]="formData.email" (ngModelChange)="onEmailChange()"
+                   placeholder="email@company.tn"
+                   [class.input--error]="(formTouched && !formData.email?.trim()) || !!formEmailError"/>
+            @if (formTouched && !formData.email?.trim()) {
+              <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+            } @else if (formEmailError) {
+              <span class="field-error">{{ i18n.t(formEmailError) }}</span>
+            }
           </div>
           <div class="form-group">
             <label>{{ i18n.t('form_phone') }}</label>
-            <input type="text" [(ngModel)]="formData.phone" placeholder="+216 XX XXX XXX" [class.input--error]="formPhoneError"/>
-            @if (formPhoneError) { <span class="field-error">{{ i18n.t(formPhoneError) }}</span> }
+            <input type="text" [(ngModel)]="formData.phone" placeholder="+216 XX XXX XXX"
+                   [class.input--error]="(formTouched && !formData.phone?.trim()) || !!formPhoneError"/>
+            @if (formTouched && !formData.phone?.trim()) {
+              <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+            } @else if (formPhoneError) {
+              <span class="field-error">{{ i18n.t(formPhoneError) }}</span>
+            }
           </div>
         </div>
         <div class="form-row">
           <div class="form-group" style="grid-column: 1 / -1">
             <label>{{ i18n.t('form_region') }}</label>
-            <select [(ngModel)]="formData.location">
+            <select [(ngModel)]="formData.location"
+                    [class.input--error]="formTouched && !formData.location">
               <option value="">{{ i18n.t('dashboard_select_governorate') }}</option>
               @for (g of governorates; track g) {
                 <option [value]="g">{{ g }}</option>
               }
             </select>
+            @if (formTouched && !formData.location) {
+              <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+            }
           </div>
         </div>
       </div>

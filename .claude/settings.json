@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"d:\\\\PFE\\\\accent-front\\\\src\" -Recurse -File | Where-Object {$_.Extension -in \".ts\",\".html\",\".css\",\".json\"} | Select-Object FullName | Format-Table -AutoSize | Out-String -Width 300)"
+    ]
+  }
+}

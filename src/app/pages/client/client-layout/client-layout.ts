@@ -20,11 +20,11 @@ import { Client } from '../../../models/client.model';
 })
 export default class ClientLayoutComponent implements OnInit, OnDestroy {
 
-  private readonly i18n         = inject(TranslationService);
-  private readonly authService  = inject(AuthService);
-  private readonly router       = inject(Router);
-  private readonly themeService = inject(ThemeService);
-  private readonly clientService = inject(ClientService);
+  private readonly i18n                = inject(TranslationService);
+  private readonly authService         = inject(AuthService);
+  private readonly router              = inject(Router);
+  private readonly themeService        = inject(ThemeService);
+  private readonly clientService       = inject(ClientService);
   private readonly notificationService = inject(NotificationWebsocketService);
 
   private avatarSub!: Subscription;
@@ -40,8 +40,8 @@ export default class ClientLayoutComponent implements OnInit, OnDestroy {
   get isDark(): boolean { return this.themeService.currentTheme() === 'dark'; }
   onDarkToggle(): void  { this.themeService.toggleTheme(); }
 
-  private username = '';
-  private email    = '';
+  private username  = '';
+  private email     = '';
   private avatarUrl = '';
 
   navItems = computed<SidebarEntry[]>(() => {
@@ -58,17 +58,17 @@ export default class ClientLayoutComponent implements OnInit, OnDestroy {
 
   get sidebarUser(): SidebarUser {
     return {
-      name: this.username || 'Client',
-      email: this.email,
+      name:      this.username || 'Client',
+      email:     this.email,
       avatarUrl: this.avatarUrl || undefined,
-      status: 'online'
+      status:    'online'
     };
   }
 
   get navbarUser(): NavbarUser {
     return {
-      name: this.username || 'Client',
-      email: this.email,
+      name:      this.username || 'Client',
+      email:     this.email,
       avatarUrl: this.avatarUrl || undefined
     };
   }
@@ -77,7 +77,9 @@ export default class ClientLayoutComponent implements OnInit, OnDestroy {
     this.username = this.authService.getUsername() ?? 'Client';
     this.email    = this.authService.getEmail()    ?? '';
 
-    // Load full profile (including avatar) from backend
+    // Connect early so the socket handshake starts before profile loads
+    this.notificationService.connect();
+
     this.clientService.getMyProfile().subscribe({
       next: (client: Client) => {
         this.username = client.firstName ?? client.login ?? 'Client';
@@ -88,10 +90,9 @@ export default class ClientLayoutComponent implements OnInit, OnDestroy {
             ? client.avatarUrl
             : 'http://localhost:8080' + client.avatarUrl;
         }
-        // Store clientId in localStorage for WebSocket subscription
         localStorage.setItem('clientId', this.clientId.toString());
-        // Connect WebSocket after we have client ID
-        this.notificationService.connect();
+        // Subscribe to client-specific channel now that we have the ID
+        this.notificationService.subscribeToClient(this.clientId);
       },
       error: () => {
         this.username = this.authService.getUsername() ?? 'Client';
@@ -99,13 +100,11 @@ export default class ClientLayoutComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Subscribe to client avatar updates
     this.avatarSub = this.notificationService.clientAvatar$.subscribe((event: AvatarEvent) => {
-      if (event.avatarUrl && this.clientId === event.resellerId) {
-        const fullUrl = event.avatarUrl.startsWith('http')
+      if (event.avatarUrl && this.clientId === event.clientId) {
+        this.avatarUrl = event.avatarUrl.startsWith('http')
           ? event.avatarUrl
           : 'http://localhost:8080' + event.avatarUrl;
-        this.avatarUrl = fullUrl;
       }
     });
   }

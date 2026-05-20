@@ -12,8 +12,8 @@ import { Client } from '../../../models/client.model';
 import { Reseller } from '../../../models/reseller.model';
 
 const MOCK_CLIENTS: Client[] = [
-  { idClient: 1, email: 'ahmed@a.com', login: 'ahmed', firstName: 'Ahmed', lastName: 'Ben Ali', phone: '12345678', location: 'Tunis', graceDaysLeft: 5,  graceDaysUsed: 0, idRev: 1, resellerName: 'ResellerX', createdAt: '2024-01-01', region: 'Tunis' },
-  { idClient: 2, email: 'sara@b.com',  login: 'sara',  firstName: 'Sara',  lastName: 'Triki',   phone: '87654321', location: 'Sfax',  graceDaysLeft: 0,  graceDaysUsed: 3, idRev: 2, resellerName: 'ResellerY', createdAt: '2024-02-01', region: 'Sfax'  },
+  { idClient: 1, email: 'ahmed@a.com', login: 'ahmed', firstName: 'Ahmed', lastName: 'Ben Ali', phone: '12345678', location: 'Tunis', graceDaysLeft: 5,  graceDaysUsed: 0, idRev: 1, resellerName: 'ResellerX', createdAt: '2024-01-01', region: 'Tunis', subscriptionStatus: 'active'   },
+  { idClient: 2, email: 'sara@b.com',  login: 'sara',  firstName: 'Sara',  lastName: 'Triki',   phone: '87654321', location: 'Sfax',  graceDaysLeft: 0,  graceDaysUsed: 3, idRev: 2, resellerName: 'ResellerY', createdAt: '2024-02-01', region: 'Sfax',  subscriptionStatus: 'expired'  },
 ];
 
 const MOCK_RESELLERS: Reseller[] = [
@@ -102,11 +102,11 @@ describe('Clients', () => {
   });
 
   describe('isActive', () => {
-    it('should return true when graceDaysLeft > 0', () => {
+    it('should return true when subscriptionStatus is active', () => {
       expect(component.isActive(MOCK_CLIENTS[0])).toBe(true);
     });
 
-    it('should return false when graceDaysLeft is 0', () => {
+    it('should return false when subscriptionStatus is not active', () => {
       expect(component.isActive(MOCK_CLIENTS[1])).toBe(false);
     });
   });
@@ -245,6 +245,50 @@ describe('Clients', () => {
     it('should return a formatted string for a valid date', () => {
       const result = component.formatDate('2023-03-10');
       expect(result).toContain('2023');
+    });
+  });
+
+  describe('pagination', () => {
+    it('should initialize with page 1 and page size 10', () => {
+      expect(component.currentPage).toBe(1);
+      expect(component.pageSize).toBe(10);
+    });
+
+    it('paginated should return a slice of filtered', () => {
+      component.pageSize = 1;
+      component.currentPage = 1;
+      expect(component.paginated.length).toBe(1);
+    });
+
+    it('prevPage should not go below page 1', () => {
+      component.currentPage = 1;
+      component.prevPage();
+      expect(component.currentPage).toBe(1);
+    });
+
+    it('nextPage should advance when not on last page', () => {
+      component.pageSize = 1;
+      component.currentPage = 1;
+      component.nextPage();
+      expect(component.currentPage).toBe(2);
+    });
+
+    it('onPageSizeChange should reset to page 1', () => {
+      component.currentPage = 3;
+      component.onPageSizeChange();
+      expect(component.currentPage).toBe(1);
+    });
+
+    it('goToPage should update currentPage for a number', () => {
+      component.pageSize = 1;
+      component.goToPage(2);
+      expect(component.currentPage).toBe(2);
+    });
+
+    it('goToPage should ignore ellipsis', () => {
+      component.currentPage = 1;
+      component.goToPage('...');
+      expect(component.currentPage).toBe(1);
     });
   });
 });

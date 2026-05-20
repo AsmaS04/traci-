@@ -38,6 +38,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
 
   private emailCheckTimeout: any = null;
   formEmailExists  = false;
+  formTouched      = false;
   private originalEmail = '';
 
   // List of Tunisian governorates for the region dropdown
@@ -67,7 +68,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   search = '';
   filterStatus: 'all' | 'active' | 'inactive' = 'all';
 
-  isActive(c: Client)    { return (c.graceDaysLeft ?? 0) > 0; }
+  isActive(c: Client): boolean { return c.subscriptionStatus === 'active'; }
   fullName(c: Client)    { return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(); }
   initials(c: Client)    { return ((c.firstName ?? '?')[0] + (c.lastName ?? '?')[0]).toUpperCase(); }
   get totalCount()       { return this.clients.length; }
@@ -159,7 +160,8 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   openAdd() {
     this.isEdit          = false;
     this.form            = { firstName: '', lastName: '', email: '', phone: '', location: 'Tunis', region: '' };
-    this.formEmailExists  = false;
+    this.formEmailExists = false;
+    this.formTouched     = false;
     this.originalEmail   = '';
     this.showModal       = true;
   }
@@ -169,7 +171,8 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     this.selected        = c;
     this.form            = { ...c };
     this.originalEmail   = c.email ?? '';
-    this.formEmailExists  = false;
+    this.formEmailExists = false;
+    this.formTouched     = false;
     this.showModal       = true;
     this.closePanel();
   }
@@ -189,6 +192,15 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     return (this.form.phone ?? '') && !this.isValidPhone(this.form.phone ?? '') ? 'msg_error_invalid_phone' : '';
   }
 
+  isFormValid(): boolean {
+    return !!(this.form.firstName?.trim())
+        && !!(this.form.lastName?.trim())
+        && this.isValidEmail(this.form.email ?? '')
+        && !this.formEmailExists
+        && this.isValidPhone(this.form.phone ?? '')
+        && !!(this.form.location);
+  }
+
   onEmailChange(): void {
     this.formEmailExists = false;
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
@@ -205,11 +217,8 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   }
 
   saveClient() {
-    if (
-      !this.isValidEmail(this.form.email ?? '') ||
-      !this.isValidPhone(this.form.phone ?? '') ||
-      this.formEmailExists
-    ) return;
+    this.formTouched = true;
+    if (!this.isFormValid()) return;
 
     if (this.isEdit && this.selected) {
       this.clientService.updateMyClient(this.selected.idClient, this.form).subscribe({
@@ -234,7 +243,8 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
 
   closeModal() {
     this.showModal       = false;
-    this.formEmailExists  = false;
+    this.formEmailExists = false;
+    this.formTouched     = false;
     this.originalEmail   = '';
     if (this.emailCheckTimeout) clearTimeout(this.emailCheckTimeout);
   }
@@ -301,4 +311,28 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
   fmt(n: number) {
     return new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n ?? 0);
   }
+
+  // ── Pagination ──────────────────────────────────────────
+  currentPage = 1;
+  pageSize    = 10;
+
+  get totalPages(): number { return Math.ceil(this.filtered.length / this.pageSize); }
+
+  get paginated(): Client[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  get pageNumbers(): (number | '...')[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (this.currentPage <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (this.currentPage >= total - 3) return [1, '...', total-4, total-3, total-2, total-1, total];
+    return [1, '...', this.currentPage-1, this.currentPage, this.currentPage+1, '...', total];
+  }
+
+  goToPage(p: number | '...'): void { if (p !== '...') this.currentPage = p as number; }
+  prevPage(): void { if (this.currentPage > 1) this.currentPage--; }
+  nextPage(): void { if (this.currentPage < this.totalPages) this.currentPage++; }
+  onPageSizeChange(): void { this.currentPage = 1; }
 }

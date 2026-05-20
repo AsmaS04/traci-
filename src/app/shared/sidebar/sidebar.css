@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════
    CSS CUSTOM PROPERTIES — Light theme
 ═══════════════════════════════════════════════════ */
+/* Replace the existing :host block with this: */
 :host {
   --sb-width:           260px;
   --sb-width-collapsed:  68px;
@@ -33,6 +34,19 @@
 
   display: flex;
   height: 100%;
+
+  /* ← These make the HOST participate in the flex layout transition */
+  width: var(--sb-width);
+  min-width: var(--sb-width);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width var(--sb-t), min-width var(--sb-t);
+}
+
+/* Add this block right after :host { ... } */
+:host.collapsed {
+  width: var(--sb-width-collapsed);
+  min-width: var(--sb-width-collapsed);
 }
 
 /* ═══════════════════════════════════════════════════

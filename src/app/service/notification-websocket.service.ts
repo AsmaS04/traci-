@@ -19,6 +19,7 @@ export type AppNotificationType =
   | 'INVOICE_CREATED'
   | 'INVOICE_PAID'
   | 'PAYMENT_SUCCESS'
+  | 'RESELLER_REASSIGNED'
   | 'SUBSCRIPTION_EXPIRING';
 
 export interface AppNotification {

@@ -8,6 +8,7 @@ export interface Client {
   location: string;
   graceDaysLeft: number | null;
   graceDaysUsed: number | null;
+  graceActivatedAt?: string | null;   // ← new
   idRev: number | null;
   resellerName: string | null;
   createdAt: string;

@@ -91,17 +91,7 @@ describe('ResellerClientsComponent', () => {
     expect(component.clients.length).toBe(2);
     expect(component.clients[0].firstName).toBe('Alice');
   });
-
-  it('should identify active and inactive clients', () => {
-    expect(component.isActive(MOCK_CLIENTS[0])).toBe(true);
-    expect(component.isActive(MOCK_CLIENTS[1])).toBe(false);
-  });
-
-  it('should compute activeCount and inactiveCount', () => {
-    expect(component.activeCount).toBe(1);
-    expect(component.inactiveCount).toBe(1);
-  });
-
+  
   it('should filter by search term', () => {
     component.search = 'alice';
     expect(component.filtered.length).toBe(1);

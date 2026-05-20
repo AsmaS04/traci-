@@ -11,4 +11,5 @@ export interface Reseller {
   avatarUrl?: string;
   location?: string;
   status?: string;
+  deviceCount?: number; 
 }

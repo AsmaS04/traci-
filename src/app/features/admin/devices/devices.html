@@ -118,14 +118,14 @@
   <div class="toolbar">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('dev_search_placeholder')"/>
+      <input class="search-input" type="text" [ngModel]="search" (ngModelChange)="search=$event; currentPage=1" [placeholder]="i18n.t('dev_search_placeholder')"/>
     </div>
     <div class="filter-tabs">
-      <button [class.active]="filterStatus==='all'"        (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
-      <button [class.active]="filterStatus==='actif'"      (click)="filterStatus='actif'">{{ i18n.t('filter_active') }}</button>
-      <button [class.active]="filterStatus==='inactif'"    (click)="filterStatus='inactif'">{{ i18n.t('filter_inactive') }}</button>
-      <button [class.active]="filterStatus==='libre'"      (click)="filterStatus='libre'">{{ i18n.t('kpi_libre') }}</button>
-      <button [class.active]="filterStatus==='unassigned'" (click)="filterStatus='unassigned'">{{ i18n.t('kpi_unassigned') }}</button>
+      <button [class.active]="filterStatus==='all'"        (click)="filterStatus='all'; currentPage=1">{{ i18n.t('filter_all') }}</button>
+      <button [class.active]="filterStatus==='actif'"      (click)="filterStatus='actif'; currentPage=1">{{ i18n.t('filter_active') }}</button>
+      <button [class.active]="filterStatus==='inactif'"    (click)="filterStatus='inactif'; currentPage=1">{{ i18n.t('filter_inactive') }}</button>
+      <button [class.active]="filterStatus==='libre'"      (click)="filterStatus='libre'; currentPage=1">{{ i18n.t('kpi_libre') }}</button>
+      <button [class.active]="filterStatus==='unassigned'" (click)="filterStatus='unassigned'; currentPage=1">{{ i18n.t('kpi_unassigned') }}</button>
     </div>
     <select class="filter-select" [(ngModel)]="filterModel">
       @for (m of modelOptions; track m) {
@@ -153,7 +153,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (d of filtered; track d.idDevice) {
+          @for (d of paginated; track d.idDevice) {
           <tr class="table-row"
             [class.row--actif]="(d.status||'').toLowerCase()==='actif'"
             [class.row--libre]="(d.status||'').toLowerCase()==='libre'"
@@ -201,6 +201,26 @@
         </tbody>
       </table>
     </div>
+    @if (totalPages > 1) {
+    <div class="pagination-bar">
+      <div class="pagination-info">
+        Showing {{ (currentPage-1)*pageSize+1 }}–{{ currentPage*pageSize > filtered.length ? filtered.length : currentPage*pageSize }} of {{ filtered.length }}
+      </div>
+      <div class="pagination-controls">
+        <select class="page-size-select" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage===1">‹</button>
+        @for (p of pageNumbers; track $index) {
+          @if (p === '...') { <span class="page-ellipsis">…</span> }
+          @else { <button class="page-btn" [class.page-btn--active]="p===currentPage" (click)="goToPage(p)">{{ p }}</button> }
+        }
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage===totalPages">›</button>
+      </div>
+    </div>
+    }
   </div>
 </div>
 }

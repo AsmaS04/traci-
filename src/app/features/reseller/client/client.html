@@ -36,12 +36,12 @@
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input class="search-input" type="text" [(ngModel)]="search" [placeholder]="i18n.t('res_search_clients')"/>
+      <input class="search-input" type="text" [ngModel]="search" (ngModelChange)="search=$event; currentPage=1" [placeholder]="i18n.t('res_search_clients')"/>
     </div>
     <div class="filter-tabs">
-      <button class="filter-tab" [class.active]="filterStatus==='all'"      (click)="filterStatus='all'">{{ i18n.t('filter_all') }}</button>
-      <button class="filter-tab" [class.active]="filterStatus==='active'"   (click)="filterStatus='active'">{{ i18n.t('filter_active') }}</button>
-      <button class="filter-tab" [class.active]="filterStatus==='inactive'" (click)="filterStatus='inactive'">{{ i18n.t('filter_inactive') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='all'"      (click)="filterStatus='all'; currentPage=1">{{ i18n.t('filter_all') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='active'"   (click)="filterStatus='active'; currentPage=1">{{ i18n.t('filter_active') }}</button>
+      <button class="filter-tab" [class.active]="filterStatus==='inactive'" (click)="filterStatus='inactive'; currentPage=1">{{ i18n.t('filter_inactive') }}</button>
     </div>
     <span class="result-count">{{ filtered.length }} {{ i18n.t('res_clients_found') }}</span>
   </div>
@@ -62,13 +62,21 @@
           </tr>
         </thead>
         <tbody>
-          @for (c of filtered; track c.idClient) {
+          @for (c of paginated; track c.idClient) {
           <tr class="table-row" [class.row--active]="isActive(c)" [class.row--inactive]="!isActive(c)" (click)="openPanel(c)">
             <td class="row-accent"></td>
             <td class="cell-id">#{{ c.idClient }}</td>
             <td>
               <div class="client-cell">
-                <div class="client-avatar" [class.avatar--active]="isActive(c)" [class.avatar--inactive]="!isActive(c)">{{ initials(c) }}</div>
+                @if (c.avatarUrl) {
+                  <img class="client-avatar-img"
+                       [src]="c.avatarUrl.startsWith('http') ? c.avatarUrl : 'http://localhost:8080' + c.avatarUrl"
+                       alt="avatar">
+                } @else {
+                  <div class="client-avatar" [class.avatar--active]="isActive(c)" [class.avatar--inactive]="!isActive(c)">
+                    {{ initials(c) }}
+                  </div>
+                }
                 <div>
                   <p class="client-name">{{ fullName(c) }}</p>
                   <p class="client-email">{{ c.email }}</p>
@@ -93,11 +101,31 @@
           </tr>
           }
           @if (filtered.length === 0) {
-            <tr><td colspan="7" class="empty-row">{{ i18n.t('no_clients') }}<\/td></tr>
+            <tr><td colspan="7" class="empty-row">{{ i18n.t('no_clients') }}</td></tr>
           }
         </tbody>
       </table>
     </div>
+    @if (totalPages > 1) {
+    <div class="pagination-bar">
+      <div class="pagination-info">
+        Showing {{ (currentPage-1)*pageSize+1 }}–{{ currentPage*pageSize > filtered.length ? filtered.length : currentPage*pageSize }} of {{ filtered.length }}
+      </div>
+      <div class="pagination-controls">
+        <select class="page-size-select" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+        </select>
+        <button class="page-btn" (click)="prevPage()" [disabled]="currentPage===1">‹</button>
+        @for (p of pageNumbers; track $index) {
+          @if (p === '...') { <span class="page-ellipsis">…</span> }
+          @else { <button class="page-btn" [class.page-btn--active]="p===currentPage" (click)="goToPage(p)">{{ p }}</button> }
+        }
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage===totalPages">›</button>
+      </div>
+    </div>
+    }
   </div>
 </div>
 
@@ -150,7 +178,15 @@
 
     @if (panelTab==='profile') {
       <div class="profile-card">
-        <div class="profile-avatar" [class.avatar--active]="isActive(panelClient)" [class.avatar--inactive]="!isActive(panelClient)">{{ initials(panelClient) }}</div>
+        @if (panelClient.avatarUrl) {
+          <img class="profile-avatar-img"
+               [src]="panelClient.avatarUrl.startsWith('http') ? panelClient.avatarUrl : 'http://localhost:8080' + panelClient.avatarUrl"
+               alt="avatar">
+        } @else {
+          <div class="profile-avatar" [class.avatar--active]="isActive(panelClient)" [class.avatar--inactive]="!isActive(panelClient)">
+            {{ initials(panelClient) }}
+          </div>
+        }
         <div class="profile-main">
           <div class="profile-name-row">
             <p class="profile-name">{{ fullName(panelClient) }}</p>
@@ -199,13 +235,18 @@
         <div class="tab-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
           <p>{{ i18n.t('empty_no_devices_client') }}</p>
-          <!-- Assign device button removed -->
         </div>
       } @else {
         <div class="devices-list">
           @for (d of panelDevices; track d.idDevice) {
-            <div class="device-item" [class.device-item--actif]="d.status.toLowerCase()==='actif'" [class.device-item--expired]="d.status.toLowerCase()==='expiré'" [class.device-item--inactive]="d.status.toLowerCase()==='inactif'">
-              <div class="device-item-icon" [class.dii--actif]="d.status.toLowerCase()==='actif'" [class.dii--expired]="d.status.toLowerCase()==='expiré'" [class.dii--inactive]="d.status.toLowerCase()==='inactif'">
+            <div class="device-item"
+              [class.device-item--actif]="d.status.toLowerCase()==='actif'"
+              [class.device-item--expired]="d.status.toLowerCase()==='expiré'"
+              [class.device-item--inactive]="d.status.toLowerCase()==='inactif'">
+              <div class="device-item-icon"
+                [class.dii--actif]="d.status.toLowerCase()==='actif'"
+                [class.dii--expired]="d.status.toLowerCase()==='expiré'"
+                [class.dii--inactive]="d.status.toLowerCase()==='inactif'">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
               </div>
               <div class="device-item-body">
@@ -276,11 +317,19 @@
       <div class="form-grid">
         <div class="form-group">
           <label>{{ i18n.t('profile_first_name') }}</label>
-          <input type="text" [(ngModel)]="form.firstName" [placeholder]="i18n.t('profile_first_name')"/>
+          <input type="text" [(ngModel)]="form.firstName" [placeholder]="i18n.t('profile_first_name')"
+                 [class.input--error]="formTouched && !form.firstName?.trim()"/>
+          @if (formTouched && !form.firstName?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('profile_last_name') }}</label>
-          <input type="text" [(ngModel)]="form.lastName" [placeholder]="i18n.t('profile_last_name')"/>
+          <input type="text" [(ngModel)]="form.lastName" [placeholder]="i18n.t('profile_last_name')"
+                 [class.input--error]="formTouched && !form.lastName?.trim()"/>
+          @if (formTouched && !form.lastName?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_email') }}</label>
@@ -288,22 +337,35 @@
             [(ngModel)]="form.email"
             (ngModelChange)="onEmailChange()"
             placeholder="email@example.com"
-            [class.input--error]="formEmailError"/>
-          @if (formEmailError) { <span class="field-error">{{ i18n.t(formEmailError) }}</span> }
+            [class.input--error]="(formTouched && !form.email?.trim()) || !!formEmailError"/>
+          @if (formTouched && !form.email?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          } @else if (formEmailError) {
+            <span class="field-error">{{ i18n.t(formEmailError) }}</span>
+          }
         </div>
         <div class="form-group">
           <label>{{ i18n.t('form_phone') }}</label>
-          <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX" [class.input--error]="formPhoneError"/>
-          @if (formPhoneError) { <span class="field-error">{{ i18n.t(formPhoneError) }}</span> }
+          <input type="tel" [(ngModel)]="form.phone" placeholder="+216 XX XXX XXX"
+                 [class.input--error]="(formTouched && !form.phone?.trim()) || !!formPhoneError"/>
+          @if (formTouched && !form.phone?.trim()) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          } @else if (formPhoneError) {
+            <span class="field-error">{{ i18n.t(formPhoneError) }}</span>
+          }
         </div>
         <div class="form-group form-group--full">
           <label>{{ i18n.t('col_region') }}</label>
-          <select [(ngModel)]="form.location" class="form-select">
+          <select [(ngModel)]="form.location" class="form-select"
+                  [class.input--error]="formTouched && !form.location">
             <option value="" disabled>{{ i18n.t('dashboard_select_governorate') }}</option>
             @for (gov of governorates; track gov) {
               <option [value]="gov">{{ gov }}</option>
             }
           </select>
+          @if (formTouched && !form.location) {
+            <span class="field-error">{{ i18n.t('msg_error_required') }}</span>
+          }
         </div>
       </div>
     </div>
