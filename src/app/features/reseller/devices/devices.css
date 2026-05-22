@@ -1,6 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
-:host { display: block; font-family: 'Manrope', sans-serif; }
+:host {
+  --orange: #0D9488;
+  --orange-lt: rgba(13,148,136,0.12);
+  --bg: #F3F4F6;
+  --card: #FFFFFF;
+  --border: #E5E7EB;
+  --text-900: #111827;
+  --text-500: #6B7280;
+  --text-300: #9CA3AF;
+  --radius: 14px;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  font-family: 'Manrope', sans-serif;
+}
 
 /* ── Skeleton ───────────────────────────────────────── */
 .sk {
@@ -25,7 +39,14 @@
 .sk-btn     { height:36px; border-radius:10px; }
 
 /* ── Page ──────────────────────────────────────────── */
-.page { padding: 2rem 2.2rem 3rem; max-width: 1300px; background: var(--bg); min-height: 100%; }
+.page {
+  padding: 2rem 2.2rem 3rem;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--bg);
+  min-height: 100%;
+}
 
 /* ── Header ────────────────────────────────────────── */
 .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.6rem; gap: 1rem; flex-wrap: wrap; }

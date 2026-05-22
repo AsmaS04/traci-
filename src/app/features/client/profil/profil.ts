@@ -147,7 +147,7 @@ export default class ProfilComponent implements OnInit {
   }
 
   isValidEmail(e: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim());
+    return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test((e ?? '').trim());
   }
 
   isValidPhone(p: string): boolean {

@@ -1,7 +1,6 @@
 /* ═══════════════════════════════════════════════════
    CSS CUSTOM PROPERTIES — Light theme
 ═══════════════════════════════════════════════════ */
-/* Replace the existing :host block with this: */
 :host {
   --sb-width:           260px;
   --sb-width-collapsed:  68px;
@@ -32,10 +31,9 @@
   --sb-sub-badge-text:  #344054;
   --sb-status-border:   #ffffff;
 
+  /* ── Host participates in parent flex layout transition ── */
   display: flex;
   height: 100%;
-
-  /* ← These make the HOST participate in the flex layout transition */
   width: var(--sb-width);
   min-width: var(--sb-width);
   flex-shrink: 0;
@@ -43,7 +41,7 @@
   transition: width var(--sb-t), min-width var(--sb-t);
 }
 
-/* Add this block right after :host { ... } */
+/* Collapsed state on host — makes .right-side {flex:1} expand */
 :host.collapsed {
   width: var(--sb-width-collapsed);
   min-width: var(--sb-width-collapsed);
@@ -117,7 +115,6 @@
 
 /* ── Logo images ────────────────────────────────── */
 .logo-img {
-  /* Expanded: full logo */
   height: 36px;
   width: auto;
   max-width: 170px;
@@ -127,7 +124,6 @@
   transition: height var(--sb-t), max-width var(--sb-t);
 }
 
-/* Collapsed: shrink to icon size — shows the icon portion of the logo */
 .sidebar.collapsed .logo-img {
   height: 36px;
   max-width: 36px;
@@ -141,12 +137,10 @@
 
 /* ═══════════════════════════════════════════════════
    NAV AREA
-   min-height: 0 is critical — without it, the nav
-   can't shrink, pushing the footer off-screen.
 ═══════════════════════════════════════════════════ */
 .sidebar-nav {
   flex: 1;
-  min-height: 0;        /* ← fixes footer being pushed too low */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 8px;
@@ -315,7 +309,7 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   TOGGLE BUTTON — sits just above footer
+   TOGGLE BUTTON
 ═══════════════════════════════════════════════════ */
 .toggle-btn {
   display: flex;
@@ -415,10 +409,15 @@
 .sidebar.collapsed .user-more { opacity: 0; pointer-events: none; }
 
 /* ═══════════════════════════════════════════════════
-   MOBILE — always show fully expanded even if isCollapsed
-   The shell handles positioning as a fixed drawer
+   MOBILE — always fully expanded; shell handles positioning
 ═══════════════════════════════════════════════════ */
 @media (max-width: 767px) {
+  :host,
+  :host.collapsed {
+    width: var(--sb-width);
+    min-width: var(--sb-width);
+  }
+
   .sidebar,
   .sidebar.collapsed {
     width: var(--sb-width);
@@ -434,7 +433,7 @@
   .sidebar.collapsed .user-info      { opacity: 1; max-width: 160px; pointer-events: auto; }
   .sidebar.collapsed .user-more      { opacity: 1; pointer-events: auto; }
 
-  /* Re-align items to left-aligned row */
+  /* Re-align items */
   .sidebar.collapsed .nav-item       { justify-content: flex-start; padding: 8px 10px; }
   .sidebar.collapsed .user-row       { justify-content: flex-start; padding: 6px 8px; }
   .sidebar.collapsed .toggle-btn     { justify-content: flex-start; padding: 8px 10px; }

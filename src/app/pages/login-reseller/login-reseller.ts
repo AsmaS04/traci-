@@ -39,8 +39,14 @@ export class LoginReseller {
         }
         this.loading = false;
       },
-      error: () => {
-        this.error   = this.ts.t('login_error_reseller_credentials');
+      error: (err) => {
+        // ✅ Use backend error message if available (plain string), else fallback to translation
+        const backendMessage = err.error;
+        if (backendMessage && typeof backendMessage === 'string') {
+          this.error = backendMessage;
+        } else {
+          this.error = this.ts.t('login_error_reseller_credentials');
+        }
         this.loading = false;
       }
     });

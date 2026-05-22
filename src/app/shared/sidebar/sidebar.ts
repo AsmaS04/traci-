@@ -65,27 +65,29 @@ export class SidebarComponent implements OnInit, OnDestroy {
   @Input() logoText = 'TRACI';
 
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly notifWs = inject(NotificationWebsocketService);  // <-- add
-  private avatarSub!: Subscription;  // <-- add
-
+  private readonly notifWs   = inject(NotificationWebsocketService);
+  private avatarSub!: Subscription;
 
   isCollapsed = signal(false);
   openMenus   = signal<Set<string>>(new Set());
 
+  /** Mirrors isCollapsed onto the host element so the flex parent reacts */
   @HostBinding('class.collapsed')
-get hostCollapsed(): boolean { return this.isCollapsed(); }
+  get hostCollapsed(): boolean { return this.isCollapsed(); }
 
-   ngOnInit(): void {  // <-- add
+  ngOnInit(): void {
     this.notifWs.connect();
     this.avatarSub = this.notifWs.avatar$.subscribe((event: AvatarEvent) => {
       if (event.avatarUrl) {
-        const fullUrl = event.avatarUrl.startsWith('http') ? event.avatarUrl : 'http://localhost:8080' + event.avatarUrl;
+        const fullUrl = event.avatarUrl.startsWith('http')
+          ? event.avatarUrl
+          : 'http://localhost:8080' + event.avatarUrl;
         this.user = { ...this.user, avatarUrl: fullUrl };
       }
     });
   }
 
-  ngOnDestroy(): void {  // <-- add
+  ngOnDestroy(): void {
     this.avatarSub?.unsubscribe();
   }
 

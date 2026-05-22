@@ -9,7 +9,7 @@ import { Client } from '../../../models/client.model';
 import { TranslationService } from '../../../service/translation.service';
 import { ResellerService } from '../../../service/Reseller.service';
 import { ClientService } from '../../../service/Client.service';
-import { DeviceService } from '../../../service/Device.service';  // <-- ADD THIS IMPORT
+import { DeviceService } from '../../../service/Device.service';
 
 @Component({
   selector: 'app-resellers',
@@ -27,7 +27,7 @@ export class Resellers implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient,
-    private deviceService: DeviceService   // <-- ADD THIS DEPENDENCY
+    private deviceService: DeviceService
   ) {}
 
   private emailCheckTimeout: any = null;
@@ -55,12 +55,15 @@ export class Resellers implements OnInit, OnDestroy {
   suspendClientAssignments: { [key: number]: number } = {};
   bulkResellerId: number | null = null;
 
+  // ── Reactivate confirmation modal ─────────────────────────
+  showReactivateModal = false;
+  reactivateTarget: Reseller | null = null;
+
   resellers: Reseller[] = [];
   formEmailExists = false;
   formTouched     = false;
   private originalEmail = '';
 
-  // ── NEW: KPI data for detail view ─────────────────────
   totalDevices: number = 0;
   currentMonthCommission: number = 0;
 
@@ -180,7 +183,7 @@ export class Resellers implements OnInit, OnDestroy {
     this.showModal       = true;
   }
 
-  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
 
   get formEmailError(): string {
@@ -322,12 +325,27 @@ export class Resellers implements OnInit, OnDestroy {
     return 'low';
   }
 
+  // ── Reactivate with confirmation modal ─────────────────────
   openReactivate(r: Reseller, e: Event): void {
     e.stopPropagation();
-    this.resellerService.reactivate(r.idRev).subscribe({
-      next: () => { this.loadResellers(); },
+    this.reactivateTarget = r;
+    this.showReactivateModal = true;
+  }
+
+  confirmReactivate(): void {
+    if (!this.reactivateTarget) return;
+    this.resellerService.reactivate(this.reactivateTarget.idRev).subscribe({
+      next: () => {
+        this.loadResellers();
+        this.closeReactivateModal();
+      },
       error: (err) => console.error('Failed to reactivate reseller', err)
     });
+  }
+
+  closeReactivateModal(): void {
+    this.showReactivateModal = false;
+    this.reactivateTarget = null;
   }
 
   formatDate(d: string): string {

@@ -151,7 +151,7 @@ export class Clients implements OnInit {
     if (r) this.formData.resellerName = r.nomEntreprise;
   }
 
-  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
   get formEmailError(): string { return (this.formData.email ?? '') && !this.isValidEmail(this.formData.email ?? '') ? 'msg_error_invalid_email' : ''; }
   get formPhoneError(): string { return (this.formData.phone ?? '') && !this.isValidPhone(this.formData.phone ?? '') ? 'msg_error_invalid_phone' : ''; }

@@ -104,6 +104,15 @@
 .avatar--healthy  { background: rgba(22,163,74,0.12); color: #16A34A; border: 1px solid rgba(22,163,74,0.25); }
 .avatar--inactive { background: rgba(239,68,68,0.10); color: #DC2626; border: 1px solid rgba(239,68,68,0.2); }
 
+/* Avatar image override — used when reseller has uploaded a photo */
+.avatar--img { padding: 0; object-fit: cover; background: none; }
+
+/* Profile detail: large avatar image */
+.profile-avatar-img { width: 60px; height: 60px; border-radius: 14px; object-fit: cover; display: block; }
+
+/* Client mini-card avatar image */
+.client-mini-avatar--img { width: 34px; height: 34px; border-radius: 9px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
+
 .name-primary   { font-size: 0.84rem; font-weight: 700; color: var(--text-900); margin: 0 0 0.1rem; }
 .name-secondary { font-size: 0.71rem; color: var(--text-300); margin: 0; }
 
@@ -268,6 +277,27 @@
   font-size: 12px;
   color: var(--text-500, #6b7280);
   margin: 4px 0 0;
+}
+/* Improve dropdown inside suspend modal */
+.suspend-select {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-900);
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.suspend-select:focus {
+  border-color: var(--teal);
+  outline: none;
+}
+.suspend-select--full {
+  width: 100%;
+  margin-top: 6px;
 }
 
 /* ── State wrappers ─────────────────────────────────────── */

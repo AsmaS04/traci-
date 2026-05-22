@@ -75,6 +75,130 @@
 .btn-secondary:hover { border-color: #14B8A6; color: #0D9488; }
 .btn-secondary svg { width: 13px; height: 13px; }
 
+/* ── Panel rename section ─────────────────────────────── */
+.panel-name-section {
+  margin: 0 1.4rem 1rem;
+  padding: 0.8rem 0 0.8rem;
+  border-top: 1px solid var(--border, #e5e7eb);
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.panel-name-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-name-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-300, #9ca3af);
+  margin-bottom: 0.25rem;
+}
+
+.panel-name-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-900, #111827);
+  word-break: break-word;
+}
+
+.btn-rename {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--bg, #f9fafb);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--text-500, #6b7280);
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-rename:hover {
+  border-color: #14B8A6;
+  color: #14B8A6;
+  background: rgba(20,184,166,0.05);
+}
+.btn-rename svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* Edit form */
+.panel-rename-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rename-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg, #f9fafb);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  color: var(--text-900, #111827);
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  box-sizing: border-box;
+}
+.rename-input:focus {
+  border-color: #14B8A6;
+  box-shadow: 0 0 0 2px rgba(20,184,166,0.1);
+}
+
+.rename-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.btn-rename-cancel {
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--text-500, #6b7280);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-rename-cancel:hover {
+  background: var(--bg, #f9fafb);
+  color: var(--text-900, #111827);
+}
+
+.btn-rename-save {
+  padding: 0.45rem 1rem;
+  background: #14B8A6;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-rename-save:hover:not(:disabled) {
+  background: #0f766e;
+}
+.btn-rename-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Empty */
 .empty-state { background: var(--card,#fff); border: 1px solid var(--border,#e5e7eb); border-radius: 16px; padding: 4rem 2rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
 .empty-icon { display: flex; justify-content: center; margin-bottom: 1rem; }

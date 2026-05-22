@@ -80,7 +80,7 @@ export class AdminProfil implements OnInit {
   profile = { ...this.originalProfile };
 
   isValidEmail(e: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+    return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test(e.trim());
   }
   isValidPhone(p: string): boolean {
     return /^\d{8}$/.test(p.replace(/[\s\-\.]/g, ''));

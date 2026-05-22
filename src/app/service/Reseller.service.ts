@@ -7,9 +7,14 @@ import { Device } from '../models/device.model';
 @Injectable({ providedIn: 'root' })
 export class ResellerService {
   private http = inject(HttpClient);
+  
+  // ✅ Admin operations go to /api/admin/resellers
   private adminUrl = 'http://localhost:8080/api/admin/resellers';
+  
+  // ✅ Public / portal operations go to /api/resellers
+  private publicUrl = 'http://localhost:8080/api/resellers';
   private portalUrl = 'http://localhost:8080/api/reseller';
-   private baseUrl = 'http://localhost:8080/api/resellers'; // for public endpoints
+
   // ── Admin scope ─────────────────────────────────────
   getAll() {
     return this.http.get<Reseller[]>(this.adminUrl);
@@ -39,22 +44,23 @@ export class ResellerService {
     return this.http.put<Reseller>(`${this.adminUrl}/${id}/reactivate`, {});
   }
 
+  // ✅ Now uses adminUrl (which points to /api/admin/resellers)
   getReassignSuggestions(id: number) {
     return this.http.get<{ clients: any[]; resellers: any[] }>(`${this.adminUrl}/${id}/reassign-suggestions`);
   }
 
- checkEmail(email: string) {
-  return this.http.get<{ exists: boolean }>(
-    `http://localhost:8080/api/resellers/check-email`,
-    { params: { email } }
-  );
-}
-
- /** Get current month commission for a reseller (admin) */
-  getCurrentMonthCommission(resellerId: number) {
-    return this.http.get<{ commission: number }>(`${this.baseUrl}/${resellerId}/commission/current`);
+  // ── Public / portal endpoints ───────────────────────
+  checkEmail(email: string) {
+    return this.http.get<{ exists: boolean }>(
+      `${this.publicUrl}/check-email`,
+      { params: { email } }
+    );
   }
-  // ── Reseller portal scope ───────────────────────────
+
+  getCurrentMonthCommission(resellerId: number) {
+    return this.http.get<{ commission: number }>(`${this.publicUrl}/${resellerId}/commission/current`);
+  }
+
   getMyProfile() {
     return this.http.get<Reseller>(`${this.portalUrl}/profile`);
   }
@@ -70,19 +76,14 @@ export class ResellerService {
   uploadAvatar(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-
-    return this.http.post<Reseller>(
-      `${this.portalUrl}/upload-avatar`,
-      formData
-    );
+    return this.http.post<Reseller>(`${this.portalUrl}/upload-avatar`, formData);
   }
 
-
   getMyCommissions() {
-  return this.http.get<any[]>(`${this.portalUrl}/commissions`);
-}
+    return this.http.get<any[]>(`${this.portalUrl}/commissions`);
+  }
 
-getMyInvoices() {
-  return this.http.get<any[]>(`${this.portalUrl}/invoices`);
-}
+  getMyInvoices() {
+    return this.http.get<any[]>(`${this.portalUrl}/invoices`);
+  }
 }

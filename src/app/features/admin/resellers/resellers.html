@@ -107,15 +107,21 @@
               <td class="col-id"><span class="id-badge">#{{ r.idRev }}</span></td>
               <td>
                 <div class="name-cell">
-                  <div class="avatar" [class.avatar--healthy]="(r.clientCount ?? 0) > 0" [class.avatar--inactive]="(r.clientCount ?? 0) === 0">
-                    {{ (r.username || '?').charAt(0).toUpperCase() }}
-                  </div>
+                  @if (r.avatarUrl) {
+                    <img class="avatar avatar--img"
+                         [src]="r.avatarUrl.startsWith('http') ? r.avatarUrl : 'http://localhost:8080' + r.avatarUrl"
+                         alt="avatar">
+                  } @else {
+                    <div class="avatar" [class.avatar--healthy]="(r.clientCount ?? 0) > 0" [class.avatar--inactive]="(r.clientCount ?? 0) === 0">
+                      {{ (r.username || '?').charAt(0).toUpperCase() }}
+                    </div>
+                  }
                   <div>
                     <p class="name-primary">{{ r.username }}</p>
                     <p class="name-secondary">{{ r.email }}</p>
                   </div>
                 </div>
-              </td>
+               </td>
               <td>{{ r.nomEntreprise || '—' }}</td>
               <td>{{ r.email }}</td>
               <td>{{ r.phone || '—' }}</td>
@@ -125,7 +131,7 @@
                   [class.client-count--empty]="(r.clientCount ?? 0) === 0">
                   {{ r.clientCount ?? 0 }}
                 </span>
-              </td>
+               </td>
               <td>{{ formatDate(r.createdAt) }}</td>
               <td class="col-actions" (click)="$event.stopPropagation()">
                 <button class="action-btn action-btn--edit" (click)="openEdit(r, $event)" [title]="i18n.t('btn_edit')">
@@ -141,19 +147,19 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                   </button>
                 }
-              </td>
-            </tr>
+               </td>
+             </tr>
           }
           @empty {
             <tr>
               <td colspan="9" class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 <p>{{ i18n.t('no_resellers') }}</p>
-              </td>
-            </tr>
+               </td>
+             </tr>
           }
         </tbody>
-      </table>
+       </table>
       @if (totalPages > 1) {
       <div class="pagination-bar">
         <div class="pagination-info">
@@ -244,9 +250,15 @@
       [class.profile-card--healthy]="(selected.clientCount ?? 0) > 0"
       [class.profile-card--inactive]="(selected.clientCount ?? 0) === 0">
       <div class="profile-avatar"
-        [class.avatar--healthy]="(selected.clientCount ?? 0) > 0"
-        [class.avatar--inactive]="(selected.clientCount ?? 0) === 0">
-        {{ (selected.username || '?').charAt(0).toUpperCase() }}
+        [class.avatar--healthy]="(selected.clientCount ?? 0) > 0 && !selected.avatarUrl"
+        [class.avatar--inactive]="(selected.clientCount ?? 0) === 0 && !selected.avatarUrl">
+        @if (selected.avatarUrl) {
+          <img class="profile-avatar-img"
+               [src]="selected.avatarUrl.startsWith('http') ? selected.avatarUrl : 'http://localhost:8080' + selected.avatarUrl"
+               alt="avatar">
+        } @else {
+          {{ (selected.username || '?').charAt(0).toUpperCase() }}
+        }
       </div>
       <div class="profile-info">
         <div class="profile-name-row">
@@ -280,19 +292,19 @@
     </div>
 
     <div class="detail-stats">
-  <div class="detail-stat">
-    <p class="detail-stat-value">{{ selected.clientCount ?? 0 }}</p>
-    <p class="detail-stat-label">{{ i18n.t('total_clients') }}</p>
-  </div>
-  <div class="detail-stat">
-    <p class="detail-stat-value">{{ totalDevices }}</p>
-    <p class="detail-stat-label">{{ i18n.t('total_devices_assigned') }}</p>
-  </div>
-  <div class="detail-stat">
-    <p class="detail-stat-value">{{ currentMonthCommission | currency:'TND':'symbol':'1.2-2' }}</p>
-    <p class="detail-stat-label">{{ i18n.t('commission_this_month') }}</p>
-  </div>
-</div>
+      <div class="detail-stat">
+        <p class="detail-stat-value">{{ selected.clientCount ?? 0 }}</p>
+        <p class="detail-stat-label">{{ i18n.t('total_clients') }}</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-value">{{ totalDevices }}</p>
+        <p class="detail-stat-label">{{ i18n.t('total_devices_assigned') }}</p>
+      </div>
+      <div class="detail-stat">
+        <p class="detail-stat-value">{{ currentMonthCommission | currency:'TND':'symbol':'1.2-2' }}</p>
+        <p class="detail-stat-label">{{ i18n.t('commission_this_month') }}</p>
+      </div>
+    </div>
 
     @if (selectedClients.length > 0) {
       <div class="clients-list-section">
@@ -300,7 +312,13 @@
         <div class="client-cards">
           @for (c of selectedClients; track c.idClient) {
             <div class="client-mini-card">
-              <div class="client-mini-avatar">{{ (c.firstName || '?').charAt(0) }}</div>
+              @if (c.avatarUrl) {
+                <img class="client-mini-avatar client-mini-avatar--img"
+                     [src]="c.avatarUrl.startsWith('http') ? c.avatarUrl : 'http://localhost:8080' + c.avatarUrl"
+                     alt="avatar">
+              } @else {
+                <div class="client-mini-avatar">{{ (c.firstName || '?').charAt(0) }}</div>
+              }
               <div class="client-mini-body">
                 <p class="client-mini-name">{{ c.firstName }} {{ c.lastName }}</p>
                 <p class="client-mini-email">{{ c.email }}</p>
@@ -315,130 +333,138 @@
   }
 
   <!-- ═══════════════════ SUSPEND MODAL ═══════════════ -->
-@if (showSuspendModal && suspendTarget) {
-<div class="modal-backdrop" (click)="closeSuspendModal()">
-  <div class="modal modal--suspend" (click)="$event.stopPropagation()">
+  @if (showSuspendModal && suspendTarget) {
+  <div class="modal-backdrop" (click)="closeSuspendModal()">
+    <div class="modal modal--suspend" (click)="$event.stopPropagation()">
 
-    <!-- Header -->
-    <div class="modal-header modal-header--danger">
-      <div class="modal-danger-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-        </svg>
-      </div>
-      <div class="modal-header-text">
-        <h2 class="modal-title">{{ i18n.t('btn_suspend') }}: {{ suspendTarget.nomEntreprise }}</h2>
-        <p class="modal-subtitle">{{ i18n.t('suspend_reassign_hint') }}</p>
-      </div>
-      <button class="modal-close" (click)="closeSuspendModal()">✕</button>
-    </div>
-
-    <!-- Body -->
-    <div class="modal-body">
-
-      <!-- Loading -->
-      @if (suspendLoading) {
-        <div class="state-center">
-          <span class="spinner"></span>
-          <p>{{ i18n.t('loading_client_suggestions') }}</p>
-        </div>
-      }
-
-      <!-- No clients -->
-      @if (!suspendLoading && suspendSuggestions.length === 0) {
-        <div class="state-center state-empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="32" height="32">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
+      <!-- Header -->
+      <div class="modal-header modal-header--danger">
+        <div class="modal-danger-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
           </svg>
-          <p>{{ i18n.t('suspend_no_clients_msg') }}</p>
         </div>
-      }
-
-      <!-- Client list -->
-      @if (!suspendLoading && suspendSuggestions.length > 0) {
-
-        <!-- Bulk assign -->
-        <div class="suspend-bulk-row">
-          <label class="suspend-bulk-label">{{ i18n.t('suspend_bulk_label') }}</label>
-          <select [(ngModel)]="bulkResellerId" (ngModelChange)="applyBulkAssign()" class="suspend-select">
-            <option [ngValue]="null">— {{ i18n.t('suspend_choose') }} —</option>
-            @for (rv of suspendResellers; track rv.idRev) {
-              <option [ngValue]="rv.idRev">
-                {{ rv.nomEntreprise }} ({{ rv.location || '—' }}) — {{ rv.clientCount }} {{ i18n.t('col_clients').toLowerCase() }}
-              </option>
-            }
-          </select>
+        <div class="modal-header-text">
+          <h2 class="modal-title">{{ i18n.t('btn_suspend') }}: {{ suspendTarget.nomEntreprise }}</h2>
+          <p class="modal-subtitle">{{ i18n.t('suspend_reassign_hint') }}</p>
         </div>
+        <button class="modal-close" (click)="closeSuspendModal()">✕</button>
+      </div>
 
-        <!-- Per-client cards -->
-        <div class="suspend-client-list">
-          @for (c of suspendSuggestions; track c.clientId) {
-            <div class="scc">
+      <!-- Body -->
+      <div class="modal-body">
 
-              <!-- Top row: avatar + info + score -->
-              <div class="scc-top">
-                <div class="scc-avatar">{{ (c.clientName || '?').charAt(0) }}</div>
-                <div class="scc-info">
-                  <span class="scc-name">{{ c.clientName }}</span>
-                  <span class="scc-loc">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                         width="11" height="11" stroke-linecap="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
+        <!-- Loading -->
+        @if (suspendLoading) {
+          <div class="state-center">
+            <span class="spinner"></span>
+            <p>{{ i18n.t('loading_client_suggestions') }}</p>
+          </div>
+        }
+
+        <!-- No clients -->
+        @if (!suspendLoading && suspendSuggestions.length === 0) {
+          <div class="state-center state-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="32" height="32">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+            </svg>
+            <p>{{ i18n.t('suspend_no_clients_msg') }}</p>
+          </div>
+        }
+
+        <!-- Client list -->
+        @if (!suspendLoading && suspendSuggestions.length > 0) {
+          <div class="suspend-client-list">
+            @for (c of suspendSuggestions; track c.clientId) {
+              <div class="scc">
+                <!-- Top row: avatar + info + score -->
+                <div class="scc-top">
+                  <div class="scc-avatar">{{ (c.clientName || '?').charAt(0) }}</div>
+                  <div class="scc-info">
+                    <span class="scc-name">{{ c.clientName }}</span>
+                    <span class="scc-loc">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      {{ c.clientLocation || '—' }}
+                    </span>
+                  </div>
+                  <span class="score-badge score-badge--{{ getScoreClass(c.score) }}">
+                    {{ c.score }} pts
+                  </span>
+                </div>
+
+                <!-- Recommendation row -->
+                @if (c.suggestedResellerName) {
+                  <div class="scc-rec">
+                    <svg class="rec-star" viewBox="0 0 24 24" fill="currentColor" width="13" height="13">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
-                    {{ c.clientLocation || '—' }}
-                  </span>
-                </div>
-                <span class="score-badge score-badge--{{ getScoreClass(c.score) }}">
-                  {{ c.score }} pts
-                </span>
-              </div>
-
-              <!-- Recommendation row -->
-              @if (c.suggestedResellerName) {
-                <div class="scc-rec">
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"
-                       class="rec-star"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  <span class="rec-label">{{ i18n.t('reassign_recommended') }}:</span>
-                  <span class="rec-name">{{ c.suggestedResellerName }}</span>
-                  <span class="rec-city">{{ c.suggestedResellerLocation ? '(' + c.suggestedResellerLocation + ')' : '' }}</span>
-                  <span class="score-label score-label--{{ c.scoreLabel }}">
-                    {{ i18n.t('reassign_' + c.scoreLabel) }}
-                  </span>
-                </div>
-              }
-
-              <!-- Override select -->
-              <select [(ngModel)]="suspendClientAssignments[c.clientId]" class="suspend-select suspend-select--full">
-                <option [ngValue]="undefined">— {{ i18n.t('suspend_unassigned') }} —</option>
-                @for (rv of suspendResellers; track rv.idRev) {
-                  <option [ngValue]="rv.idRev">
-                    {{ rv.nomEntreprise }} ({{ rv.location || '—' }}) — {{ rv.clientCount }} {{ i18n.t('col_clients').toLowerCase() }}
-                  </option>
+                    <span class="rec-label">{{ i18n.t('reassign_recommended') }}:</span>
+                    <span class="rec-name">{{ c.suggestedResellerName }}</span>
+                    <span class="rec-city" *ngIf="c.suggestedResellerLocation">({{ c.suggestedResellerLocation }})</span>
+                    <span class="score-label score-label--{{ c.scoreLabel }}">
+                      {{ i18n.t('reassign_' + c.scoreLabel) }}
+                    </span>
+                  </div>
                 }
-              </select>
 
-            </div>
-          }
-        </div>
+                <!-- Override select -->
+                <select [(ngModel)]="suspendClientAssignments[c.clientId]" class="suspend-select suspend-select--full">
+                  <option [ngValue]="undefined">— {{ i18n.t('suspend_unassigned') }} —</option>
+                  @for (rv of suspendResellers; track rv.idRev) {
+                    <option [ngValue]="rv.idRev">
+                      {{ rv.nomEntreprise }} ({{ rv.location || '—' }}) — {{ rv.clientCount }} {{ i18n.t('col_clients').toLowerCase() }}
+                    </option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        }
+      </div>
 
-      }
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeSuspendModal()">{{ i18n.t('btn_cancel') }}</button>
+        <button class="btn-suspend" (click)="confirmSuspend()" [disabled]="suspendLoading">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               width="15" height="15" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+          {{ i18n.t('btn_confirm_suspend') }}
+        </button>
+      </div>
+
     </div>
+  </div>
+  }
 
-    <!-- Footer -->
-    <div class="modal-footer">
-      <button class="btn-ghost" (click)="closeSuspendModal()">{{ i18n.t('btn_cancel') }}</button>
-      <button class="btn-suspend" (click)="confirmSuspend()" [disabled]="suspendLoading">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             width="15" height="15" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+  <!-- ═══════════════════ REACTIVATE CONFIRM MODAL ═══════════════ -->
+@if (showReactivateModal && reactivateTarget) {
+<div class="modal-backdrop" (click)="closeReactivateModal()">
+  <div class="modal modal--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ i18n.t('reactivate_confirm_title') || 'Reactivate Reseller' }}</h2>
+      <button class="modal-close" (click)="closeReactivateModal()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align: center;">
+      <div class="delete-icon" style="color: #0D9488;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
         </svg>
-        {{ i18n.t('btn_confirm_suspend') }}
-      </button>
+      </div>
+      <p class="delete-msg">{{ i18n.t('reactivate_confirm_message') }}</p>
+      <p style="font-weight: 700; margin-top: 1rem;">{{ reactivateTarget.nomEntreprise }}</p>
     </div>
-
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="closeReactivateModal()">No</button>
+      <button class="btn-primary" (click)="confirmReactivate()">Yes, reactivate</button>
+    </div>
   </div>
 </div>
 }

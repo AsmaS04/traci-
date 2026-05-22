@@ -63,4 +63,5 @@ export class DeviceService {
   countByReseller(resellerId: number): Observable<{ count: number }> {
     return this.http.get<{ count: number }>(`${this.baseUrl}/reseller/${resellerId}/count`);
   }
+
 }

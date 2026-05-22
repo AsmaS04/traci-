@@ -10,8 +10,8 @@
         <div class="sk sk-btn" style="width:130px"></div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin-bottom:1.4rem">
-      @for (_ of [1,2]; track $index) {
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.4rem">
+      @for (_ of [1,2,3]; track $index) {
         <div class="sk-card" style="display:flex;align-items:center;gap:.75rem">
           <div class="sk sk-avatar sk-circle"></div>
           <div style="flex:1;display:flex;flex-direction:column;gap:.4rem">
@@ -76,8 +76,10 @@
     </div>
   </div>
 
-  <!-- ROW 1: KPI CARDS -->
-  <div class="kpi-row">
+  <!-- ROW 1: KPI CARDS — now 3 columns -->
+  <div class="kpi-row" style="grid-template-columns: repeat(3, 1fr)">
+
+    <!-- Total Clients -->
     <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/clients')">
       <div class="kpi-icon kpi-icon--teal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -94,6 +96,7 @@
       <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
 
+    <!-- Devices Under Management -->
     <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/devices')">
       <div class="kpi-icon kpi-icon--blue">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1" fill="currentColor"/></svg>
@@ -108,6 +111,39 @@
       </div>
       <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
+
+    <!-- Subscriptions -->
+    <div class="kpi-card" (click)="navigateTo('/reseller-dashboard/clients')">
+      <div class="kpi-icon" [style.background]="issueClients > 0 ? 'rgba(239,68,68,0.10)' : 'rgba(22,163,74,0.10)'"
+           [style.color]="issueClients > 0 ? '#DC2626' : '#16A34A'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+        </svg>
+      </div>
+      <div class="kpi-body">
+        <p class="kpi-label">SUBSCRIPTIONS</p>
+        <p class="kpi-value" [style.color]="issueClients > 0 ? '#DC2626' : '#16A34A'">
+          {{ fmtInt(stableClients) }}
+        </p>
+        <!-- progress bar -->
+        <div style="margin-top:0.4rem">
+          <div style="height:4px;background:var(--border,#E5E7EB);border-radius:99px;overflow:hidden;margin-bottom:0.3rem">
+            <div [style.width.%]="totalClients > 0 ? (stableClients / totalClients) * 100 : 0"
+                 [style.background]="issueClients > 0 ? '#DC2626' : '#16A34A'"
+                 style="height:100%;border-radius:99px;transition:width 0.4s ease"></div>
+          </div>
+          @if (issueClients > 0) {
+            <p class="kpi-sub" style="color:#DC2626">{{ issueClients }} need attention</p>
+          } @else {
+            <p class="kpi-sub" style="color:#16A34A">All active</p>
+          }
+        </div>
+      </div>
+      <svg class="kpi-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+
   </div>
 
   <!-- ROW 2: COMMISSION + REVENUE + ATTENTION -->

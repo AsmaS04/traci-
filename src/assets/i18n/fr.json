@@ -193,6 +193,11 @@
   "inv_download_pdf": "Télécharger PDF",
   "inv_after_payment": "après paiement",
 
+  "reactivate_confirm_title": "Réactiver le revendeur",
+  "reactivate_confirm_message": "Êtes-vous sûr de vouloir réactiver ce revendeur ? Cela ne restaurera pas les clients ou appareils qui ont été réassignés pendant la suspension.",
+  "btn_yes_reactivate": "Oui, réactiver",
+  "btn_no": "Non",
+
   "dev_title": "Mes Appareils",
   "dev_subtitle": "Gérez vos appareils",
   "dev_search_placeholder": "Rechercher par série, modèle, client...",

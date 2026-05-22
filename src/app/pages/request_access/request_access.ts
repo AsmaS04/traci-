@@ -39,7 +39,7 @@ export default class RequestAccess implements OnInit {
   }
 
   isValidEmailFormat(): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email);
+    return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test(this.email);
   }
 
   // Called on (blur) from the email input

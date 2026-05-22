@@ -261,15 +261,66 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
     if (total === 0) return;
 
     this.clientChart = new ApexCharts(el, {
-      chart: { type: 'donut', height: 180, animations: { enabled: true, speed: 500 } },
+      chart: {
+        type: 'donut',
+        height: 180,
+        animations: { enabled: true, speed: 500 },
+      },
       series: [stable, issues],
-      labels: ['Active', 'Expired / Pending'],
+      labels: ['Active', 'Inactive'],
       colors: ['#0D9488', '#DC2626'],
-      plotOptions: { pie: { donut: { size: '62%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '12px', color: '#6B7280', formatter: () => String(total) } } } } },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '62%',
+            labels: {
+              show: true,
+              name: {
+                show: true,
+                fontSize: '11px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 600,
+                color: '#6B7280',
+                offsetY: -8,
+              },
+              value: {
+                show: true,
+                fontSize: '22px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 800,
+                color: '#111827',
+                offsetY: -2,
+                formatter: () => String(total),
+              },
+              total: {
+                show: true,
+                showAlways: true,
+                label: 'Total',
+                fontSize: '11px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 600,
+                color: '#6B7280',
+                formatter: () => String(total),
+              },
+            },
+          },
+        },
+      },
       dataLabels: { enabled: false },
       stroke: { width: 0 },
-      legend: { position: 'bottom', fontSize: '12px', fontWeight: 600, labels: { colors: '#475569' }, markers: { size: 5 } },
-      tooltip: { y: { formatter: (val: number) => `${val} (${total > 0 ? ((val / total) * 100).toFixed(1) : '0'}%)` } }
+      legend: {
+        position: 'bottom',
+        fontSize: '12px',
+        fontWeight: 600,
+        labels: { colors: '#475569' },
+        markers: { size: 5 },
+      },
+      tooltip: {
+        y: {
+          formatter: (val: number) =>
+            `${val} (${total > 0 ? ((val / total) * 100).toFixed(1) : '0'}%)`,
+        },
+      },
     });
     this.clientChart.render();
   }
@@ -280,7 +331,7 @@ export default class ResellerDashboardComponent implements OnInit, OnDestroy {
   addEmailExists  = false;
   addFormTouched  = false;
 
-  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidEmail(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test((e ?? '').trim()); }
   isValidPhone(p: string): boolean { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
 
   get addEmailError(): string {

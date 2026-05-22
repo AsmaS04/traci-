@@ -88,6 +88,11 @@
   "msg_error_invalid_email": "Invalid email format",
   "msg_error_invalid_phone": "Phone must be exactly 8 digits",
 
+  "reactivate_confirm_title": "Reactivate Reseller",
+  "reactivate_confirm_message": "Are you sure you want to reactivate this reseller? This will not restore clients or devices that were reassigned during suspension.",
+  "btn_yes_reactivate": "Yes, reactivate",
+  "btn_no": "No",
+
   "res_eyebrow": "Reseller Panel",
   "res_title": "Dashboard",
   "res_stat_clients": "Total Clients",

@@ -177,7 +177,7 @@ export default class ResellerClientsComponent implements OnInit, OnDestroy {
     this.closePanel();
   }
 
-  isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e ?? '').trim()); }
+  isValidEmail(e: string) { return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,6}$/.test((e ?? '').trim()); }
   isValidPhone(p: string) { return /^\d{8}$/.test((p ?? '').replace(/[\s\-\.]/g, '')); }
 
   get formEmailError(): string {
